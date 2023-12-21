@@ -3,32 +3,32 @@
 import MetalKit
 import Spatial
 
-class MeshTexEllipse: MeshTexture {
-
+open class MeshTexEllipse: MeshTexture {
+    
     var radius = CGFloat(1)
     var inward = false
-
-    init(_ device: MTLDevice,
-         texName : String,
-         compare : MTLCompareFunction,
-         radius  : CGFloat,
-         inward  : Bool,
-         winding : MTLWinding) throws {
-
+    
+    public init(_ device: MTLDevice,
+                texName : String,
+                compare : MTLCompareFunction,
+                radius  : CGFloat,
+                inward  : Bool,
+                winding : MTLWinding) throws {
+        
         try super.init(device  : device,
                        texName : texName,
                        compare : compare,
                        winding : winding)
-
+        
         self.radius = radius
         self.inward = inward
-
+        
         guard let modelMesh = modelEllipsoid(device) else {
             throw RendererError.badVertex
         }
         mtkMesh = try MTKMesh(mesh: modelMesh, device: device)
     }
-
+    
     func modelEllipsoid(_ device: MTLDevice) -> MDLMesh? {
         let allocator = MTKMeshBufferAllocator(device: device)
         let radii = SIMD3<Float>(repeating: Float(radius))
@@ -40,7 +40,7 @@ class MeshTexEllipse: MeshTexture {
             inwardNormals    : inward,
             hemisphere       : false,
             allocator        : allocator)
-
+        
         let modelVD = MTKModelIOVertexDescriptorFromMetal(metalVD)
         guard let attributes = modelVD.attributes as? [MDLVertexAttribute] else {
             return nil
@@ -48,9 +48,9 @@ class MeshTexEllipse: MeshTexture {
         attributes[VertexIndex.position].name = MDLVertexAttributePosition
         attributes[VertexIndex.texcoord].name = MDLVertexAttributeTextureCoordinate
         attributes[VertexIndex.normal  ].name = MDLVertexAttributeNormal
-
+        
         modelMesh.vertexDescriptor = modelVD
         return modelMesh
     }
-
+    
 }

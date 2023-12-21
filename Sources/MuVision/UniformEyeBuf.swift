@@ -1,11 +1,11 @@
 // created by musesum
 #if os(visionOS)
+
 import Spatial
 import CompositorServices
 
-
 /// triple buffered Uniform for either 1 or 2 eyes
-class UniformEyeBuf<Item> {
+open class UniformEyeBuf<Item> {
     //typealias UniEyes = UniformEyes
     public struct UniEyes {
         // a uniform for each eye
@@ -20,10 +20,10 @@ class UniformEyeBuf<Item> {
     var uniformEyes: UnsafeMutablePointer<UniEyes>
     var tripleOffset = 0
     var tripleIndex = 0
-
-    init(_ device: MTLDevice,
-         _ label: String,
-         far: Bool) {
+    
+    public init(_ device: MTLDevice,
+                _ label: String,
+                far: Bool) {
 
         // round up to multiple of 256 bytes
         self.uniformSize = (MemoryLayout<UniEyes>.size + 0xFF) & -0x100
@@ -35,10 +35,10 @@ class UniformEyeBuf<Item> {
         uniformEyes = UnsafeMutableRawPointer(uniformBuf.contents())
             .bindMemory(to: UniEyes.self, capacity: 1)
     }
-
+    
     /// Update projection and rotation
-    func updateEyeUniforms(_ layerDrawable: LayerRenderer.Drawable,
-                           _ modelMatrix: simd_float4x4) {
+    public func updateEyeUniforms(_ layerDrawable: LayerRenderer.Drawable,
+                                  _ modelMatrix: simd_float4x4) {
 
         let anchor = layerDrawable.deviceAnchor
         updateTripleBufferedUniform()

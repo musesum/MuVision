@@ -3,7 +3,7 @@
 import MetalKit
 import Spatial
 
-public class MeshTexture: MeshBase {
+open class MeshTexture: MeshBase {
 
     private var texName: String!
     public var texture: MTLTexture!
@@ -11,7 +11,7 @@ public class MeshTexture: MeshBase {
     public init(device  : MTLDevice,
                 texName : String,
                 compare : MTLCompareFunction,
-                winding : MTLWinding ) throws {
+                winding : MTLWinding) throws {
 
         super.init(device: device,
                    compare: compare,

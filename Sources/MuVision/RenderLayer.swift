@@ -1,5 +1,7 @@
 //  Created by musesum on 8/4/23.
+
 #if os(visionOS)
+
 import MetalKit
 import ARKit
 import Spatial
@@ -8,21 +10,20 @@ import simd
 
 let TripleBufferCount = 3
 
-class RenderLayer {
+open class RenderLayer {
 
-    let layerRenderer: LayerRenderer
-    let device: MTLDevice
-    let library: MTLLibrary
-    let commandQueue: MTLCommandQueue
+    private let commandQueue: MTLCommandQueue
+    private var delegate: RenderLayerProtocol?
+    private let tripleSemaphore = DispatchSemaphore(value: TripleBufferCount)
+    private let arSession = ARKitSession()
+    private let worldTracking = WorldTrackingProvider()
 
-    var delegate: RenderLayerProtocol?
-    let tripleSemaphore = DispatchSemaphore(value: TripleBufferCount)
-    let arSession = ARKitSession()
-    let worldTracking = WorldTrackingProvider()
+    public let layerRenderer: LayerRenderer
+    public let device: MTLDevice
+    public let library: MTLLibrary
+    public var rotation: Float = 0
 
-    var rotation: Float = 0
-
-    init(_ layerRenderer: LayerRenderer) {
+    public init(_ layerRenderer: LayerRenderer) {
 
         self.layerRenderer = layerRenderer
         self.device = MTLCreateSystemDefaultDevice()!
@@ -30,13 +31,13 @@ class RenderLayer {
         self.commandQueue = device.makeCommandQueue()!
     }
 
-    func setDelegate(_ delegate: RenderLayerProtocol) {
+    public func setDelegate(_ delegate: RenderLayerProtocol) {
         self.delegate = delegate
         delegate.makeResources()
         delegate.makePipeline()
     }
 
-    func makeRenderPass(layerDrawable: LayerRenderer.Drawable) -> MTLRenderPassDescriptor {
+    public func makeRenderPass(layerDrawable: LayerRenderer.Drawable) -> MTLRenderPassDescriptor {
 
         let renderPass = MTLRenderPassDescriptor()
         renderPass.colorAttachments[0].texture = layerDrawable.colorTextures[0]
@@ -82,7 +83,7 @@ class RenderLayer {
         layerFrame.endSubmission()
     }
 
-    func startRenderLoop() {
+    public func startRenderLoop() {
         Task {
             do {
                 try await arSession.run([worldTracking])

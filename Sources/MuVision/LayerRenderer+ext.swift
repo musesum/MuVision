@@ -1,9 +1,7 @@
-//  extensions.swift
-//  from FullyImmersiveMetal
-//
 //  Created by musesum on 8/8/23.
 
 #if os(visionOS)
+
 import CompositorServices
 
 extension LayerRenderer.Clock.Instant {
