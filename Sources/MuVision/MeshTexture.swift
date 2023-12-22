@@ -3,7 +3,7 @@
 import MetalKit
 import Spatial
 
-open class MeshTexture: MeshBase {
+open class MeshTexture: MeshMetal {
 
     private var texName: String!
     public var texture: MTLTexture!

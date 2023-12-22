@@ -9,7 +9,7 @@ open class RenderNode {
     
     private var renderer: RenderLayer
     private var renderPipe: MTLRenderPipelineState?
-    public var mesh: MeshBase?
+    public var mesh: MeshMetal?
     public var eyeBuf: UniformEyeBuf<UniformEye>?
     
     public init(_ renderer: RenderLayer) {

@@ -3,7 +3,7 @@
 import MetalKit
 import Spatial
 
-open class MeshBase {
+open class MeshMetal {
 
     private var device: MTLDevice
     public var winding: MTLWinding
@@ -57,7 +57,7 @@ open class MeshBase {
 
         guard let mtkMesh else { return err("mesh") }
 
-        //???? renderCmd.setCullMode(.back)
+        //?? renderCmd.setCullMode(.back) // creates artifacts
         renderCmd.setFrontFacing(winding)
         renderCmd.setDepthStencilState(stencil)
 
