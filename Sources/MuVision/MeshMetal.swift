@@ -5,10 +5,11 @@ import Spatial
 
 open class MeshMetal {
 
-    private var device: MTLDevice
-    public var winding: MTLWinding
-    public var stencil: MTLDepthStencilState
-    public var metalVD: MTLVertexDescriptor
+    open var device: MTLDevice
+    private var winding: MTLWinding
+    private var stencil: MTLDepthStencilState
+    
+    public var metalVD = MTLVertexDescriptor()
     public var mtkMesh: MTKMesh?
 
     public init(device  : MTLDevice,
@@ -17,39 +18,46 @@ open class MeshMetal {
 
         self.device = device
         self.winding = winding
-        self.metalVD = MTLVertexDescriptor()
 
         let sd = MTLDepthStencilDescriptor()
         sd.isDepthWriteEnabled = true
         sd.depthCompareFunction = compare
         self.stencil = device.makeDepthStencilState(descriptor: sd)!
-
-        makeMetalVD()
     }
-    open func makeMetalVD() {
-        addVertexFormat(.float3, VertexIndex.position)
-        addVertexFormat(.float2, VertexIndex.texcoord)
-        addVertexFormat(.float3, VertexIndex.normal  )
+    
+    public func makeMetalVD(_ nameFormats: [VertexNameFormat],
+                            _ layoutStride: Int) {
+        var offset = 0
+        for (index,(_,format)) in nameFormats.enumerated() {
+            addMetalVD(index, format, &offset)
+        }
+        metalVD.layouts[0].stride = layoutStride
+        metalVD.layouts[0].stepRate = 1
+        metalVD.layouts[0].stepFunction = .perVertex
+        
+        func err(_ msg: String) {
+            print("⁉️ \(#function) error: \(msg)")
+        }
     }
-    public func addVertexFormat(_ format: MTLVertexFormat,
-                                _ index: Int) {
+    public func addMetalVD(_ index: Int,
+                           _ format: MTLVertexFormat,
+                           _ offset: inout Int) {
         let stride: Int
         switch format {
+        case .float : stride = MemoryLayout<Float>.size
         case .float2: stride = MemoryLayout<Float>.size * 2
         case .float3: stride = MemoryLayout<Float>.size * 3
         case .float4: stride = MemoryLayout<Float>.size * 4
         default: return err("unknown format \(format)")
         }
+        metalVD.attributes[index].bufferIndex = 0
         metalVD.attributes[index].format = format
-        metalVD.attributes[index].offset = 0
-        metalVD.attributes[index].bufferIndex = index
-
-        metalVD.layouts[index].stride = stride
-        metalVD.layouts[index].stepRate = 1
-        metalVD.layouts[index].stepFunction = .perVertex
+        metalVD.attributes[index].offset = offset
+        
+        offset += stride
 
         func err(_ msg: String) {
-            print("⁉️ addVertexFormat error: \(msg)")
+            print("⁉️ \(#function) error: \(msg)")
         }
     }
 

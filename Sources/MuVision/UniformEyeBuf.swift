@@ -102,7 +102,7 @@ open class UniformEyeBuf<Item> {
 
         renderCmd.setVertexBuffer(uniformBuf,
                                   offset: tripleOffset,
-                                  index: VertexIndex.uniforms /* 3 */)
+                                  index: 3 /*VertexIndex.uniforms*/)
     }
 
 }

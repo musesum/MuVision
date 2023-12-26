@@ -1,53 +1,104 @@
-// created by musesum on 12/22/23
+// created by musesum on 12/25/23
 
-import UIKit
-import Metal
-import CoreImage
-import simd
-import ModelIO
 import MetalKit
+import Spatial
 
-open class MeshModel {
+public typealias VertexNameFormat = (String, MTLVertexFormat)
 
-    let device: MTLDevice
-    let metalVD: MTLVertexDescriptor
-    
-    public  var vertexBuf: MTLBuffer! //??? private
-    public  var indexBuf: MTLBuffer! //??? private
+open class MeshModel<Item> {
 
-    public var vertices: [Float]!
-    public var indices: [UInt16]!
+    private var device: MTLDevice
+
+    public var vertexBuf: MTLBuffer!
+    public var indexBuf: MTLBuffer!
+    public var vertices: [Item]!
+    public var indices: [UInt32]!
+
+    public var modelVD = MDLVertexDescriptor()
     public var mdlMesh: MDLMesh!
 
-    public init(_ device: MTLDevice,
-                _ metalVD: MTLVertexDescriptor) {
-
+    public init (_ device: MTLDevice,
+                 _ nameFormats: [VertexNameFormat],
+                 _ vertexStride: Int) {
         self.device = device
-        self.metalVD = metalVD
+
+        makeModelVD(nameFormats,vertexStride)
     }
+    public func makeModelVD(_ nameFormats: [ (String, MTLVertexFormat)],
+                            _ layoutStride: Int) {
+        var offset = 0
+        for (index,(name,format)) in nameFormats.enumerated() {
+            addModelVD(index, name, format, &offset)
+        }
 
-    public func updateBuffers(verticesLen : Int,
-                              indicesLen  : Int) {
+        modelVD.layouts[0] = MDLVertexBufferLayout(stride: layoutStride)
 
-        vertexBuf = device.makeBuffer(bytes: vertices, length: verticesLen)
-        indexBuf  = device.makeBuffer(bytes: indices , length: indicesLen )
+        func err(_ msg: String) {
+            print("⁉️ \(#function) error: \(msg)")
+        }
+
+
+        func addModelVD(_ index: Int,
+                        _ name: String,
+                        _ format: MTLVertexFormat,
+                        _ offset: inout Int) {
+            let stride: Int
+            switch format {
+            case .float : stride = MemoryLayout<Float>.size
+            case .float2: stride = MemoryLayout<Float>.size * 2
+            case .float3: stride = MemoryLayout<Float>.size * 3
+            case .float4: stride = MemoryLayout<Float>.size * 4
+            default: return err("unknown format \(format)")
+            }
+            let convert: [MTLVertexFormat: MDLVertexFormat] = [
+                .float :.float ,
+                .float2:.float2,
+                .float3:.float3,
+                .float4:.float4,
+            ]
+            guard let modelFormat = convert[format] else { return err("modelFormat")}
+
+            modelVD.attributes[index] = MDLVertexAttribute(
+                name: name,
+                format: modelFormat,
+                offset: offset,
+                bufferIndex: 0)
+
+            offset += stride
+
+            func err(_ msg: String) {
+                print("⁉️ \(#function) error: \(msg)")
+            }
+        }
+
+    }
+    public func updateBuffers(_ verticesLen : Int,
+                              _ indicesLen  : Int) {
 
         let allocator = MTKMeshBufferAllocator(device: device)
         let vertexData = Data(bytes: vertices, count: verticesLen)
         let vertexBuffer = allocator.newBuffer(with: vertexData, type: .vertex)
 
-        let indexData = Data(bytes: indices, count: indices.count * MemoryLayout<UInt32>.stride)
+        let indexData = Data(bytes: indices, count: indicesLen)
         let indexBuffer = allocator.newBuffer(with: indexData, type: .index)
 
         let submesh = MDLSubmesh(indexBuffer  : indexBuffer,
                                  indexCount   : indices.count,
-                                 indexType    : .uint16,
+                                 indexType    : .uint32,
                                  geometryType : .triangles,
                                  material     : nil)
+        do {
+            mdlMesh = MDLMesh(vertexBuffers : [vertexBuffer],
+                              vertexCount   : vertices.count,
+                              descriptor    : modelVD,
+                              submeshes     : [submesh])
 
-        mdlMesh = MDLMesh(vertexBuffers : [vertexBuffer],
-                          vertexCount   : vertices.count,
-                          descriptor    : metalVD.modelVD,
-                          submeshes     : [submesh])
+        } catch {
+            err("making mdlMesh, mtkMesh")
+        }
+
+        func err(_ msg: String) {
+            print("⁉️ \(#function) error: \(msg)")
+        }
     }
 }
