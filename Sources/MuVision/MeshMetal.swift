@@ -2,6 +2,7 @@
 
 import MetalKit
 import Spatial
+import ModelIO
 
 open class MeshMetal {
 
@@ -34,10 +35,6 @@ open class MeshMetal {
         metalVD.layouts[0].stride = layoutStride
         metalVD.layouts[0].stepRate = 1
         metalVD.layouts[0].stepFunction = .perVertex
-        
-        func err(_ msg: String) {
-            print("⁉️ \(#function) error: \(msg)")
-        }
     }
     public func addMetalVD(_ index: Int,
                            _ format: MTLVertexFormat,
@@ -48,17 +45,29 @@ open class MeshMetal {
         case .float2: stride = MemoryLayout<Float>.size * 2
         case .float3: stride = MemoryLayout<Float>.size * 3
         case .float4: stride = MemoryLayout<Float>.size * 4
-        default: return err("unknown format \(format)")
+        default: return err("\(#function) unknown format \(format)")
         }
         metalVD.attributes[index].bufferIndex = 0
         metalVD.attributes[index].format = format
         metalVD.attributes[index].offset = offset
-        
         offset += stride
 
         func err(_ msg: String) {
-            print("⁉️ \(#function) error: \(msg)")
+            print("⁉️ error: \(msg)")
         }
+    }
+    public func makeModelFromMetalVD(_ nameFormats: [VertexNameFormat],
+                                     _ layoutStride: Int) -> MDLVertexDescriptor {
+
+        let modelVD = MTKModelIOVertexDescriptorFromMetal(metalVD)
+        if let attributes = modelVD.attributes as? [MDLVertexAttribute] {
+
+            for (index,(name,_)) in nameFormats.enumerated() {
+                attributes[index].name = name
+            }
+        }
+        modelVD.layouts[0] = MDLVertexBufferLayout(stride: layoutStride)
+        return modelVD
     }
 
     open func drawMesh(_ renderCmd: MTLRenderCommandEncoder) {

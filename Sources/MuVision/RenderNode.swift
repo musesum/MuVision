@@ -25,8 +25,8 @@ open class RenderNode {
         let colorFormat = configuration.colorFormat
         let depthFormat = configuration.depthFormat
         
-        guard let mesh else { return err("mesh")}
-        
+        guard let mesh else { return err("\(#function) mesh")}
+
         do {
             let pd = MTLRenderPipelineDescriptor()
             
@@ -43,7 +43,7 @@ open class RenderNode {
         }
         
         func err(_ msg: String) {
-            print("⁉️ SpatialRenderer::\(#function) error: \(msg)")
+            print("⁉️ error: \(msg)")
         }
     }
     

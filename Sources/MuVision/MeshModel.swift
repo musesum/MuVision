@@ -7,7 +7,7 @@ public typealias VertexNameFormat = (String, MTLVertexFormat)
 
 open class MeshModel<Item> {
 
-    private var device: MTLDevice
+    public var device: MTLDevice
 
     public var vertexBuf: MTLBuffer!
     public var indexBuf: MTLBuffer!
@@ -33,11 +33,6 @@ open class MeshModel<Item> {
 
         modelVD.layouts[0] = MDLVertexBufferLayout(stride: layoutStride)
 
-        func err(_ msg: String) {
-            print("⁉️ \(#function) error: \(msg)")
-        }
-
-
         func addModelVD(_ index: Int,
                         _ name: String,
                         _ format: MTLVertexFormat,
@@ -48,7 +43,7 @@ open class MeshModel<Item> {
             case .float2: stride = MemoryLayout<Float>.size * 2
             case .float3: stride = MemoryLayout<Float>.size * 3
             case .float4: stride = MemoryLayout<Float>.size * 4
-            default: return err("unknown format \(format)")
+            default: return err("\(#function) unknown format \(format)")
             }
             let convert: [MTLVertexFormat: MDLVertexFormat] = [
                 .float :.float ,
@@ -56,7 +51,7 @@ open class MeshModel<Item> {
                 .float3:.float3,
                 .float4:.float4,
             ]
-            guard let modelFormat = convert[format] else { return err("modelFormat")}
+            guard let modelFormat = convert[format] else { return err("\(#function) modelFormat")}
 
             modelVD.attributes[index] = MDLVertexAttribute(
                 name: name,
@@ -67,7 +62,7 @@ open class MeshModel<Item> {
             offset += stride
 
             func err(_ msg: String) {
-                print("⁉️ \(#function) error: \(msg)")
+                print("⁉️ error: \(msg)")
             }
         }
 
@@ -87,18 +82,10 @@ open class MeshModel<Item> {
                                  indexType    : .uint32,
                                  geometryType : .triangles,
                                  material     : nil)
-        do {
+
             mdlMesh = MDLMesh(vertexBuffers : [vertexBuffer],
                               vertexCount   : vertices.count,
                               descriptor    : modelVD,
                               submeshes     : [submesh])
-
-        } catch {
-            err("making mdlMesh, mtkMesh")
-        }
-
-        func err(_ msg: String) {
-            print("⁉️ \(#function) error: \(msg)")
-        }
     }
 }

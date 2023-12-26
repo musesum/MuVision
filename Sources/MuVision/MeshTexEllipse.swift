@@ -2,6 +2,16 @@
 
 import MetalKit
 import Spatial
+import simd
+
+
+/// not used direct
+struct VertexMesh {
+    let position : SIMD3<Float>
+    let texCoord : SIMD2<Float>
+    let normal   : SIMD3<Float>
+}
+
 
 open class MeshTexEllipse: MeshTexture {
     
@@ -40,17 +50,18 @@ open class MeshTexEllipse: MeshTexture {
             inwardNormals    : inward,
             hemisphere       : false,
             allocator        : allocator)
-        
-        let modelVD = MTKModelIOVertexDescriptorFromMetal(metalVD)
-        guard let attributes = modelVD.attributes as? [MDLVertexAttribute] else {
-            return nil
-        }
-        attributes[VertexIndex.position].name = MDLVertexAttributePosition
-        attributes[VertexIndex.texcoord].name = MDLVertexAttributeTextureCoordinate
-        attributes[VertexIndex.normal  ].name = MDLVertexAttributeNormal
-        
+
+        let nameFormats: [VertexNameFormat] = [
+            (MDLVertexAttributePosition         , .float3),
+            (MDLVertexAttributeTextureCoordinate, .float2),
+            (MDLVertexAttributeNormal           , .float3)
+             ]
+        let layoutStride = MemoryLayout<VertexMesh>.stride
+        makeMetalVD(nameFormats, layoutStride)
+
+        let modelVD = makeModelFromMetalVD(nameFormats, layoutStride)
         modelMesh.vertexDescriptor = modelVD
+
         return modelMesh
     }
-    
 }
