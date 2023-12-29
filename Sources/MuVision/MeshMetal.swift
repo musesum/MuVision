@@ -74,9 +74,7 @@ open class MeshMetal {
 
         guard let mtkMesh else { return err("mesh") }
 
-        //?? renderCmd.setCullMode(.back) // creates artifacts
         renderCmd.setFrontFacing(winding)
-        renderCmd.setDepthStencilState(stencil)
 
         for (index, element) in mtkMesh.vertexDescriptor.layouts.enumerated() {
             guard let layout = element as? MDLVertexBufferLayout else { return }
