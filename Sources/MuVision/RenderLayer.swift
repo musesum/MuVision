@@ -1,5 +1,8 @@
 //  Created by musesum on 8/4/23.
 
+
+let TripleBufferCount = 3
+
 #if os(visionOS)
 
 import MetalKit
@@ -7,8 +10,6 @@ import ARKit
 import Spatial
 import CompositorServices
 import simd
-
-let TripleBufferCount = 3
 
 open class RenderLayer {
 
@@ -69,9 +70,10 @@ open class RenderLayer {
         guard let timing = layerFrame.predictTiming() else { return }
         LayerRenderer.Clock().wait(until: timing.optimalInputTime)
         guard let layerDrawable = layerFrame.queryDrawable() else { return }
-
         tripleSemaphore.wait()
+
         guard let commandBuf = commandQueue.makeCommandBuffer() else { fatalError("renderFrame::commandBuf") }
+        
         commandBuf.addCompletedHandler { (_ commandBuf)-> Swift.Void in
             self.tripleSemaphore.signal()
         }
@@ -79,7 +81,9 @@ open class RenderLayer {
         layerFrame.startSubmission()
         let time = LayerRenderer.Clock.Instant.epoch.duration(to:  layerDrawable.frameTiming.presentationTime).timeInterval
         layerDrawable.deviceAnchor = worldTracking.queryDeviceAnchor(atTimestamp: time)
-        delegate.renderLayer(commandBuf, layerFrame, layerDrawable)
+        
+        delegate.renderLayer(commandBuf, layerDrawable)
+        
         layerFrame.endSubmission()
     }
 
@@ -107,6 +111,21 @@ open class RenderLayer {
             case .invalidated: break
             @unknown default:  print("⁉️ RenderLayer::runLoop @unknown default")
             }
+        }
+    }
+    public func setViewMappings(_ renderCmd     : MTLRenderCommandEncoder,
+                         _ layerDrawable : LayerRenderer.Drawable,
+                         _ viewports     : [MTLViewport]) {
+
+        if layerDrawable.views.count > 1 {
+            var viewMappings = (0 ..< layerDrawable.views.count).map {
+                MTLVertexAmplificationViewMapping(
+                    viewportArrayIndexOffset: UInt32($0),
+                    renderTargetArrayIndexOffset: UInt32($0))
+            }
+            renderCmd.setVertexAmplificationCount(
+                viewports.count,
+                viewMappings: &viewMappings)
         }
     }
 }

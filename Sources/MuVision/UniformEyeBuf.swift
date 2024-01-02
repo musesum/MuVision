@@ -1,15 +1,16 @@
 // created by musesum
-#if os(visionOS)
-
-import Spatial
+#if !os(visionOS)
+import MetalKit
+#else
 import CompositorServices
+#endif
+import Spatial
 
 /// triple buffered Uniform for either 1 or 2 eyes
 open class UniformEyeBuf<Item> {
-    //typealias UniEyes = UniformEyes
+
     public struct UniEyes {
-        // a uniform for each eye
-        var eye: (Item, Item)
+        var eye: (Item, Item) // a uniform for each eye
     }
 
     let uniformSize: Int
@@ -17,7 +18,7 @@ open class UniformEyeBuf<Item> {
     let uniformBuf: MTLBuffer
     let infinitelyFar: Bool // infinit distance for stars (same background for both eyes)
 
-    var uniformEyes: UnsafeMutablePointer<UniEyes>
+    var uniformEyes: UnsafeMutablePointer<UniEyes>!
     var tripleOffset = 0
     var tripleIndex = 0
     
@@ -31,40 +32,29 @@ open class UniformEyeBuf<Item> {
         self.infinitelyFar = far
         self.uniformBuf = device.makeBuffer(length: tripleUniformSize, options: [.storageModeShared])!
         self.uniformBuf.label = label
-
-        uniformEyes = UnsafeMutableRawPointer(uniformBuf.contents())
-            .bindMemory(to: UniEyes.self, capacity: 1)
+        updateTripleBufferedUniform()
     }
-    
+#if !os(visionOS)
+
+#else
+
     /// Update projection and rotation
     public func updateEyeUniforms(_ layerDrawable: LayerRenderer.Drawable,
                                   _ modelMatrix: simd_float4x4) {
-
-        let anchor = layerDrawable.deviceAnchor
         updateTripleBufferedUniform()
 
-        let deviceAnchor = anchor?.originFromAnchorTransform ?? matrix_identity_float4x4
+        let anchor = (layerDrawable.deviceAnchor?.originFromAnchorTransform
+                      ?? matrix_identity_float4x4)
 
         self.uniformEyes[0].eye.0 = uniformForEyeIndex(0)
         if layerDrawable.views.count > 1 {
             self.uniformEyes[0].eye.1 = uniformForEyeIndex(1)
         }
 
-        func updateTripleBufferedUniform() {
-
-            tripleIndex = (tripleIndex + 1) % TripleBufferCount
-            tripleOffset = uniformSize * tripleIndex
-            let uniformPtr = uniformBuf.contents() + tripleOffset
-            uniformEyes = UnsafeMutableRawPointer(uniformPtr)
-                .bindMemory(to: UniEyes.self, capacity: 1)
-        }
-
         func uniformForEyeIndex(_ index: Int) -> Item {
 
             let view = layerDrawable.views[index]
-            
-            let viewMatrix = (deviceAnchor * view.transform).inverse
-            
+
             let projection = ProjectiveTransform3D(
                 leftTangent   : Double(view.tangents[0]),
                 rightTangent  : Double(view.tangents[1]),
@@ -74,8 +64,9 @@ open class UniformEyeBuf<Item> {
                 farZ          : Double(layerDrawable.depthRange.x),
                 reverseZ      : true)
 
+            let viewMatrix = (anchor * view.transform).inverse
             var viewModel = viewMatrix * modelMatrix
-            
+
             if infinitelyFar {
                 viewModel.columns.3 = simd_make_float4(0.0, 0.0, 0.0, 1.0)
             }
@@ -83,21 +74,16 @@ open class UniformEyeBuf<Item> {
             return eyeUniforms as! Item
         }
     }
-    func setViewMappings(_ renderCmd     : MTLRenderCommandEncoder,
-                         _ layerDrawable : LayerRenderer.Drawable,
-                         _ viewports     : [MTLViewport]) {
+#endif
+    func updateTripleBufferedUniform() {
 
-        if layerDrawable.views.count > 1 {
-            var viewMappings = (0 ..< layerDrawable.views.count).map {
-                MTLVertexAmplificationViewMapping(
-                    viewportArrayIndexOffset: UInt32($0),
-                    renderTargetArrayIndexOffset: UInt32($0))
-            }
-            renderCmd.setVertexAmplificationCount(
-                viewports.count,
-                viewMappings: &viewMappings)
-        }
+        tripleIndex = (tripleIndex + 1) % TripleBufferCount
+        tripleOffset = uniformSize * tripleIndex
+        let uniformPtr = uniformBuf.contents() + tripleOffset
+        uniformEyes = UnsafeMutableRawPointer(uniformPtr)
+            .bindMemory(to: UniEyes.self, capacity: 1)
     }
+
     func setUniformBuf(_ renderCmd: MTLRenderCommandEncoder)  {
 
         renderCmd.setVertexBuffer(uniformBuf,
@@ -106,4 +92,3 @@ open class UniformEyeBuf<Item> {
     }
 
 }
-#endif

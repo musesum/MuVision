@@ -13,6 +13,9 @@ open class MeshMetal {
     public var metalVD = MTLVertexDescriptor()
     public var mtkMesh: MTKMesh?
 
+    public var eyeBuf     : UniformEyeBuf<UniformEye>?
+    public var uniformBuf : MTLBuffer!
+
     public init(device  : MTLDevice,
                 compare : MTLCompareFunction,
                 winding : MTLWinding)  {
@@ -76,13 +79,11 @@ open class MeshMetal {
 
         renderCmd.setFrontFacing(winding)
 
-        for (index, element) in mtkMesh.vertexDescriptor.layouts.enumerated() {
-            guard let layout = element as? MDLVertexBufferLayout else { return }
-            if layout.stride != 0 {
+        for (index, layout) in mtkMesh.vertexDescriptor.layouts.enumerated() {
+            if let layout = layout as? MDLVertexBufferLayout,
+               layout.stride != 0 {
                 let vb = mtkMesh.vertexBuffers[index]
-                renderCmd.setVertexBuffer(vb.buffer,
-                                          offset: vb.offset,
-                                          index: index)
+                renderCmd.setVertexBuffer(vb.buffer, offset: vb.offset, index: index)
             }
         }
 

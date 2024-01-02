@@ -5,7 +5,7 @@
 import Spatial
 import CompositorServices
 
-open class RenderNode {
+open class RenderLayerNode {
     
     private var renderer: RenderLayer
     private var renderPipe: MTLRenderPipelineState?
@@ -47,12 +47,9 @@ open class RenderNode {
         }
     }
     
-    public func drawLayer(_ layerDrawable: LayerRenderer.Drawable,
-                          _ renderCmd: MTLRenderCommandEncoder,
-                          _ viewports: [MTLViewport]) {
+    public func drawEyeMesh(_ renderCmd: MTLRenderCommandEncoder) {
         
         guard let eyeBuf, let mesh, let renderPipe else { return }
-        eyeBuf.setViewMappings(renderCmd, layerDrawable, viewports)
         eyeBuf.setUniformBuf(renderCmd)
         renderCmd.setRenderPipelineState(renderPipe)
         mesh.drawMesh(renderCmd)
