@@ -19,11 +19,13 @@ open class MeshTexEllipse: MeshTexture {
     
     public init(_ device: MTLDevice,
                 texName  : String,
+                compare  : MTLCompareFunction,
                 radius   : CGFloat,
                 inward   : Bool,
                 winding  : MTLWinding) throws {
 
         try super.init(device, texName, cull: .back, winding: winding)
+        self.stencil = MeshMetal.stencil(device, compare, true)
 
         self.radius = radius
         self.inward = inward

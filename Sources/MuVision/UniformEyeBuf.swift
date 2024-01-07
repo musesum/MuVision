@@ -39,7 +39,8 @@ open class UniformEyeBuf {
 #if os(visionOS)
 
     /// Update projection and rotation
-    public func updateEyeUniforms(_ layerDrawable: LayerRenderer.Drawable) {
+    public func updateEyeUniforms(_ layerDrawable: LayerRenderer.Drawable,
+                                  _ modelMatrix: simd_float4x4) {
         updateTripleBufferedUniform()
 
         self.uniformEyes[0].eye.0 = uniformForEyeIndex(0)
@@ -63,7 +64,7 @@ open class UniformEyeBuf {
             let anchor = (layerDrawable.deviceAnchor?.originFromAnchorTransform
                           ?? matrix_identity_float4x4)
             let viewMatrix = (anchor * view.transform).inverse
-            var viewModel = viewMatrix //????? * modelMatrix
+            var viewModel = viewMatrix * modelMatrix
 
             if infinitelyFar {
                 viewModel.columns.3 = simd_make_float4(0.0, 0.0, 0.0, 1.0)

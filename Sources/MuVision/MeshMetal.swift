@@ -67,8 +67,8 @@ open class MeshMetal {
         return modelVD
     }
     public static func stencil(_ device: MTLDevice,
-                             _ compare: MTLCompareFunction,
-                             _ write: Bool) -> MTLDepthStencilState {
+                               _ compare: MTLCompareFunction,
+                               _ write: Bool) -> MTLDepthStencilState {
 
         let depth = MTLDepthStencilDescriptor()
         depth.depthCompareFunction = compare
