@@ -12,24 +12,19 @@ struct VertexMesh {
     let normal   : SIMD3<Float>
 }
 
-
 open class MeshTexEllipse: MeshTexture {
     
     var radius = CGFloat(1)
     var inward = false
     
     public init(_ device: MTLDevice,
-                texName : String,
-                compare : MTLCompareFunction,
-                radius  : CGFloat,
-                inward  : Bool,
-                winding : MTLWinding) throws {
-        
-        try super.init(device  : device,
-                       texName : texName,
-                       compare : compare,
-                       winding : winding)
-        
+                texName  : String,
+                radius   : CGFloat,
+                inward   : Bool,
+                winding  : MTLWinding) throws {
+
+        try super.init(device, texName, cull: .back, winding: winding)
+
         self.radius = radius
         self.inward = inward
         

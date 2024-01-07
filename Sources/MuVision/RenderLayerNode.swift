@@ -10,7 +10,7 @@ open class RenderLayerNode {
     private var renderer: RenderLayer
     private var renderPipe: MTLRenderPipelineState?
     public var mesh: MeshMetal?
-    public var eyeBuf: UniformEyeBuf<UniformEye>?
+    public var eyeBuf: UniformEyeBuf?
     
     public init(_ renderer: RenderLayer) {
         self.renderer = renderer
@@ -45,14 +45,6 @@ open class RenderLayerNode {
         func err(_ msg: String) {
             print("⁉️ error: \(msg)")
         }
-    }
-    
-    public func drawEyeMesh(_ renderCmd: MTLRenderCommandEncoder) {
-        
-        guard let eyeBuf, let mesh, let renderPipe else { return }
-        eyeBuf.setUniformBuf(renderCmd)
-        renderCmd.setRenderPipelineState(renderPipe)
-        mesh.drawMesh(renderCmd)
     }
 }
 #endif 

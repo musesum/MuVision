@@ -114,8 +114,8 @@ open class RenderLayer {
         }
     }
     public func setViewMappings(_ renderCmd     : MTLRenderCommandEncoder,
-                         _ layerDrawable : LayerRenderer.Drawable,
-                         _ viewports     : [MTLViewport]) {
+                                _ layerDrawable : LayerRenderer.Drawable,
+                                _ viewports     : [MTLViewport]) {
 
         if layerDrawable.views.count > 1 {
             var viewMappings = (0 ..< layerDrawable.views.count).map {
