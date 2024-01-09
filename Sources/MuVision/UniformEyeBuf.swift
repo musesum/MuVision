@@ -14,7 +14,6 @@ open class UniformEyeBuf {
     public struct UniEyes {
         var eye: (UniformEye, UniformEye) // a uniform for each eye
     }
-
     let uniformSize: Int
     let tripleUniformSize: Int
     let uniformBuf: MTLBuffer

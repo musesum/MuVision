@@ -34,9 +34,9 @@ public class DepthRenderState {
     var stateNow: MetalVisionState
     var stencil : MTLDepthStencilState!
 
-    init(_ device: MTLDevice,
-         vision : DepthRender,
-         metal  : DepthRender) {
+    public init(_ device: MTLDevice,
+                vision : DepthRender,
+                metal  : DepthRender) {
 
         self.device = device
         self.vision = vision
@@ -44,9 +44,9 @@ public class DepthRenderState {
         self.stateNow  = DepthRender.state
         makeStencil()
     }
-    init(_ device: MTLDevice,
-         vision: DepthRender) {
-        
+    public init(_ device: MTLDevice,
+                vision: DepthRender) {
+
         DepthRender.state = .vision
 
         self.device = device
