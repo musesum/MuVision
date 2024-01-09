@@ -4,23 +4,17 @@ import MetalKit
 import Spatial
 import ModelIO
 
+
 open class MeshMetal {
 
-    open var device: MTLDevice
-    public var cull: MTLCullMode
-    public var winding: MTLWinding
-    public var stencil: MTLDepthStencilState!
+    private var depthRenderState: DepthRenderState
     public var metalVD = MTLVertexDescriptor()
     public var mtkMesh: MTKMesh?
     public var eyeBuf: UniformEyeBuf?
     public var uniformBuf : MTLBuffer!
 
-    public init(_ device: MTLDevice,
-                cull: MTLCullMode,
-                winding: MTLWinding) {
-        self.device = device
-        self.cull = cull
-        self.winding = winding
+    public init(_ depthRenderState: DepthRenderState) {
+        self.depthRenderState = depthRenderState
     }
 
     public func makeMetalVD(_ nameFormats: [VertexNameFormat],
@@ -66,23 +60,12 @@ open class MeshMetal {
         modelVD.layouts[0] = MDLVertexBufferLayout(stride: layoutStride)
         return modelVD
     }
-    public static func stencil(_ device: MTLDevice,
-                               _ compare: MTLCompareFunction,
-                               _ write: Bool) -> MTLDepthStencilState {
 
-        let depth = MTLDepthStencilDescriptor()
-        depth.depthCompareFunction = compare
-        depth.isDepthWriteEnabled = write
-        let depthStencil = device.makeDepthStencilState(descriptor: depth)!
-        return depthStencil
-    }
     open func drawMesh(_ renderCmd: MTLRenderCommandEncoder) {
 
         guard let mtkMesh else { return err("mesh") }
 
-        renderCmd.setCullMode(cull)
-        renderCmd.setFrontFacing(winding)
-        renderCmd.setDepthStencilState(stencil)
+        depthRenderState.setCullWindingStencil(renderCmd)
 
         for (index, layout) in mtkMesh.vertexDescriptor.layouts.enumerated() {
             if let layout = layout as? MDLVertexBufferLayout,

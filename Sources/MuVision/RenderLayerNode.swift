@@ -49,7 +49,6 @@ open class RenderLayerNode {
     public func drawLayer(_ renderCmd: MTLRenderCommandEncoder) {
 
         guard let eyeBuf, let mesh, let renderPipe else { return }
-        //???? eyeBuf.setViewMappings(renderCmd, layerDrawable, viewports)
         eyeBuf.setUniformBuf(renderCmd)
         renderCmd.setRenderPipelineState(renderPipe)
         mesh.drawMesh(renderCmd)

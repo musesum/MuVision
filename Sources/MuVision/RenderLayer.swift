@@ -34,8 +34,8 @@ open class RenderLayer {
 
     public func setDelegate(_ delegate: RenderLayerProtocol) {
         self.delegate = delegate
-        delegate.makeResources()
-        delegate.makePipeline()
+       delegate.makeResources()
+       delegate.makePipeline()
     }
 
     public func makeRenderPass(layerDrawable: LayerRenderer.Drawable) -> MTLRenderPassDescriptor {
@@ -44,7 +44,7 @@ open class RenderLayer {
         renderPass.colorAttachments[0].texture = layerDrawable.colorTextures[0]
         renderPass.colorAttachments[0].loadAction = .clear
         renderPass.colorAttachments[0].storeAction = .store
-        renderPass.colorAttachments[0].clearColor = MTLClearColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.0)
+        renderPass.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 1)
 
         renderPass.depthAttachment.texture = layerDrawable.depthTextures[0]
         renderPass.depthAttachment.loadAction = .clear
@@ -64,7 +64,7 @@ open class RenderLayer {
         guard let layerFrame = layerRenderer.queryNextFrame() else { return }
 
         layerFrame.startUpdate()
-        // Perform frame independent work
+        performCpuWork()
         layerFrame.endUpdate()
 
         guard let timing = layerFrame.predictTiming() else { return }
@@ -85,6 +85,9 @@ open class RenderLayer {
         delegate.renderLayer(commandBuf, layerDrawable)
         
         layerFrame.endSubmission()
+    }
+    func performCpuWork() {
+        // nothing right now
     }
 
     public func startRenderLoop() {
@@ -114,8 +117,10 @@ open class RenderLayer {
         }
     }
     public func setViewMappings(_ renderCmd     : MTLRenderCommandEncoder,
-                                _ layerDrawable : LayerRenderer.Drawable,
-                                _ viewports     : [MTLViewport]) {
+                                _ layerDrawable : LayerRenderer.Drawable) {
+        
+        let viewports = layerDrawable.views.map { $0.textureMap.viewport }
+        renderCmd.setViewports(viewports)
 
         if layerDrawable.views.count > 1 {
             var viewMappings = (0 ..< layerDrawable.views.count).map {

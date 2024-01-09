@@ -16,17 +16,14 @@ open class MeshTexEllipse: MeshTexture {
     
     var radius = CGFloat(1)
     var inward = false
-    
-    public init(_ device: MTLDevice,
-                texName  : String,
-                compare  : MTLCompareFunction,
-                radius   : CGFloat,
-                inward   : Bool,
-                winding  : MTLWinding) throws {
 
-        try super.init(device, texName, cull: .back, winding: winding)
-        self.stencil = MeshMetal.stencil(device, compare, true)
+    public init(_ device      : MTLDevice,
+                _ texName     : String,
+                _ depthRender : DepthRender,
+                radius        : CGFloat,
+                inward        : Bool) throws {
 
+        try super.init(device, texName, depthRender)
         self.radius = radius
         self.inward = inward
         
