@@ -12,7 +12,7 @@ public enum MetalVisionState: String {
 
 public class DepthRender {
 
-    public static var state: MetalVisionState = .vision
+    public static var state: MetalVisionState = .metal
 
     var cull    : MTLCullMode
     var winding : MTLWinding
