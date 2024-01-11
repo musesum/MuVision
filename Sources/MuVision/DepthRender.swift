@@ -3,7 +3,12 @@
 import MetalKit
 
 /// visionOS will changes stencil and cull requirements
-public enum MetalVisionState { case metal, vision }
+public enum MetalVisionState: String {
+    case metal
+    case vision
+    public var script: String { return rawValue }
+
+}
 
 public class DepthRender {
 
@@ -19,20 +24,20 @@ public class DepthRender {
                 _ compare : MTLCompareFunction,
                 _ write   : Bool) {
 
-        self.cull    =  cull
-        self.winding =  winding
-        self.compare =  compare
-        self.write   =  write
+        self.cull    = cull
+        self.winding = winding
+        self.compare = compare
+        self.write   = write
     }
 }
 
 public class DepthRenderState {
 
-    var device  : MTLDevice
-    var vision  : DepthRender
-    var metal   : DepthRender
-    var stateNow: MetalVisionState
-    var stencil : MTLDepthStencilState!
+    var device   : MTLDevice
+    var vision   : DepthRender
+    var metal    : DepthRender
+    var stateNow : MetalVisionState
+    var stencil  : MTLDepthStencilState!
 
     public init(_ device: MTLDevice,
                 vision : DepthRender,
@@ -41,7 +46,7 @@ public class DepthRenderState {
         self.device = device
         self.vision = vision
         self.metal  = metal
-        self.stateNow  = DepthRender.state
+        self.stateNow = DepthRender.state
         makeStencil()
     }
     public init(_ device: MTLDevice,
@@ -72,7 +77,7 @@ public class DepthRenderState {
         stencil = device.makeDepthStencilState(descriptor: depth)!
     }
     public func setCullWindingStencil(_ renderCmd: MTLRenderCommandEncoder) {
-
+        // flipped between .metal and .vision state
         if stateNow != DepthRender.state {
             stateNow = DepthRender.state
             makeStencil()

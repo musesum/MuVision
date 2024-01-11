@@ -23,7 +23,7 @@ open class RenderLayer {
     public let device: MTLDevice
     public let library: MTLLibrary
     public var rotation: Float = 0
-
+    public static var viewports: [MTLViewport]!
     public init(_ layerRenderer: LayerRenderer) {
 
         self.layerRenderer = layerRenderer
@@ -44,7 +44,7 @@ open class RenderLayer {
         renderPass.colorAttachments[0].texture = layerDrawable.colorTextures[0]
         renderPass.colorAttachments[0].loadAction = .clear
         renderPass.colorAttachments[0].storeAction = .store
-        renderPass.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 1)
+        renderPass.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0) //????
 
         renderPass.depthAttachment.texture = layerDrawable.depthTextures[0]
         renderPass.depthAttachment.loadAction = .clear
@@ -116,10 +116,10 @@ open class RenderLayer {
             }
         }
     }
-    public func setViewMappings(_ renderCmd     : MTLRenderCommandEncoder,
-                                _ layerDrawable : LayerRenderer.Drawable) {
+    public static func setViewMappings(_ renderCmd     : MTLRenderCommandEncoder,
+                                       _ layerDrawable : LayerRenderer.Drawable) {
         
-        let viewports = layerDrawable.views.map { $0.textureMap.viewport }
+        viewports = layerDrawable.views.map { $0.textureMap.viewport }
         renderCmd.setViewports(viewports)
 
         if layerDrawable.views.count > 1 {
