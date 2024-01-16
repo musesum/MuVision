@@ -89,7 +89,7 @@ open class UniformEyeBuf {
 
         log += 1
         if log%200 == 0 {
-            print("projectModel: \(projectModel.script)")
+            //???? print("projectModel: \(projectModel.script)")
         }
     }
 

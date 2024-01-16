@@ -44,7 +44,7 @@ open class RenderLayer {
         renderPass.colorAttachments[0].texture = layerDrawable.colorTextures[0]
         renderPass.colorAttachments[0].loadAction = .clear
         renderPass.colorAttachments[0].storeAction = .store
-        renderPass.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0) //????
+        renderPass.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0)
 
         renderPass.depthAttachment.texture = layerDrawable.depthTextures[0]
         renderPass.depthAttachment.loadAction = .clear

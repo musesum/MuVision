@@ -10,9 +10,9 @@ open class MeshTexture: MeshMetal {
 
     public init(_ device  : MTLDevice,
                 _ texName : String,
-                _ depthRender: DepthRender) throws {
+                _ renderDepth: RenderDepth) throws {
 
-        super.init(DepthRenderState(device, vision: depthRender))
+        super.init(DepthRendering(device, immerse: renderDepth))
         self.texName = texName
         self.texture = device.load(texName)
     }

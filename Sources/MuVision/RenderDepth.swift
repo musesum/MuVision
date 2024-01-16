@@ -2,17 +2,16 @@
 
 import MetalKit
 
-/// visionOS will changes stencil and cull requirements
-public enum MetalVisionState: String {
+/// immersive DisplayLayer will changes stencil and cull requirements
+public enum RenderState: String {
     case metal
-    case vision
+    case immer
     public var script: String { return rawValue }
-
 }
 
-public class DepthRender {
+public class RenderDepth {
 
-    public static var state: MetalVisionState = .metal
+    public static var state: RenderState = .metal
 
     var cull    : MTLCullMode
     var winding : MTLWinding
@@ -31,44 +30,44 @@ public class DepthRender {
     }
 }
 
-public class DepthRenderState {
+public class DepthRendering {
 
-    var device   : MTLDevice
-    var vision   : DepthRender
-    var metal    : DepthRender
-    var stateNow : MetalVisionState
-    var stencil  : MTLDepthStencilState!
+    var device      : MTLDevice
+    var immer       : RenderDepth
+    var metal       : RenderDepth
+    var renderState : RenderState
+    var stencil     : MTLDepthStencilState!
 
     public init(_ device: MTLDevice,
-                vision : DepthRender,
-                metal  : DepthRender) {
+                immerse : RenderDepth,
+                metal   : RenderDepth) {
 
         self.device = device
-        self.vision = vision
+        self.immer  = immerse
         self.metal  = metal
-        self.stateNow = DepthRender.state
+        self.renderState = RenderDepth.state
         makeStencil()
     }
     public init(_ device: MTLDevice,
-                vision: DepthRender) {
+                immerse: RenderDepth) {
 
-        DepthRender.state = .vision
+        RenderDepth.state = .immer
 
         self.device = device
-        self.vision = vision
-        self.metal  = vision
-        self.stateNow  = .vision
+        self.immer  = immerse
+        self.metal  = immerse // not used
+        self.renderState = .immer
         makeStencil()
     }
     func makeStencil() {
 
         let depth = MTLDepthStencilDescriptor()
 
-        switch stateNow {
+        switch renderState {
 
-        case .vision:
-            depth.depthCompareFunction = vision.compare
-            depth.isDepthWriteEnabled = vision.write
+        case .immer:
+            depth.depthCompareFunction = immer.compare
+            depth.isDepthWriteEnabled = immer.write
 
         case .metal:
             depth.depthCompareFunction = metal.compare
@@ -78,16 +77,16 @@ public class DepthRenderState {
     }
     public func setCullWindingStencil(_ renderCmd: MTLRenderCommandEncoder) {
         // flipped between .metal and .vision state
-        if stateNow != DepthRender.state {
-            stateNow = DepthRender.state
+        if renderState != RenderDepth.state {
+            renderState = RenderDepth.state
             makeStencil()
         }
         renderCmd.setDepthStencilState(stencil)
 
-        switch stateNow {
-        case .vision:
-            renderCmd.setCullMode(vision.cull)
-            renderCmd.setFrontFacing(vision.winding)
+        switch renderState {
+        case .immer:
+            renderCmd.setCullMode(immer.cull)
+            renderCmd.setFrontFacing(immer.winding)
 
         case .metal:
             renderCmd.setCullMode(metal.cull)

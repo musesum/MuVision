@@ -7,14 +7,14 @@ import ModelIO
 
 open class MeshMetal {
 
-    private var depthRenderState: DepthRenderState
+    private var depthRendering: DepthRendering
     public var metalVD = MTLVertexDescriptor()
     public var mtkMesh: MTKMesh?
     public var eyeBuf: UniformEyeBuf?
     public var uniformBuf : MTLBuffer!
 
-    public init(_ depthRenderState: DepthRenderState) {
-        self.depthRenderState = depthRenderState
+    public init(_ depthRenderState: DepthRendering) {
+        self.depthRendering = depthRenderState
     }
 
     public func makeMetalVD(_ nameFormats: [VertexNameFormat],
@@ -65,7 +65,7 @@ open class MeshMetal {
 
         guard let mtkMesh else { return err("mesh") }
 
-        depthRenderState.setCullWindingStencil(renderCmd)
+        depthRendering.setCullWindingStencil(renderCmd)
 
         for (index, layout) in mtkMesh.vertexDescriptor.layouts.enumerated() {
             if let layout = layout as? MDLVertexBufferLayout,

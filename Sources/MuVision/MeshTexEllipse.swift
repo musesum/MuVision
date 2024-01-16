@@ -19,7 +19,7 @@ open class MeshTexEllipse: MeshTexture {
 
     public init(_ device      : MTLDevice,
                 _ texName     : String,
-                _ depthRender : DepthRender,
+                _ depthRender : RenderDepth,
                 radius        : CGFloat,
                 inward        : Bool) throws {
 
