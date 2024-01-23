@@ -3,7 +3,7 @@
 import simd
 
 extension SIMD4 {
-    var xyz: SIMD3<Scalar> {
+    public var xyz: SIMD3<Scalar> {
         SIMD3(x, y, z)
     }
 }

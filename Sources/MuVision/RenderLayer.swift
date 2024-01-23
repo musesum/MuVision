@@ -1,5 +1,6 @@
 //  Created by musesum on 8/4/23.
 
+import MuFlo // NextFrame
 
 let TripleBufferCount = 3
 
@@ -10,6 +11,7 @@ import ARKit
 import Spatial
 import CompositorServices
 import simd
+
 
 open class RenderLayer {
 
@@ -79,15 +81,19 @@ open class RenderLayer {
         }
 
         layerFrame.startSubmission()
+
         let time = LayerRenderer.Clock.Instant.epoch.duration(to:  layerDrawable.frameTiming.presentationTime).timeInterval
-        layerDrawable.deviceAnchor = worldTracking.queryDeviceAnchor(atTimestamp: time)
-        
+        let deviceAnchor = worldTracking.queryDeviceAnchor(atTimestamp: time)
+        layerDrawable.deviceAnchor = deviceAnchor
+
         delegate.renderLayer(commandBuf, layerDrawable)
-        
+
         layerFrame.endSubmission()
     }
     func performCpuWork() {
-        // nothing right now
+        // this should execute pending Flo animations
+        // while ignoring the metal based renderFrame()
+        NextFrame.shared.nextFrames(force: true)
     }
 
     public func startRenderLoop() {

@@ -39,11 +39,11 @@ public class DepthRendering {
     var stencil     : MTLDepthStencilState!
 
     public init(_ device: MTLDevice,
-                immerse : RenderDepth,
-                metal   : RenderDepth) {
+                immer : RenderDepth,
+                metal : RenderDepth) {
 
         self.device = device
-        self.immer  = immerse
+        self.immer  = immer
         self.metal  = metal
         self.renderState = RenderDepth.state
         makeStencil()

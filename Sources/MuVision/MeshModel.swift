@@ -20,6 +20,7 @@ open class MeshModel<Item> {
     public init (_ device: MTLDevice,
                  _ nameFormats: [VertexNameFormat],
                  _ vertexStride: Int) {
+
         self.device = device
 
         makeModelVD(nameFormats,vertexStride)
