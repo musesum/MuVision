@@ -34,7 +34,7 @@ extension SIMD4<Double> {
 }
 extension simd_float4x4 {
 
-    var script: String {
+    public var script: String {
         return "(\(columns.0.script), \(columns.1.script), \(columns.2.script), \(columns.3.script))"
     }
 }

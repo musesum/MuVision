@@ -36,10 +36,13 @@ open class UniformEyeBuf {
         updateTripleBufferedUniform()
     }
 #if os(visionOS)
+    //TODO: remove //????
+    var log: Int = 0
 
     /// Update projection and rotation
     public func updateEyeUniforms(_ layerDrawable: LayerRenderer.Drawable,
                                   _ modelMatrix: simd_float4x4) {
+        
         updateTripleBufferedUniform()
 
         self.uniformEyes[0].eye.0 = uniformForEyeIndex(0)
@@ -60,38 +63,39 @@ open class UniformEyeBuf {
                 farZ          : Double(layerDrawable.depthRange.x),
                 reverseZ      : true)
 
-            let anchor = (layerDrawable.deviceAnchor?.originFromAnchorTransform
-                          ?? matrix_identity_float4x4)
-            let viewMatrix = (anchor * view.transform).inverse
+            let deviceTransform = (layerDrawable.deviceAnchor?.originFromAnchorTransform ?? matrix_identity_float4x4)
+
+            let viewMatrix = (deviceTransform * view.transform).inverse
             var viewModel = viewMatrix * modelMatrix
 
             if infinitelyFar {
-                viewModel.columns.3 = simd_make_float4(0.0, 0.0, 0.0, 1.0)
+                viewModel.columns.3 = simd_make_float4(0, 0, 0, 10) //?????
             }
+
+            //TODO: remove //????
             log += 1
             if log%200 == 0 {
-                print("projection  : \(projection.matrix.script)")
-                //print("viewModel   : \(viewModel.script)")
+                print("\n👁️v projection   : \(projection.matrix.script)")
+                print(  "👁️v viewModel    : \(viewModel.script)")
             }
             let uniformEye = UniformEye(.init(projection), viewModel)
+
+
             return uniformEye
         }
     }
-#endif
-    var log: Int = 0
+    #else
 
+    #endif
     /// Update projection and rotation
     public func updateEyeUniforms(_ projectModel: matrix_float4x4) {
+
         updateTripleBufferedUniform()
 
         self.uniformEyes[0].eye.0 = UniformEye(projectModel,
                                                matrix_identity_float4x4)
-
-        log += 1
-        if log%200 == 0 {
-            //???? print("projectModel: \(projectModel.script)")
-        }
     }
+
 
     func updateTripleBufferedUniform() {
 
@@ -102,11 +106,12 @@ open class UniformEyeBuf {
             .bindMemory(to: UniEyes.self, capacity: 1)
     }
 
-    public func setUniformBuf(_ renderCmd: MTLRenderCommandEncoder)  {
+    public func setUniformBuf(_ renderCmd: MTLRenderCommandEncoder, _ from: String)  {
 
         renderCmd.setVertexBuffer(uniformBuf,
                                   offset: tripleOffset,
                                   index: 3 /*VertexIndex.uniforms*/)
+        //print("\(from): \(tripleOffset)", terminator: " ")
     }
 
 }

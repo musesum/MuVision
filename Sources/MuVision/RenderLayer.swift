@@ -17,7 +17,7 @@ open class RenderLayer {
 
     private let commandQueue: MTLCommandQueue
     private var delegate: RenderLayerProtocol?
-    private let tripleSemaphore = DispatchSemaphore(value: TripleBufferCount)
+    private let inFlightSemaphore = DispatchSemaphore(value: TripleBufferCount)
     private let arSession = ARKitSession()
     private let worldTracking = WorldTrackingProvider()
 
@@ -63,37 +63,46 @@ open class RenderLayer {
     func renderFrame() {
 
         guard let delegate else { return }
-        guard let layerFrame = layerRenderer.queryNextFrame() else { return }
+        guard let frame = layerRenderer.queryNextFrame() else { return }
 
-        layerFrame.startUpdate()
+        frame.startUpdate()
         performCpuWork()
-        layerFrame.endUpdate()
+        frame.endUpdate()
 
-        guard let timing = layerFrame.predictTiming() else { return }
+        guard let timing = frame.predictTiming() else { return }
         LayerRenderer.Clock().wait(until: timing.optimalInputTime)
-        guard let layerDrawable = layerFrame.queryDrawable() else { return }
-        tripleSemaphore.wait()
-
-        guard let commandBuf = commandQueue.makeCommandBuffer() else { fatalError("renderFrame::commandBuf") }
+        guard let drawable = frame.queryDrawable() else { return }
         
+        _ = inFlightSemaphore.wait(timeout: DispatchTime.distantFuture)
+        guard let commandBuf = commandQueue.makeCommandBuffer() else { fatalError("renderFrame::commandBuf") }
+
+        let semaphore = inFlightSemaphore
         commandBuf.addCompletedHandler { (_ commandBuf)-> Swift.Void in
-            self.tripleSemaphore.signal()
+            semaphore.signal()
         }
 
-        layerFrame.startSubmission()
+        frame.startSubmission()
 
-        let time = LayerRenderer.Clock.Instant.epoch.duration(to:  layerDrawable.frameTiming.presentationTime).timeInterval
+        let time = LayerRenderer.Clock.Instant.epoch.duration(to:  drawable.frameTiming.presentationTime).timeInterval
+
         let deviceAnchor = worldTracking.queryDeviceAnchor(atTimestamp: time)
-        layerDrawable.deviceAnchor = deviceAnchor
+        drawable.deviceAnchor = deviceAnchor
 
-        delegate.renderLayer(commandBuf, layerDrawable)
+        delegate.updateUniforms(drawable)
 
-        layerFrame.endSubmission()
+        // metal compute
+        delegate.computeLayer(commandBuf) //????
+
+        // metal render
+        delegate.renderLayer(commandBuf, drawable)
+
+        frame.endSubmission()
     }
+
     func performCpuWork() {
         // this should execute pending Flo animations
         // while ignoring the metal based renderFrame()
-        NextFrame.shared.nextFrames(force: true)
+        _ = NextFrame.shared.nextFrames(force: true)
     }
 
     public func startRenderLoop() {
@@ -122,12 +131,11 @@ open class RenderLayer {
             }
         }
     }
-    public static func setViewMappings(_ renderCmd     : MTLRenderCommandEncoder,
-                                       _ layerDrawable : LayerRenderer.Drawable) {
-        
-        viewports = layerDrawable.views.map { $0.textureMap.viewport }
+    public static func setViewMappings(
+        _ renderCmd     : MTLRenderCommandEncoder,
+        _ layerDrawable : LayerRenderer.Drawable) {
+            viewports = layerDrawable.views.map { $0.textureMap.viewport }
         renderCmd.setViewports(viewports)
-
         if layerDrawable.views.count > 1 {
             var viewMappings = (0 ..< layerDrawable.views.count).map {
                 MTLVertexAmplificationViewMapping(
@@ -137,6 +145,7 @@ open class RenderLayer {
             renderCmd.setVertexAmplificationCount(
                 viewports.count,
                 viewMappings: &viewMappings)
+
         }
     }
 }
