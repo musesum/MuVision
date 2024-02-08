@@ -2,6 +2,7 @@
 #if os(visionOS)
 import ARKit
 import CompositorServices
+import MuExtensions
 
 open class WorldTracking {
     public static var shared = WorldTracking()
