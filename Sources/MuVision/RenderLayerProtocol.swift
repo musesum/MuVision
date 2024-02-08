@@ -11,7 +11,7 @@ public protocol RenderLayerProtocol {
 
     func makePipeline()
 
-    func updateUniforms(_ drawable: LayerRenderer.Drawable)
+    func updateUniforms(_ layerDrawable: LayerRenderer.Drawable)
 
 
     func computeLayer(_ commandBuf: MTLCommandBuffer)

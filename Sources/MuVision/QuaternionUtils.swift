@@ -24,6 +24,13 @@ public func translateQuat(x: Float, y: Float, z: Float) -> matrix_float4x4 {
                                          vector_float4(0, 0, 1, 0),
                                          vector_float4(x, y, z, 1)))
 }
+public func translateQuat(_ v: vector_float4) -> matrix_float4x4 {
+
+    return matrix_float4x4.init(columns:(vector_float4(1, 0, 0, 0),
+                                         vector_float4(0, 1, 0, 0),
+                                         vector_float4(0, 0, 1, 0),
+                                         vector_float4(v.x, v.y, v.z, 1)))
+}
 
 public func radians_from_degrees(_ degrees: Float) -> Float {
     return (degrees / 180) * .pi

@@ -5,30 +5,26 @@ import MuFlo // NextFrame
 let TripleBufferCount = 3
 
 #if os(visionOS)
-
 import MetalKit
-import ARKit
 import Spatial
 import CompositorServices
 import simd
-
 
 open class RenderLayer {
 
     private let commandQueue: MTLCommandQueue
     private var delegate: RenderLayerProtocol?
     private let inFlightSemaphore = DispatchSemaphore(value: TripleBufferCount)
-    private let arSession = ARKitSession()
-    private let worldTracking = WorldTrackingProvider()
 
-    public let layerRenderer: LayerRenderer
+
+    public let renderer: LayerRenderer
     public let device: MTLDevice
     public let library: MTLLibrary
     public var rotation: Float = 0
     public static var viewports: [MTLViewport]!
-    public init(_ layerRenderer: LayerRenderer) {
+    public init(_ renderer: LayerRenderer) {
 
-        self.layerRenderer = layerRenderer
+        self.renderer = renderer
         self.device = MTLCreateSystemDefaultDevice()!
         self.library = device.makeDefaultLibrary()!
         self.commandQueue = device.makeCommandQueue()!
@@ -54,7 +50,7 @@ open class RenderLayer {
         renderPass.depthAttachment.clearDepth = 0.0
 
         renderPass.rasterizationRateMap = layerDrawable.rasterizationRateMaps.first
-        if layerRenderer.configuration.layout == .layered {
+        if renderer.configuration.layout == .layered {
             renderPass.renderTargetArrayLength = layerDrawable.views.count
         }
         return renderPass
@@ -63,7 +59,7 @@ open class RenderLayer {
     func renderFrame() {
 
         guard let delegate else { return }
-        guard let frame = layerRenderer.queryNextFrame() else { return }
+        guard let frame = renderer.queryNextFrame() else { return }
 
         frame.startUpdate()
         performCpuWork()
@@ -82,16 +78,12 @@ open class RenderLayer {
         }
 
         frame.startSubmission()
-
-        let time = LayerRenderer.Clock.Instant.epoch.duration(to:  drawable.frameTiming.presentationTime).timeInterval
-
-        let deviceAnchor = worldTracking.queryDeviceAnchor(atTimestamp: time)
-        drawable.deviceAnchor = deviceAnchor
-
+        WorldTracking.shared.updateAnchor(drawable)
+        
         delegate.updateUniforms(drawable)
 
         // metal compute
-        delegate.computeLayer(commandBuf) //????
+        delegate.computeLayer(commandBuf) //???
 
         // metal render
         delegate.renderLayer(commandBuf, drawable)
@@ -107,11 +99,9 @@ open class RenderLayer {
 
     public func startRenderLoop() {
         Task {
-            do {
-                try await arSession.run([worldTracking])
-            } catch {
-                fatalError("Failed to initialize ARSession")
-            }
+
+            try? await WorldTracking.shared.start()
+
 
             let renderThread = Thread {
                 self.renderLoop()
@@ -123,8 +113,8 @@ open class RenderLayer {
 
     func renderLoop() {
         while true {
-            switch layerRenderer.state {
-            case .paused:  layerRenderer.waitUntilRunning()
+            switch renderer.state {
+            case .paused:  renderer.waitUntilRunning()
             case .running: autoreleasepool { renderFrame() }
             case .invalidated: break
             @unknown default:  print("⁉️ RenderLayer::runLoop @unknown default")
