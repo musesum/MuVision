@@ -17,6 +17,16 @@ public func rotateQuat(radians: Float, axis: SIMD3<Float>) -> matrix_float4x4 {
     return matrix_float4x4.init(columns:(col0,col1,col2,col3))
 }
 
+
+
+public func scaleQuat(_ s: Float) -> matrix_float4x4 {
+
+    return matrix_float4x4.init(columns:(vector_float4(1, 0, 0, s),
+                                         vector_float4(0, 1, 0, s),
+                                         vector_float4(0, 0, 1, s),
+                                         vector_float4(0, 0, 0, 1)))
+}
+
 public func translateQuat(x: Float, y: Float, z: Float) -> matrix_float4x4 {
 
     return matrix_float4x4.init(columns:(vector_float4(1, 0, 0, 0),

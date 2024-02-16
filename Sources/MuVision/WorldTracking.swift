@@ -10,7 +10,9 @@ open class WorldTracking {
     private let arSession = ARKitSession()
     private let worldTracking = WorldTrackingProvider()
     private var running = false
+    private var anchorPrev = ""
     public var deviceAnchor: DeviceAnchor?
+
 
 
     public init() {}
@@ -30,9 +32,14 @@ open class WorldTracking {
 
         deviceAnchor = worldTracking.queryDeviceAnchor(atTimestamp: time)
         layerDrawable.deviceAnchor = deviceAnchor
-        MuLog.Log("👁️🌎", interval: 1) {
-            if let anchorOrigin = self.deviceAnchor?.originFromAnchorTransform {
-                print("👁️🌎", "⚓️origin    \(anchorOrigin.script)")
+
+        MuLog.debug {
+            if let anchorNow = self.deviceAnchor?.originFromAnchorTransform.script,
+               self.anchorPrev != anchorNow {
+                self.anchorPrev = anchorNow
+                MuLog.Log("👁️⚓️origin", interval: 1, terminator: "") {
+                    print("    " + anchorNow)
+                }
             }
         }
     }

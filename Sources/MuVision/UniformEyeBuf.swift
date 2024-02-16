@@ -46,7 +46,7 @@ open class UniformEyeBuf {
 
         updateTripleBufferedUniform()
 
-        let modelMatrix = updateRotation()
+        //let modelMatrix = updateRotation()
         let deviceAnchor = WorldTracking.shared.deviceAnchor
         let anchorOrigin = deviceAnchor?.originFromAnchorTransform ?? matrix_identity_float4x4
 
@@ -56,23 +56,36 @@ open class UniformEyeBuf {
         }
 
         MuLog.Log(label, interval: 4) {
+            let tab = "\t\(label[0...1])"
 
             if layerDrawable.views.count > 1 {
+                let view0 = layerDrawable.views[0]
+                let view1 = layerDrawable.views[1]
+                let orient0 =  (anchorOrigin * view0.transform).inverse
+                let orient1 =  (anchorOrigin * view1.transform).inverse
+
                 let eye0 = self.uniformEyes[0].eye.0
                 let eye1 = self.uniformEyes[0].eye.1
-                print(label)
-                print("\t\(label) projection  ", "0:\(eye0.projection.script)  1:\(eye1.projection.script)")
-                print("\t\(label) projection_ ", "0:\(viewProjection_(0).script)  1:\(viewProjection_(1).script)")
-                print("\t\(label) tangents    ", "0:\(tangentsDepthStr(0))  1:\(tangentsDepthStr(1))")
-                print("\t\(label) viewModel   ", "0:\(eye0.viewModel.script)")
+                print(tab+" projection  0:\(eye0.projection.script(-2))")
+                print(tab+"             1:\(eye1.projection.script(-2))")
+                print(tab+" orientation 0:\(orient0.script)")
+                print(tab+"             1:\(orient1.script)")
+//                print(tab+" projection_ 0:\(viewProjection_(0).script)")
+//                print(tab+"             1:\(viewProjection_(1).script)")
+                print(tab+" tangents    0:\(tangentsDepthStr(0))  1:\(tangentsDepthStr(1))")
+                print("\t👁️ viewModel   ", "0:\(eye0.viewModel.script(-2))")
             } else {
+                let view0 = layerDrawable.views[0]
+                let orient0 =  (anchorOrigin * view0.transform).inverse
+
                 let eye0 = self.uniformEyes[0].eye.0
-                print(label)
-                print("\t\(label) projection  ", "0:\(eye0.projection.script)")
-                print("\t\(label) projection_ ", "0:\(viewProjection_(0).script)")
-                print("\t\(label) tangents    ", "0:\(tangentsDepthStr(0))")
-                print("\t\(label) viewModel   ", "0:\(eye0.viewModel.script)")
+                print(tab+" projection  0:\(eye0.projection.script)")
+                print(tab+" orientation 0:\(orient0.script)")
+//                print(tab+" projection_ 0:\(viewProjection_(0).script)")
+//                print(tab+" tangents    0:\(tangentsDepthStr(0))")
+                print(tab+" viewModel   0:\(eye0.viewModel.script)")
             }
+
             /// compare with Apple's Projection
             func viewProjection_(_ index: Int, reverseZ: Bool = true) -> simd_double4x4 {
 
@@ -104,8 +117,7 @@ open class UniformEyeBuf {
             }
             func tangentsDepthStr(_ index: Int) -> String {
                 let view = layerDrawable.views[index]
-                return "\(view.tangents.script); \(layerDrawable.depthRange.script)"
-
+                return "\(view.tangents.script(-2)); \(layerDrawable.depthRange.script(-2))"
             }
         }
 
@@ -121,11 +133,14 @@ open class UniformEyeBuf {
                 farZ          : Double(layerDrawable.depthRange.x),
                 reverseZ      : true)
 
-            let viewMatrix = (anchorOrigin * view.transform).inverse
-            var viewModel = viewMatrix * modelMatrix
+            let orientation = (anchorOrigin * view.transform).inverse
+            var viewModel = orientation
 
             if infinitelyFar {
+                viewModel = orientation
                 viewModel.columns.3 = simd_make_float4(0, 0, 0, 1)
+            } else {
+                viewModel *= updateRotation() //?????
             }
             let uniformEye = UniformEye(.init(projection), viewModel)
 
