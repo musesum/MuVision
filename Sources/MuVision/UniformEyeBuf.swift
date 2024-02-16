@@ -46,7 +46,6 @@ open class UniformEyeBuf {
 
         updateTripleBufferedUniform()
 
-        //let modelMatrix = updateRotation()
         let deviceAnchor = WorldTracking.shared.deviceAnchor
         let anchorOrigin = deviceAnchor?.originFromAnchorTransform ?? matrix_identity_float4x4
 
@@ -72,7 +71,7 @@ open class UniformEyeBuf {
                 print(tab+"             1:\(orient1.script)")
 //                print(tab+" projection_ 0:\(viewProjection_(0).script)")
 //                print(tab+"             1:\(viewProjection_(1).script)")
-                print(tab+" tangents    0:\(tangentsDepthStr(0))  1:\(tangentsDepthStr(1))")
+//                print(tab+" tangents    0:\(tangentsDepthStr(0))  1:\(tangentsDepthStr(1))")
                 print("\t👁️ viewModel   ", "0:\(eye0.viewModel.script(-2))")
             } else {
                 let view0 = layerDrawable.views[0]
@@ -149,10 +148,7 @@ open class UniformEyeBuf {
         /// rotate model
         func updateRotation() -> matrix_float4x4 {
             //???? rotation += 0.01
-            let rotationAxis = SIMD3<Float>(1, 1, 0)
-            let rotationMat = rotateQuat(radians: rotation, axis: rotationAxis)
-            let translationMat = translateQuat(cameraPos)
-            return translationMat * rotationMat
+            return cameraPos.translate * SIMD3<Float>(1, 1, 0).rotate(radians: rotation)
         }
     }
     #endif
