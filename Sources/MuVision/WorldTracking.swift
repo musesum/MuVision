@@ -33,13 +33,12 @@ open class WorldTracking {
         deviceAnchor = worldTracking.queryDeviceAnchor(atTimestamp: time)
         layerDrawable.deviceAnchor = deviceAnchor
 
-        MuLog.debug {
+        MuLog.NoLog("👁️⚓️origin", interval: 1, terminator: "") {
             if let anchorNow = self.deviceAnchor?.originFromAnchorTransform.script,
                self.anchorPrev != anchorNow {
+                
                 self.anchorPrev = anchorNow
-                MuLog.Log("👁️⚓️origin", interval: 1, terminator: "") {
-                    print("    " + anchorNow)
-                }
+                print("    " + anchorNow)
             }
         }
     }

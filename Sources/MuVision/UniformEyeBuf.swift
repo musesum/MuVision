@@ -35,7 +35,7 @@ open class UniformEyeBuf {
         self.uniformBuf = device.makeBuffer(length: tripleUniformSize, options: [.storageModeShared])!
         self.uniformBuf.label = label
 
-        updateTripleBufferedUniform()
+        nextTripleUniformBuffer()
     }
 #if os(visionOS)
 
@@ -44,7 +44,7 @@ open class UniformEyeBuf {
                                   _ cameraPos: vector_float4,
                                   _ label: String) {
 
-        updateTripleBufferedUniform()
+        nextTripleUniformBuffer()
 
         let deviceAnchor = WorldTracking.shared.deviceAnchor
         let anchorOrigin = deviceAnchor?.originFromAnchorTransform ?? matrix_identity_float4x4
@@ -69,9 +69,6 @@ open class UniformEyeBuf {
                 print(tab+"             1:\(eye1.projection.script(-2))")
                 print(tab+" orientation 0:\(orient0.script)")
                 print(tab+"             1:\(orient1.script)")
-//                print(tab+" projection_ 0:\(viewProjection_(0).script)")
-//                print(tab+"             1:\(viewProjection_(1).script)")
-//                print(tab+" tangents    0:\(tangentsDepthStr(0))  1:\(tangentsDepthStr(1))")
                 print("\t👁️ viewModel   ", "0:\(eye0.viewModel.script(-2))")
             } else {
                 let view0 = layerDrawable.views[0]
@@ -80,39 +77,7 @@ open class UniformEyeBuf {
                 let eye0 = self.uniformEyes[0].eye.0
                 print(tab+" projection  0:\(eye0.projection.script)")
                 print(tab+" orientation 0:\(orient0.script)")
-//                print(tab+" projection_ 0:\(viewProjection_(0).script)")
-//                print(tab+" tangents    0:\(tangentsDepthStr(0))")
                 print(tab+" viewModel   0:\(eye0.viewModel.script)")
-            }
-
-            /// compare with Apple's Projection
-            func viewProjection_(_ index: Int, reverseZ: Bool = true) -> simd_double4x4 {
-
-                let view = layerDrawable.views[index]
-                let xScale = Double((view.tangents[1] - view.tangents[0])/2)
-                let yScale = Double((view.tangents[2] - view.tangents[3])/2)
-                let zFar = Double(layerDrawable.depthRange.x)
-                let zNear = Double(layerDrawable.depthRange.y)
-
-                var zScale  : Double
-                var wzScale : Double
-
-                if zFar.isInfinite {
-                    zScale = Double(-1)
-                    wzScale = -2 * Double(-2 * zNear)
-                } else {
-                    let zRange = zFar - zNear
-                    zScale  = (reverseZ ? -(zNear + zFar): -(zFar + zNear)) / zRange
-                    wzScale = (reverseZ ? -zNear * zFar  : -zFar * zNear  ) / zRange
-                }
-
-                let P = simd_double4([ xScale, 0, 0, 0 ])
-                let Q = simd_double4([ 0, yScale, 0, 0 ])
-                let R = simd_double4([ 0, 0, zScale, reverseZ ? 1: -1])
-                let S = simd_double4([ 0, 0, wzScale, 0 ])
-
-                let mat = matrix_double4x4([P, Q, R, S])
-                return mat
             }
             func tangentsDepthStr(_ index: Int) -> String {
                 let view = layerDrawable.views[index]
@@ -120,7 +85,8 @@ open class UniformEyeBuf {
             }
         }
 
-        func uniformForEyeIndex(_ index: Int, _ label: String? = nil) -> UniformEye {
+        func uniformForEyeIndex(_ index: Int, 
+                                _ label: String? = nil) -> UniformEye {
 
             let view = layerDrawable.views[index]
             let projection = ProjectiveTransform3D(
@@ -156,12 +122,12 @@ open class UniformEyeBuf {
     public func updateEyeUniforms(_ projection: matrix_float4x4,
                                   _ viewModel: matrix_float4x4) {
 
-        updateTripleBufferedUniform()
+        nextTripleUniformBuffer()
 
         self.uniformEyes[0].eye.0 = UniformEye(projection, viewModel)
     }
 
-    func updateTripleBufferedUniform() {
+    func nextTripleUniformBuffer() {
 
         tripleIndex = (tripleIndex + 1) % TripleBufferCount
         tripleOffset = uniformSize * tripleIndex
