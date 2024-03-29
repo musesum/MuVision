@@ -13,7 +13,7 @@ import simd
 open class RenderLayer {
 
     private let commandQueue: MTLCommandQueue
-    private var delegate: RenderLayerProtocol?
+    private var touchCanvas: RenderLayerProtocol?
     private let inFlightSemaphore = DispatchSemaphore(value: TripleBufferCount)
 
 
@@ -30,10 +30,10 @@ open class RenderLayer {
         self.commandQueue = device.makeCommandQueue()!
     }
 
-    public func setDelegate(_ delegate: RenderLayerProtocol) {
-        self.delegate = delegate
-       delegate.makeResources()
-       delegate.makePipeline()
+    public func setDelegate(_ touchCanvas: RenderLayerProtocol) {
+        self.touchCanvas = touchCanvas
+       touchCanvas.makeResources()
+       touchCanvas.makePipeline()
     }
 
     public func makeRenderPass(layerDrawable: LayerRenderer.Drawable) -> MTLRenderPassDescriptor {
@@ -58,7 +58,7 @@ open class RenderLayer {
 
     func renderFrame() {
 
-        guard let delegate else { return }
+        guard let touchCanvas else { return }
         guard let frame = renderer.queryNextFrame() else { return }
 
         frame.startUpdate()
@@ -80,13 +80,13 @@ open class RenderLayer {
         frame.startSubmission()
         WorldTracking.shared.updateAnchor(drawable)
         
-        delegate.updateUniforms(drawable)
+        touchCanvas.updateUniforms(drawable)
 
         // metal compute
-        delegate.computeLayer(commandBuf) //???
+        touchCanvas.computeLayer(commandBuf) //???
 
         // metal render
-        delegate.renderLayer(commandBuf, drawable)
+        touchCanvas.renderLayer(commandBuf, drawable)
 
         frame.endSubmission()
     }
