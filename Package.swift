@@ -13,7 +13,6 @@ let package = Package(
             targets: ["MuVision"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/musesum/MuExtensions.git", .branch("main")),
         .package(url: "https://github.com/musesum/MuFlo.git", from: "0.23.0")
     ],
     targets: [
@@ -21,7 +20,6 @@ let package = Package(
         // Targets can depend on other targets in this package and products from dependencies.
         .target(name: "MuVision",
                 dependencies: [
-                    .product(name: "MuExtensions", package: "MuExtensions"),
                     .product(name: "MuFlo", package: "MuFlo")]),
         .testTarget(
             name: "MuVisionTests",

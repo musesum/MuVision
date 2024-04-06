@@ -6,7 +6,7 @@ import simd
 #if os(visionOS)
 import CompositorServices
 #endif
-import MuExtensions
+import MuFlo
 
 /// triple buffered Uniform for either 1 or 2 eyes
 open class UniformEyeBuf {
