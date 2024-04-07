@@ -13,7 +13,7 @@ let package = Package(
             targets: ["MuVision"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/musesum/MuFlo.git", from: "0.23.0")
+        .package(url: "https://github.com/musesum/MuFlo.git", branch: "main")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
