@@ -1,7 +1,7 @@
 import Foundation
 import MuFlo
 
-public struct MuHand {
+public struct MuVision {
 
     public static let bundle = Bundle.module
 
@@ -10,13 +10,13 @@ public struct MuHand {
 
         guard let path = Bundle.module.path(forResource: filename,
                                             ofType: ext)  else {
-            print("⁉️ MuHand:: couldn't find file: \(filename)")
+            print("⁉️ MuVision:: couldn't find file: \(filename)")
             return nil
         }
         do {
             return try String(contentsOfFile: path) }
         catch {
-            print("⁉️ MuHand \(#function) error:\(error) loading contents of:\(path)")
+            print("⁉️ MuVision \(#function) error:\(error) loading contents of:\(path)")
         }
         return nil
     }
@@ -25,7 +25,7 @@ public struct MuHand {
                                 _ filename: String,
                                 _ ext: String = "flo.h") -> Bool {
 
-        guard let script = MuHand.read(filename, ext) ?? read(filename, ext) else {
+        guard let script = MuVision.read(filename, ext) ?? read(filename, ext) else {
             return false
         }
         let success = FloParse().parseScript(root, script)
