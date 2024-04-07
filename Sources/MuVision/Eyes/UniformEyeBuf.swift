@@ -105,7 +105,7 @@ open class UniformEyeBuf {
                 viewModel = orientation
                 viewModel.columns.3 = simd_make_float4(0, 0, 0, 1)
             } else {
-                viewModel *= updateRotation() //?????
+                viewModel *= updateRotation() //??
             }
             let uniformEye = UniformEye(.init(projection), viewModel)
 
