@@ -38,7 +38,7 @@ public class JointFlo {
     /// hash should be the same between all devices during runtime
     public var hash: Int { chiral.rawValue * 1000 + joint.rawValue }
 
-    func parse(_ chiral: Chiral, _ hand˚: Flo, _ joint: JointEnum) {
+    func parseJoint(_ chiral: Chiral, _ hand˚: Flo, _ joint: JointEnum) {
 
         self.chiral = chiral
         self.joint = joint

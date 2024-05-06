@@ -13,7 +13,7 @@ open class HandsModel {
                 _ rootFlo: Flo,
                 _ archive: FloArchive) {
 
-        MuVision.parseFlo(rootFlo, "model.hand")
+        //????? MuVision.parseFlo(rootFlo, "hand")
         let rootHandFlo = rootFlo.bind("model.hand")
         handsFlo.left.parseHand(.left, rootHandFlo.bind("left"))
         handsFlo.right.parseHand(.right, rootHandFlo.bind("right"))

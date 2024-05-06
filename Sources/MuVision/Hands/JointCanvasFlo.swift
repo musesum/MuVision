@@ -13,7 +13,7 @@ public class JointCanvasFlo: JointFlo {
                      _ parent˚: Flo) {
 
         self.touchCanvas = touchCanvas
-        self.joint = .canvas
+        self.joint = .touch
         self.chiral = chiral
 
         flo˚ = parent˚.bind(joint.name) { val,_ in

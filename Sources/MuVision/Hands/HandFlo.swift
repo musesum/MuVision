@@ -97,8 +97,8 @@ public class HandFlo {
             .littleBase  ,
             .littleInter ,
             .littleTip   ,
-//            .wrist       ,
-//            .forearm     ,
+            .wrist       ,
+            .forearm     ,
         ]
 
         touchThumb = [
@@ -113,7 +113,7 @@ public class HandFlo {
 
         self.chiral = chiral
         for (jointEnum, jointFlo) in self.joints {
-            jointFlo.parse(chiral, hand˚, jointEnum)
+            jointFlo.parseJoint(chiral, hand˚, jointEnum)
         }
 
     }

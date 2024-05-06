@@ -3,7 +3,7 @@
 import ARKit
 
 public enum JointEnum: Int {
-    case canvas      = 0
+    case touch       = 0
     case thumbKnuc   = 1
     case thumbBase   = 2
     case thumbInter  = 3
@@ -39,7 +39,7 @@ public enum JointEnum: Int {
     
     var name: String {
         switch self {
-        case .canvas      : "canvas"
+        case .touch       : "touch"
         case .thumbKnuc   : "thumb.knuc"
         case .thumbBase   : "thumb.base"
         case .thumbInter  : "thumb.inter"

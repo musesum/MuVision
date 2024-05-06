@@ -10,7 +10,7 @@ public struct MuVision {
 
         guard let path = Bundle.module.path(forResource: filename,
                                             ofType: ext)  else {
-            print("⁉️ MuVision:: couldn't find file: \(filename)")
+            print("⁉️ MuVision:: couldn't find file: \(filename).\(ext)")
             return nil
         }
         do {
