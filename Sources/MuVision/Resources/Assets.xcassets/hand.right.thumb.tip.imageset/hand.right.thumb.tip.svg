@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;">
+    <g id="Right" transform="matrix(0.867467,0,0,0.867467,101.889,-66.443)">
+        <g id="Bones">
+            <path d="M99.394,508.476L141.413,615.179" style="fill:none;stroke:rgb(106,106,106);stroke-width:8.15px;"/>
+            <path d="M141.413,615.179L191.245,715.624" style="fill:none;stroke:rgb(106,106,106);stroke-width:8.15px;"/>
+            <path d="M191.245,715.624L262.671,826.253" style="fill:none;stroke:rgb(106,106,106);stroke-width:8.15px;"/>
+            <path d="M262.671,826.253L465.011,1003.08" style="fill:none;stroke:rgb(106,106,106);stroke-width:8.15px;"/>
+            <path d="M465.011,1003.08L466.62,1211.71" style="fill:none;stroke:rgb(106,106,106);stroke-width:8.15px;"/>
+            <path d="M323.339,405.034L338.878,575.663" style="fill:none;stroke:rgb(106,106,106);stroke-width:8.15px;"/>
+            <path d="M338.878,575.663L353.042,761.476" style="fill:none;stroke:rgb(106,106,106);stroke-width:8.15px;"/>
+            <path d="M464.652,1000.98L353.042,761.476" style="fill:none;stroke:rgb(106,106,106);stroke-width:8.15px;"/>
+            <path d="M464.652,1000.98L450.214,743.53" style="fill:none;stroke:rgb(106,106,106);stroke-width:8.15px;"/>
+            <path d="M450.214,743.53L456.71,573.132" style="fill:none;stroke:rgb(106,106,106);stroke-width:8.15px;"/>
+            <path d="M456.71,573.132L457.534,397.601" style="fill:none;stroke:rgb(106,106,106);stroke-width:8.15px;"/>
+            <path d="M457.534,397.601L459.28,252.691" style="fill:none;stroke:rgb(106,106,106);stroke-width:8.15px;"/>
+            <path d="M459.28,252.691L462.046,139.702" style="fill:none;stroke:rgb(106,106,106);stroke-width:8.15px;"/>
+            <path d="M304.308,188.296L315.999,298.804" style="fill:none;stroke:rgb(106,106,106);stroke-width:8.15px;"/>
+            <path d="M315.999,298.804L323.109,403.085" style="fill:none;stroke:rgb(106,106,106);stroke-width:8.15px;"/>
+            <path d="M619.902,201.902L605.234,299.437" style="fill:none;stroke:rgb(106,106,106);stroke-width:8.15px;"/>
+            <path d="M605.234,299.437L588.784,419.652" style="fill:none;stroke:rgb(106,106,106);stroke-width:8.15px;"/>
+            <path d="M588.784,419.652L564.011,589.628" style="fill:none;stroke:rgb(106,106,106);stroke-width:8.15px;"/>
+            <path d="M564.011,589.628L535.886,758.839" style="fill:none;stroke:rgb(106,106,106);stroke-width:8.15px;"/>
+            <path d="M535.886,758.839L464.292,1000.23" style="fill:none;stroke:rgb(106,106,106);stroke-width:8.15px;"/>
+            <path d="M464.292,1000.23L635.48,779.573" style="fill:none;stroke:rgb(106,106,106);stroke-width:8.15px;"/>
+            <path d="M635.48,779.573L670.093,626.609" style="fill:none;stroke:rgb(106,106,106);stroke-width:8.15px;"/>
+            <path d="M670.093,626.609L695.765,532.968" style="fill:none;stroke:rgb(106,106,106);stroke-width:8.15px;"/>
+            <path d="M695.765,532.968L718.245,440.265" style="fill:none;stroke:rgb(106,106,106);stroke-width:8.15px;"/>
+            <path d="M718.245,440.265L740.933,356.745" style="fill:none;stroke:rgb(106,106,106);stroke-width:8.15px;"/>
+        </g>
+        <g id="Joints-Black" serif:id="Joints Black">
+            <g id="Thumb">
+                <g id="Tip" transform="matrix(1.41881,0,0,1.41881,-187.598,-43.5611)">
+                    <circle cx="203" cy="391" r="26" style="stroke:white;stroke-width:4.33px;"/>
+                </g>
+                <g id="Inter" transform="matrix(1.41881,0,0,1.41881,-144.945,59.0364)">
+                    <circle cx="203" cy="391" r="26" style="fill:rgb(1,0,0);stroke:white;stroke-width:4.33px;"/>
+                </g>
+                <g id="Base" transform="matrix(1.41881,0,0,1.41881,-95.3754,162.787)">
+                    <circle cx="203" cy="391" r="26" style="stroke:white;stroke-width:4.33px;"/>
+                </g>
+                <g id="Knuc" transform="matrix(1.41881,0,0,1.41881,-25.0558,268.843)">
+                    <circle cx="203" cy="391" r="26" style="stroke:white;stroke-width:4.33px;"/>
+                </g>
+            </g>
+        </g>
+        <g id="Tip1" serif:id="Tip" transform="matrix(1.41881,0,0,1.41881,-187.598,-43.5611)">
+            <g id="Joints-White" serif:id="Joints White">
+                <g id="Thumb1" serif:id="Thumb">
+                    <circle id="Tip2" serif:id="Tip" cx="203" cy="391" r="26" style="fill:white;stroke:black;stroke-width:4.33px;"/>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

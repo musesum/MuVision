@@ -1,0 +1,258 @@
+
+import AVFoundation
+import Metal
+import UIKit
+import MuFlo
+
+#if !os(visionOS)
+
+public final class CameraSession: NSObject {
+
+    public static var shared = CameraSession(nil, position: .front)
+
+    private var isChangingFace = false
+    private var isStartingNow = false
+    private var captureDevice: AVCaptureDevice?
+    private var captureSession = AVCaptureSession()
+    private var cameraPos: AVCaptureDevice.Position = .front
+
+    private var cameraState: CameraState  = .waiting
+    private var cameraQueue = DispatchQueue(label: "CameraQueue", attributes: [])
+
+    private var textureCache: CVMetalTextureCache?
+    private var device = MTLCreateSystemDefaultDevice()
+    private var videoOut: AVCaptureVideoDataOutputSampleBufferDelegate!
+
+    public var cameraTex: MTLTexture?
+
+    public init(_ videoOut: AVCaptureVideoDataOutputSampleBufferDelegate?,
+                position: AVCaptureDevice.Position ) {
+        super.init()
+        self.cameraPos = position
+        self.videoOut = videoOut ?? self
+        let errorName = NSNotification.Name.AVCaptureSessionRuntimeError
+        let notification = NotificationCenter.default
+        notification.addObserver(self, selector: #selector(captureError), name: errorName, object: nil)
+        initOrientationObserver()
+    }
+    public var hasNewTex: Bool {
+        cameraState == .streaming && cameraTex != nil
+    }
+    public func startCamera() {
+        if isStartingNow { return }
+        isStartingNow = true
+        DebugLog { P("📷 startCamera state: \(self.cameraState)") }
+
+        switch cameraState {
+            case .waiting:
+
+                requestCameraAccess()
+                cameraQueue.async(execute: initCamera)
+
+            case .ready, .stopped:
+
+                cameraQueue.async {
+                    self.captureSession.startRunning()
+                    self.updateOrientation()
+                }
+                cameraState = .streaming
+
+            case .streaming: break
+        }
+        isStartingNow = false
+
+        func initCamera() {
+
+            captureSession.beginConfiguration()
+            initCaptureInput()
+            initCaptureOutput()
+            updateOrientation()
+            captureSession.commitConfiguration()
+
+            initTextureCache()
+            captureSession.startRunning()
+            cameraState = .streaming
+        }
+    }
+
+    /// Stop the capture session.
+    public func stopCamera() {
+        cameraQueue.async {
+
+            if  self.cameraState != .stopped {
+
+                self.captureSession.stopRunning()
+                self.cameraState = .stopped
+            }
+        }
+        isStartingNow = false
+    }
+
+    public func setCameraOn(_ isOn: Bool) {
+
+        if isOn {
+            if cameraState != .streaming {
+                startCamera()
+            }
+        } else {
+            if cameraState == .streaming {
+                stopCamera()
+            }
+        }
+    }
+
+    public func facing(_ front: Bool) {
+        if isChangingFace { return }
+        isChangingFace = true
+        cameraPos = front ? .front : .back
+        captureSession.beginConfiguration()
+        if let deviceInput = captureSession.inputs.first as? AVCaptureDeviceInput {
+            captureSession.removeInput(deviceInput)
+            initCaptureInput()
+            updateOrientation()
+        }
+        captureSession.commitConfiguration()
+        isChangingFace = false 
+    }
+
+    /// Current capture input device.
+    internal var inputDevice: AVCaptureDeviceInput? {
+        didSet {
+            if let oldValue {
+                print("   \(#function): \(oldValue) -> \(inputDevice!)")
+                captureSession.removeInput(oldValue)
+            }
+            if let inputDevice {
+                captureSession.addInput(inputDevice)
+            }
+        }
+    }
+
+    /// Current capture output data stream.
+    internal var output: AVCaptureVideoDataOutput? {
+        didSet {
+            if let oldValue {
+                print("   \(#function): \(oldValue) -> \(output!)")
+                captureSession.removeOutput(oldValue)
+            }
+            if let output {
+                captureSession.addOutput(output)
+            }
+        }
+    }
+
+    /// Requests access to camera hardware.
+    fileprivate func requestCameraAccess() {
+        AVCaptureDevice.requestAccess(for: .video) { granted in
+            if !granted {
+                PrintLog("⁉️ \(#function) not granted")
+            }  else if self.cameraState != .streaming {
+                self.cameraState = .ready
+            }
+        }
+    }
+
+    /// camera frames to textures.
+    private func initTextureCache() {
+
+        guard let device,
+              CVMetalTextureCacheCreate(nil, nil, device, nil, &textureCache) == kCVReturnSuccess
+        else {
+            return PrintLog("⁉️ err \(#function): failed")
+        }
+    }
+
+    //// initializes capture input device with media type and device position.
+    fileprivate func initCaptureInput() {
+
+        captureSession.sessionPreset = .hd1920x1080
+
+        guard let captureDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: AVMediaType.video, position: cameraPos) else { return err ("AVCaptureDevice") }
+        self.captureDevice = captureDevice
+        guard let captureInput = try? AVCaptureDeviceInput(device: captureDevice) else { return err ("AVCaptureDeviceInput") }
+        guard captureSession.canAddInput(captureInput) else { return err ("canAddInput") }
+
+        self.inputDevice = captureInput
+
+        func err(_ str: String) {
+            PrintLog("⁉️ CameraSession::initCaptureInput \(str)")
+        }
+    }
+
+    // Helper function to set the appropriate AVCaptureVideoPreviewLayerOrientation based on device orientation
+    func initOrientationObserver() {
+        NotificationCenter.default.addObserver(forName: UIDevice.orientationDidChangeNotification, object: nil, queue: .main) { _ in
+            self.updateOrientation()
+        }
+    }
+
+    func updateOrientation() {
+        if let connection = output?.connection(with: .video),
+           let captureDevice {
+
+            let rotator = AVCaptureDevice.RotationCoordinator(device: captureDevice, previewLayer: nil)
+            connection.videoRotationAngle =  rotator.videoRotationAngleForHorizonLevelCapture
+            connection.isVideoMirrored = (self.cameraPos == .front)
+        }
+    }
+
+    /// initialize capture output data stream.
+    fileprivate func initCaptureOutput() {
+        guard let videoOut else { return err("delegate == nil")}
+        let out = AVCaptureVideoDataOutput()
+        out.videoSettings =  [ kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA ]
+        out.alwaysDiscardsLateVideoFrames = true
+        out.setSampleBufferDelegate(videoOut,
+                                    queue: cameraQueue)
+        if captureSession.canAddOutput(out) {
+            self.output = out
+        } else {
+            err("add output failed")
+        }
+        func err(_ str: String) { PrintLog("⁉️ CameraSession::initCaptureOutput: \(str)") }
+    }
+    /// `AVCaptureSessionRuntimeErrorNotification` callback.
+    @objc fileprivate func captureError() {
+
+        if cameraState == .streaming {
+            PrintLog("⁉️ CameraSession::captureSessionRuntimeError") }
+    }
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+}
+extension CameraSession: AVCaptureVideoDataOutputSampleBufferDelegate {
+
+    public func captureOutput(_: AVCaptureOutput,
+                              didOutput sampleBuf: CMSampleBuffer,
+                              from _: AVCaptureConnection) {
+
+        if let camTex = convert(sampleBuf) {
+            self.cameraTex = camTex
+        }
+        func convert(_ sampleBuf: CMSampleBuffer) -> MTLTexture? {
+            guard let textureCache else { return err("textureCache") }
+            guard let imageBuf = sampleBuf.imageBuffer else { return err("imageBuf") }
+
+            let width  = CVPixelBufferGetWidth(imageBuf)
+            let height = CVPixelBufferGetHeight(imageBuf)
+            var imageTex: CVMetalTexture?
+            CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault, textureCache, imageBuf, nil, MetalComputePixelFormat, width, height, 0, &imageTex)
+
+            guard let imageTex else { return err("imageTex") }
+            guard let texture = CVMetalTextureGetTexture(imageTex) else { return err("get texture")}
+            return texture
+
+            func err(_ str: String) -> MTLTexture? {
+                PrintLog("⁉️ CameraSession::texture: \(str)")
+                return nil
+            }
+        }
+    }
+}
+#else
+public final class CameraSession: NSObject {
+    public static var shared = CameraSession()
+    var camTex: MTLTexture?  // optional texture
+}
+#endif
