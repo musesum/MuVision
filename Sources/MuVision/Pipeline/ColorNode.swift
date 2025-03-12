@@ -18,8 +18,7 @@ public class ColorNode: ComputeNode {
 
         super.init(pipeline, childFlo)
         
-        getPal    = ColorFlo(pipeFlo.getRoot()).getMix
-
+        getPal   = ColorFlo(pipeFlo.getRoot()).getMix
         inTex˚  = pipeFlo.superBindPath("in")
         outTex˚ = pipeFlo.superBindPath("out")
         palTex˚ = pipeFlo.superBindPath("pal")

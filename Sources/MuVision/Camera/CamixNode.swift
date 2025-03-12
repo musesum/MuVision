@@ -9,7 +9,7 @@ public class CamixNode: ComputeNode {
     private var inTex˚  : Flo?
     private var outTex˚ : Flo?
     private var camTex˚ : Flo?
-    private var mix˚    : Flo?
+    private var mixcam˚ : Flo?
     private var frame˚  : Flo?
     private var front˚  : Flo?
 
@@ -21,7 +21,7 @@ public class CamixNode: ComputeNode {
         inTex˚  = pipeFlo.superBindPath("in")
         camTex˚ = pipeFlo.superBindPath("cam")
         outTex˚ = pipeFlo.superBindPath("out")
-        mix˚    = pipeFlo.superBindPath("mix")
+        mixcam˚ = pipeFlo.superBindPath("mixcam")
         frame˚  = pipeFlo.superBindPath("frame")
         shader  = Shader(pipeline, file: "pipe.camix", kernel: "camixKernel")
         makeResources()
@@ -44,14 +44,15 @@ public class CamixNode: ComputeNode {
             frame˚?.updateFloScalars(frame)
         }
 
-        mix˚?.updateMtlBuffer()
-        computeEnc.setTexture(inTex˚,   index: 0)
-        computeEnc.setTexture(outTex˚,  index: 1)
-        computeEnc.setTexture(camTex˚,  index: 3)
-        computeEnc.setBuffer (mix˚,     index: 0)
-        computeEnc.setBuffer (frame˚,   index: 1)
+        mixcam˚?.updateMtlBuffer()
+        computeEnc.setTexture(inTex˚,  index: 0)
+        computeEnc.setTexture(outTex˚, index: 1)
+        computeEnc.setTexture(camTex˚, index: 3)
+        computeEnc.setBuffer (mixcam˚, index: 0)
+        computeEnc.setBuffer (frame˚,  index: 1)
         super.computeNode(computeEnc)
         outTex˚?.activate(from: outTex˚)
     }
 #endif
 }
+

@@ -17,12 +17,12 @@ public struct VertexCube {
 
 public class CubeNode: RenderNode {
 
-    private let viaIndex  : Bool
-    private var cubeMesh  : CubeMesh!
-    private var cubeIndex : CubemapIndex?
-    private var inTex˚    : Flo?
-    private var cudex˚    : Flo?
-    private var mix˚      : Flo?
+    private let viaIndex   : Bool
+    private var cubeMesh   : CubeMesh!
+    private var cubeIndex  : CubemapIndex?
+    private var inTex˚     : Flo?
+    private var cudex˚     : Flo?
+    private var mixcube˚   : Flo?
     private var lastAspect : Aspect?
 
     override public init(_ pipeline : Pipeline,
@@ -32,9 +32,9 @@ public class CubeNode: RenderNode {
         self.viaIndex = true
         super.init(pipeline, childFlo)
         
-        inTex˚ = pipeFlo.superBindPath("in")
-        cudex˚ = pipeFlo.superBindPath("cudex")
-        mix˚   = pipeFlo.superBindPath("mix")
+        inTex˚  = pipeFlo.superBindPath("in")
+        cudex˚  = pipeFlo.superBindPath("cudex")
+        mixcube˚ = pipeFlo.superBindPath("mixcube")
         makeRenderPipeline()
         makeResources()
         pipeline.rotateClosure["cudex˚"] = { self.remakeAspect() }
@@ -73,11 +73,11 @@ public class CubeNode: RenderNode {
         guard let renderPipelineState else { return }
 
         cubeMesh.eyeBuf?.setUniformBuf(renderEnc)
-        mix˚?.updateMtlBuffer()
+        mixcube˚?.updateMtlBuffer()
 
         renderEnc.setFragmentTexture(inTex˚, index: 0)
         renderEnc.setFragmentTexture(cudex˚, index: 1)
-        renderEnc.setFragmentBuffer (mix˚,   index: 0)
+        renderEnc.setFragmentBuffer (mixcube˚, index: 0)
 
         renderEnc.setRenderPipelineState(renderPipelineState)
         cubeMesh.drawMesh(renderEnc)
