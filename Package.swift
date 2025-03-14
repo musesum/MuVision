@@ -7,8 +7,8 @@ let package = Package(
     platforms: [.iOS(.v17)],
     products: [.library(name: "MuVision", targets: ["MuVision"])],
     dependencies: [
-        .package(url: "https://github.com/musesum/MuFlo.git", branch: "dev"),
-        .package(url: "https://github.com/musesum/MuPeer.git", branch: "dev"),
+        .package(url: "https://github.com/musesum/MuFlo.git", branch: "main"),
+        .package(url: "https://github.com/musesum/MuPeer.git", branch: "main"),
     ],
     targets: [
         .target(name: "MuVision",
