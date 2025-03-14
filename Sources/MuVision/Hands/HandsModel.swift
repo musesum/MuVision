@@ -9,7 +9,7 @@ open class HandsModel {
 
     public let handsFlo = LeftRight<HandPose>(HandPose(), HandPose())
 
-    public init(_ touchCanvas: TouchCanvasDelegate,
+    public init(_ touchCanvas: TouchCanvas,
                 _ rootFlo: Flo) {
 
         let handFlo˚ = rootFlo.bind("model.hand")

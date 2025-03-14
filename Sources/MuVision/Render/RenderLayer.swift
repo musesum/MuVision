@@ -7,7 +7,7 @@ import CompositorServices
 import simd
 import MuFlo // NextFrame
 
-open class RenderLayer {
+open class RenderLayer: @unchecked Sendable {
 
     public static var viewports: [MTLViewport]!
     private let commandQueue: MTLCommandQueue
@@ -36,7 +36,8 @@ open class RenderLayer {
 
     public func startRenderLoop() {
         Task {
-            let renderThread = Thread {
+            let renderThread = Thread { [weak self] in
+                guard let self else { return }
                 self.renderLoop()
             }
             renderThread.start()

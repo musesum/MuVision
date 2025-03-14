@@ -118,13 +118,13 @@ public class HandPose {
         self.chiral = chiral
         for (jointEnum, jointState) in self.joints {
             if jointState.parseJoint(chiral, hand˚, jointEnum) {
-                /// parsed ok and `on == true`
+                /// parsed ok and `on == 1`
                 jointOn.insert(jointEnum)
             }
         }
         func err(_ msg: String) { PrintLog("⁉️ HandFlo::parseHand \(msg)") }
     }
-    public func parseCanvas(_ touchCanvas: TouchCanvasDelegate,
+    public func parseCanvas(_ touchCanvas: TouchCanvas,
                             _ chiral: Chiral,
                             _ root˚: Flo) {
 

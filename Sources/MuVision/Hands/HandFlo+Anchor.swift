@@ -26,7 +26,7 @@ extension HandPose {
         updateThumbIndex()
         updateOtherHand(otherHand)
 
-        NoTimeLog(#function, interval: 2.0) {
+        TimeLog(#function, interval: 2.0) {
             var msg = ""
             for (jointEnum, jointState) in self.joints {
                 if jointState.on {

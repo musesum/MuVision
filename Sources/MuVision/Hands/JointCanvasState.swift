@@ -6,9 +6,9 @@ import MuFlo
 
 public class JointCanvasState: JointState {
 
-    var touchCanvas: TouchCanvasDelegate?
+    var touchCanvas: TouchCanvas?
     
-    func parseCanvas(_ touchCanvas: TouchCanvasDelegate,
+    func parseCanvas(_ touchCanvas: TouchCanvas,
                      _ chiral: Chiral,
                      _ parent˚: Flo) {
 

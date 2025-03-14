@@ -4,11 +4,6 @@ import UIKit
 import MuFlo
 import MuPeer
 
-public protocol TouchCanvasDelegate {
-    func beginHand(_ jointState: JointState)
-    func updateHand(_ jointState: JointState)
-}
-
 public typealias TouchDrawPoint = ((CGPoint, CGFloat)->())
 public typealias TouchDrawRadius = ((TouchCanvasItem)->(CGFloat))
 
@@ -17,22 +12,21 @@ open class TouchCanvas {
     static public let shared = TouchCanvas()
     static var touchRepeat = true
     static var touchBuffers = [Int: TouchCanvasBuffer]()
-
-
-    public init() {
-        PeersController.shared.peersDelegates.append(self)
+    public static func flushTouchCanvas() {
+        var removeKeys = [Int]()
+        for (key, buf) in touchBuffers {
+            let isDone = buf.flushTouches(touchRepeat)
+            if isDone { removeKeys.append(key) }
+        }
+        for key in removeKeys {
+            touchBuffers.removeValue(forKey: key)
+        }
     }
-    deinit {
-        PeersController.shared.remove(peersDelegate: self)
-    }
-}
 
-
-// ARKit visionOS Handpose
-extension TouchCanvas: TouchCanvasDelegate {
+    public init() { PeersController.shared.peersDelegates.append(self) }
+    deinit { PeersController.shared.remove(peersDelegate: self) }
 
     public func beginHand(_ jointState: JointState) {
-
         TouchCanvas.touchBuffers[jointState.hash] = TouchCanvasBuffer(jointState, self)
         // DebugLog { P("beginHand 👐\(jointState.hash)") }
     }
@@ -48,8 +42,7 @@ extension TouchCanvas: TouchCanvasDelegate {
     }
 }
 
-// UIKit Touches
-extension TouchCanvas: TouchProtocol {
+extension TouchCanvas { // + Touch
 
     public func beginTouch(_ touch: UITouch) -> Bool {
         TouchCanvas.touchBuffers[touch.hash] = TouchCanvasBuffer(touch, self)
@@ -62,10 +55,6 @@ extension TouchCanvas: TouchProtocol {
         }
         return false
     }
-}
-
-extension TouchCanvas {
-    
 
     public func remoteItem(_ item: TouchCanvasItem) {
 
@@ -75,20 +64,6 @@ extension TouchCanvas {
             TouchCanvas.touchBuffers[item.key] = TouchCanvasBuffer(item, self)
         }
     }
-    public static func flushTouchCanvas() {
-        var removeKeys = [Int]()
-        for (key, buf) in touchBuffers {
-            let isDone = buf.flushTouches(touchRepeat)
-            if isDone { removeKeys.append(key) }
-        }
-        for key in removeKeys {
-            touchBuffers.removeValue(forKey: key)
-        }
-    }
+
 }
 
-
-public protocol TouchProtocol {
-    func beginTouch(_ touch: UITouch) -> Bool
-    func updateTouch(_ touch: UITouch) -> Bool
-}

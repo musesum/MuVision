@@ -10,7 +10,11 @@ public class JointState {
     public var chiral: Chiral!
     public var joint: JointEnum!
     public var pos = SIMD3<Float>.zero
+
     public var time = TimeInterval(0)
+    public var timeBegin = TimeInterval(0)
+    public var timeEnded = TimeInterval(0)
+
     public var phase = UITouch.Phase.ended
     public var on = false
 
@@ -54,7 +58,7 @@ public class JointState {
         on = flo.boolVal("on")
     }
 
-    /// thumb finger tip as continuos controller or brush
+    /// thumb finger tip as continuous controller or brush
     func updateThumbTip(_ thumbTip: JointState) -> Int {
 
         let distance = distance(thumbTip.pos, pos)
