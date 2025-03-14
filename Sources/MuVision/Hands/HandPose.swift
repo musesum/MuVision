@@ -111,13 +111,13 @@ public class HandPose {
         ]
     }
 
-    public func parseHand(_ chiral: Chiral,
+    public func updateHand(_ chiral: Chiral,
                           _ hand˚: Flo?) {
         guard let hand˚ else { return err( "hand˚ is nil") }
 
         self.chiral = chiral
         for (jointEnum, jointState) in self.joints {
-            if jointState.parseJoint(chiral, hand˚, jointEnum) {
+            if jointState.updateJoint(chiral, hand˚, jointEnum) {
                 /// parsed ok and `on == 1`
                 jointOn.insert(jointEnum)
             }
@@ -128,10 +128,12 @@ public class HandPose {
                             _ chiral: Chiral,
                             _ root˚: Flo) {
 
-        let parent˚ = root˚.bind("sky")
-        if parent˚.name.hasPrefix("?") { return err("sky not found") }
-        canvas.parseCanvas(touchCanvas, chiral, parent˚)
-        func err(_ msg: String) { PrintLog("⁉️ HandFlo::parseCanvas \(msg)") }
+        let hand˚ = root˚.bind("hand")
+        if !hand˚.name.hasPrefix("?") {
+            canvas.parseCanvas(touchCanvas, chiral, hand˚)
+        } else {
+            PrintLog("⁉️ HandFlo::parseCanvas `hand` not found!")
+        }
     }
 
     public func trackAllJoints(on: Bool) {

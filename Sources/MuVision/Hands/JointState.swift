@@ -30,7 +30,7 @@ public class JointState {
     internal var otherTimeEnded = TimeInterval(0)
     internal var tapThreshold = TimeInterval(0.33)
 
-    func parseJoint(_ chiral: Chiral,
+    func updateJoint(_ chiral: Chiral,
                     _ hand˚: Flo,
                     _ joint: JointEnum) -> Bool {
 
@@ -47,7 +47,7 @@ public class JointState {
             print(flo˚.path(3)+"(on: \(on))")
             return on
         } else {
-            PrintLog("⁉️ JointFlo::parseJoint \(joint.name) not Found")
+            PrintLog("⁉️ JointFlo::updateJoint \(joint.name) not Found")
             return false
         }
     }

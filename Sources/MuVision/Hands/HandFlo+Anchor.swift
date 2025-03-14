@@ -33,9 +33,7 @@ extension HandPose {
                     msg += jointEnum.name + jointState.pos.digits(-2) + " "
                 }
             }
-            if !msg.isEmpty {
-                print("\n🖐️ " + msg + "\n")
-            }
+            if !msg.isEmpty { print("🖐️ " + msg + "\n") }
         }
 
         func err(_ msg: String) { PrintLog("⁉️ HandFlo::parseAnchor err: \(msg)") }

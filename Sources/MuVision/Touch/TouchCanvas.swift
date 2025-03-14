@@ -26,17 +26,17 @@ open class TouchCanvas {
     public init() { PeersController.shared.peersDelegates.append(self) }
     deinit { PeersController.shared.remove(peersDelegate: self) }
 
-    public func beginHand(_ jointState: JointState) {
+    public func beginJointState(_ jointState: JointState) {
         TouchCanvas.touchBuffers[jointState.hash] = TouchCanvasBuffer(jointState, self)
-        // DebugLog { P("beginHand 👐\(jointState.hash)") }
+        // DebugLog { P("beginJoint 👐\(jointState.hash)") }
     }
 
-    public func updateHand(_ jointState: JointState) {
+    public func updateJointState(_ jointState: JointState) {
         if let touchBuffer = TouchCanvas.touchBuffers[jointState.hash] {
             touchBuffer.addTouchHand(jointState)
             // DebugLog { P("👐 updateHand hash: \(jointState.hash)") }
         } else {
-            beginHand(jointState)
+            beginJointState(jointState)
             // DebugLog { P("👐 updateHand ⁉️ hash\(jointState.hash)") }
         }
     }

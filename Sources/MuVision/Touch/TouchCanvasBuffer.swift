@@ -109,7 +109,7 @@ open class TouchCanvasBuffer {
                 let xStr = "\(posX.lowerBound.digits(0))…\(posX.upperBound.digits(0))"
                 let yStr = "\(posY.lowerBound.digits(0))…\(posY.upperBound.digits(0))"
                 let rStr = "\(radi.lowerBound.digits(0))…\(radi.upperBound.digits(0))"
-                DebugLog { P("👐 (\(xStr), \(yStr), \(rStr))") }
+                NoDebugLog { P("👐 (\(xStr), \(yStr), \(rStr))") }
             }
         }
     }

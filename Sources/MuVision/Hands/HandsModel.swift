@@ -14,8 +14,8 @@ open class HandsModel {
 
         let handFlo˚ = rootFlo.bind("model.hand")
         if handFlo˚.bound {
-            handsFlo.left .parseHand(.left,  handFlo˚.bind("left" ))
-            handsFlo.right.parseHand(.right, handFlo˚.bind("right"))
+            handsFlo.left .updateHand(.left,  handFlo˚.bind("left" ))
+            handsFlo.right.updateHand(.right, handFlo˚.bind("right"))
         }
         handsFlo.left .parseCanvas(touchCanvas, .left,  rootFlo)
         handsFlo.right.parseCanvas(touchCanvas, .right, rootFlo)

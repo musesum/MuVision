@@ -7,25 +7,26 @@ import MuFlo
 public class JointCanvasState: JointState {
 
     var touchCanvas: TouchCanvas?
-    
+
     func parseCanvas(_ touchCanvas: TouchCanvas,
                      _ chiral: Chiral,
-                     _ parent˚: Flo) {
+                     _ hand˚: Flo) {
 
         self.touchCanvas = touchCanvas
         self.joint = .touching
         self.chiral = chiral
 
-        flo˚ = parent˚.bind("touching") { flo, visit in
+        flo˚ = hand˚.bind("touching") { flo, visit in
 
             guard let from = visit.from else { return err("visit.from == nil") }
-            guard let joint = from.getExpr("state") as? JointState else { return err("any is not a JointState") }
+            guard let joint = from.getExpr("state") as? JointState else { return err("not a JointState") }
+            guard let touchCanvas = self.touchCanvas else { return err("touchCanvas == nil") }
 
-            DebugLog { P("👐 parseCanvas from: \(from.path(3)) hash: \(joint.hash)") }
+            TimeLog("👐 from", interval: 4) { P("👐 from: \(from.path(3)) hash: \(joint.hash)") }
 
             switch self.phase {
-            case .began: self.touchCanvas?.beginHand(joint)
-            default:     self.touchCanvas?.updateHand(joint)
+            case .began: touchCanvas.beginJointState(joint)
+            default:     touchCanvas.updateJointState(joint)
             }
         }
         if flo˚ == nil { err(flo˚?.path() ?? "flo˚ not found") }
