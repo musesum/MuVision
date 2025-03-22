@@ -175,7 +175,7 @@ public final class CameraSession: NSObject {
         self.inputDevice = captureInput
 
         func err(_ str: String) {
-            PrintLog("⁉️ CameraSession::initCaptureInput \(str)")
+            PrintLog("⚠️ CameraSession::initCaptureInput \(str)")
         }
     }
 

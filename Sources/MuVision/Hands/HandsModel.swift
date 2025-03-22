@@ -12,7 +12,7 @@ open class HandsModel {
     public init(_ touchCanvas: TouchCanvas,
                 _ rootFlo: Flo) {
 
-        let handFlo˚ = rootFlo.bind("model.hand")
+        let handFlo˚ = rootFlo.bind("hand")
         if handFlo˚.bound {
             handsFlo.left .updateHand(.left,  handFlo˚.bind("left" ))
             handsFlo.right.updateHand(.right, handFlo˚.bind("right"))
