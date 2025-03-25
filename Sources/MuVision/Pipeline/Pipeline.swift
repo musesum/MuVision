@@ -114,7 +114,6 @@ open class Pipeline: NSObject {
         for resizeNode in resizeNodes {
             resizeNode()
         }
-
     }
 }
 
