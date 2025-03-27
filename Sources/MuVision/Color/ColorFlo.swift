@@ -1,22 +1,23 @@
 import Foundation
 import MuFlo
 
+
 public class ColorFlo {
 
-    private var xfade˚: Flo?        // cross fade flo between two current palettes
-    private var xfade = Float(0)  // cross fade current value
-    private var pal0˚: Flo?
-    private var pal0 = "rgbK"      // Red Green Blue with blacK interstitials
-    private var pal1˚: Flo?
-    private var pal1 = "wKZ"       // White with blacK inter pluz zeno fractal
+    var xfade˚: Flo? ; var xfade = Float(0) // cross fade flo between two current palettes
+    var pal0˚: Flo?  ; var pal0 = "rgbK"    // Red Green Blue with blacK interstitials
+    var pal1˚: Flo?  ; var pal1 = "wKZ"     // White with blacK inter pluz zeno fractal
 
-    private var colors = [MuColor("rgbK"), MuColor("wKZ")] // dual color palette
-    private var rgbs = [Rgb]()      // rendered color palette
-    private var changed = true
-    private var mix: UnsafeMutablePointer<UInt32>! = nil
-    private var mixSize = 0
+    var colors = [ColorRender]() // dual color palette
+    var rgbs = Rgbs()      // rendered color palette
+    var changed = true
+
+    var mix: UnsafeMutablePointer<UInt32>! = nil
+    var mixSize = 0
+    var ripples = Ripples.shared
 
     public init(_ root: Flo) {
+        self.colors = [ColorRender(pal0), ColorRender(pal1)]
         if let color = root.findPath("sky.color") {
             xfade˚ = color.bind("xfade") { flo,_ in
                 let fade = flo.float
@@ -26,14 +27,14 @@ public class ColorFlo {
 
             pal0˚ = color.bind("pal0") { flo,_ in
                 self.pal0 = flo.string
-                self.colors[0] = MuColor(flo.string)
+                self.colors[0] = ColorRender(flo.string)
                 self.changed = true
             }
             pal0˚?.activate(Visitor(0, .model))
 
             pal1˚ = color.bind("pal1") { flo,_ in
                 self.pal1 = flo.string
-                self.colors[1] = MuColor(flo.string)
+                self.colors[1] = ColorRender(flo.string)
                 self.changed = true
             }
             pal1˚?.activate(Visitor(0, .model))
@@ -46,16 +47,18 @@ public class ColorFlo {
 
     public func getMix(_ palSize: Int) -> UnsafeMutablePointer<UInt32> {
         
-        if changed || palSize != mixSize {
+        if true || changed || palSize != mixSize { //....
             changed = false
             rgbs.removeAll()
-            rgbs = MuColor.fade(from: colors[0], to: colors[1], xfade)
+            rgbs = ColorRender.fade(from: colors[0], to: colors[1], xfade)
+
+            ripples.update(&rgbs) //....
+
             if mixSize != palSize {
                 mixSize = palSize
                 mix?.deallocate()
                 mix = UnsafeMutablePointer<UInt32>.allocate(capacity: mixSize)
             }
-
             // convert [Rgb] to [Uint32]
             for i in 0 ..< rgbs.count {
                 let rgb = rgbs[i]
@@ -70,5 +73,4 @@ public class ColorFlo {
         }
         return mix
     }
-
 }

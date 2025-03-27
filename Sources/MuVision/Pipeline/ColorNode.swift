@@ -18,7 +18,7 @@ public class ColorNode: ComputeNode {
 
         super.init(pipeline, childFlo)
         
-        getPal   = ColorFlo(pipeFlo.getRoot()).getMix
+        getPal  = ColorFlo(pipeFlo.getRoot()).getMix
         inTex˚  = pipeFlo.superBindPath("in")
         outTex˚ = pipeFlo.superBindPath("out")
         palTex˚ = pipeFlo.superBindPath("pal")
@@ -55,10 +55,10 @@ public class ColorNode: ComputeNode {
 
     override public func computeNode(_ computeEnc: MTLComputeCommandEncoder)  {
 
-        computeEnc.setTexture(inTex˚,   index: 0)
-        computeEnc.setTexture(outTex˚,  index: 1)
-        computeEnc.setTexture(palTex˚,  index: 2)
-        computeEnc.setBuffer (plane˚,   index: 0)
+        computeEnc.setTexture(inTex˚,  index: 0)
+        computeEnc.setTexture(outTex˚, index: 1)
+        computeEnc.setTexture(palTex˚, index: 2)
+        computeEnc.setBuffer (plane˚,  index: 0)
         super.computeNode(computeEnc)
         outTex˚?.activate(from: outTex˚)
         palTex˚?.activate(from: palTex˚)

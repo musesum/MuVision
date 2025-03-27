@@ -3,179 +3,6 @@ import QuartzCore
 import UIKit
 import MuFlo
 
-
-public class NoteItem {
-
-    var chan: Int // channel for MPE note events
-    var note: Int // note number, not changed for MPE
-    var velo: Int // velocity
-    var lift: Int = 0 // speed of lifting finger for NoteOff
-    var wheel: Int = 0
-    var slide: Int = 0
-    var after: Int = 0
-    var phase: UITouch.Phase = .began
-
-    var radius: Float {
-        var r = 0
-        switch phase {
-        case .began: r = velo
-        case .ended: r = lift > after ? lift : after
-        default: r = after > 0 ? after : velo
-        }
-        return Float(r)
-    }
-
-    init(_ chan: Int,
-         _ note: Int,
-         _ velo: Int) {
-
-        self.chan = chan
-        self.note = note
-        self.velo = velo
-        self.after = velo
-    }
-    func update(note: Int? = nil,
-                velo: Int? = nil,
-                lift: Int? = nil,
-                wheel: Int? = nil,
-                slide: Int? = nil,
-                after: Int? = nil,
-                phase: UITouch.Phase? = nil) {
-
-        if let note { self.note = note }
-        if let velo { self.velo = velo }
-        if let lift { self.lift = lift }
-        if let wheel { self.wheel = wheel }
-        if let slide { self.slide = slide }
-        if let after { self.after = after }
-        if let phase { self.phase = phase }
-    }
-}
-
-public class MidiDraw {
-    public static var shared = MidiDraw()
-
-    var noteItems: [Int: NoteItem] = [:]
-
-    private var root       : Flo?
-    private var dotNoteOn˚ : Flo?
-    private var dotNoteOff˚: Flo?
-    private var dotWheel˚  : Flo?
-    private var dotSlide˚  : Flo?
-    private var dotAfter˚  : Flo?
-    private var dotClear˚  : Flo?
-
-    private var bufSize = CGSize.zero
-    private var drawBuf: UnsafeMutablePointer<UInt32>?
-    private var archiveFlo: ArchiveFlo?
-    public var drawableSize = CGSize.zero
-    public var drawUpdate: MTLTexture?
-
-    public func parseRoot(_ root: Flo,
-                          _ archiveFlo: ArchiveFlo) {
-        self.root = root
-        self.archiveFlo = archiveFlo
-        let dot = root .bind("sky.draw.dot")
-        dotNoteOn˚ = dot.bind("note.on") { f,_ in self.updateNoteOn(f) }
-        dotNoteOn˚ = dot.bind("note.off"){ f,_ in self.updateNoteOff(f) }
-        dotWheel˚  = dot.bind("wheel")   { f,_ in self.updateWheel(f) }
-        dotSlide˚  = dot.bind("slide")   { f,_ in self.updateSlide(f) }
-        dotAfter˚  = dot.bind("after")   { f,_ in self.updateAfter(f) }
-        dotClear˚  = dot.bind("clear")   { f,_ in self.clearCanvas() }
-    }
-
-    func updateNoteOn(_ flo: Flo) {
-        if let chan = flo.intVal("chan"),
-           let num  = flo.intVal("num"),
-           let velo = flo.intVal("velo") {
-            NoTimeLog("note\(chan)", interval: 0) { P("noteOn:  \(chan), \(num), \(velo)") }
-            if let noteItem = noteItems[chan] {
-                noteItem.update(velo: velo, phase: .began)
-                drawNoteItem(noteItem)
-            } else {
-                let noteItem = NoteItem(chan,num,velo)
-                noteItems[chan] = noteItem
-                drawNoteItem(noteItem)
-            }
-        }
-    }
-
-    func updateNoteOff(_ flo: Flo) {
-        if let chan = flo.intVal("chan"),
-           let velo = flo.intVal("velo") {
-            NoTimeLog("note\(chan)", interval: 0) { P("noteOff: \(chan), \(velo)") }
-            if let noteItem = noteItems[chan] {
-                noteItem.update(lift: velo, phase: .ended)
-                drawNoteItem(noteItem)
-            }
-        }
-    }
-    func updateWheel(_ flo: Flo) {
-        if let chan = flo.intVal("chan"),
-           let val  = flo.intVal("val") {
-            let val = val - 8192
-            TimeLog("wheel\(chan)", interval: 0.25) { P("wheel: \(chan), \(val)") }
-            if let noteItem = noteItems[chan] {
-                noteItem.update(wheel: val, phase: .moved)
-                drawNoteItem(noteItem)
-            }
-        }
-    }
-    func updateSlide(_ flo: Flo) {
-        if let chan = flo.intVal("chan"),
-           let val  = flo.intVal("val") {
-            NoTimeLog("slide\(chan)", interval: 0.25) { P("slide: \(chan), \(val) \(val)") }
-            if let noteItem = noteItems[chan] {
-                noteItem.update(slide: val, phase: .moved)
-                drawNoteItem(noteItem)
-            }
-        }
-    }
-    func updateAfter(_ flo: Flo) {
-        if let chan = flo.intVal("chan"),
-           let val = flo.intVal("val") {
-            NoTimeLog("_after\(chan)", interval: 0.25) { P("after: \(chan), \(val)") }
-            if let noteItem = noteItems[chan] {
-                noteItem.update(after: val, phase: .moved)
-                drawNoteItem(noteItem)
-            }
-        }
-    }
-    func clearCanvas() {
-        NoTimeLog("dot clear ", interval: 0) { P("dot clear all") }
-        for (chan,item) in noteItems {
-            noteItems[chan] = nil
-            item.update(velo: 0, phase: .ended)
-            drawNoteItem(item)
-        }
-        noteItems.removeAll()
-    }
-    func drawNoteItem(_ item: NoteItem) {
-        #if os(visionOS)
-        let scale = CGFloat(3)
-        #else
-        let scale = UIScreen.main.scale
-        #endif
-        let size = TouchDraw.shared.drawableSize / scale
-        let margin = CGFloat(48)/scale
-        let xs = size.width  - margin
-        let ys = size.height - margin
-        let note = CGFloat(item.note % 12)
-        let bent = note + CGFloat(item.wheel) / 8192 * 12
-        let octave = CGFloat(item.note / 12)
-        let radius = item.radius
-
-        let xxx = margin + CGFloat(bent * xs)/12
-        let yyy = margin + CGFloat(octave * ys)/12
-        let point = CGPoint(x: xxx, y: yyy)
-
-        let key = "midi\(item.chan)".hash
-        let item = TouchCanvasItem(key, point, radius, .zero, .zero, item.phase, Visitor(0, .midi))
-        TouchCanvas.shared.remoteItem(item)
-    }
-}
-
-
 public class TouchDraw {
 
     public static var shared = TouchDraw()
@@ -197,14 +24,16 @@ public class TouchDraw {
     private var archiveFlo: ArchiveFlo?
     public var drawableSize = CGSize.zero
     public var drawUpdate: MTLTexture?
+    private var drawDot: MidiDrawDot?
+    private var drawRipple: MidiDrawRipple?
 
     public func parseRoot(_ root: Flo,
                           _ archiveFlo: ArchiveFlo) {
 
         self.root = root
         self.archiveFlo = archiveFlo
-
-        MidiDraw.shared.parseRoot(root, archiveFlo)
+        //self.drawDot = MidiDrawDot(root, archiveFlo, "sky.draw.dot" )
+        self.drawRipple = MidiDrawRipple(root, archiveFlo, "sky.draw.ripple")
 
         let sky    = root.bind("sky"   )
         let input  = sky .bind("input" )

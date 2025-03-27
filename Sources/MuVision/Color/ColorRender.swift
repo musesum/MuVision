@@ -1,11 +1,11 @@
 import Foundation
 import MuFlo 
-public struct MuColor {
+public struct ColorRender {
 
     private var rgbDef = [Rgb]() // definition of Rgb ramps
     private var splice = ColorOps.gradient // how to join this color set with its neighbors
-    private let black = Rgb(0, 0, 0)
-    private let white = Rgb(1, 1, 1)
+    private let black = Rgb(r: 0, g: 0, b: 0)
+    private let white = Rgb(r: 1, g: 1, b: 1)
     private var rendered = [Rgb]() // final render of palette with gradient fades
 
     public init (hsvs: [Hsv], _ splice: ColorOps = .gradient) {
@@ -24,28 +24,28 @@ public struct MuColor {
     public init(_ script: String) {
         for s in script {
             switch s {
-                case "k": rgbDef.append(Hsv(  0,   0,   0).rgb()) // black
-                case "w": rgbDef.append(Hsv(  0,   0, 100).rgb()) // white
-                case "r": rgbDef.append(Hsv(  0, 100, 100).rgb()) // red
-                case "o": rgbDef.append(Hsv( 30, 100, 100).rgb()) // orange
-                case "y": rgbDef.append(Hsv( 60, 100, 100).rgb()) // yellow
-                case "g": rgbDef.append(Hsv(120, 100, 100).rgb()) // green
-                case "b": rgbDef.append(Hsv(240, 100, 100).rgb()) // blue
-                case "i": rgbDef.append(Hsv(270, 100, 100).rgb()) // indigo
-                case "v": rgbDef.append(Hsv(300, 100, 100).rgb()) // violet
-                case "/": splice.insert(.gradient)
-                case "K": splice.insert(.black)
-                case "W": splice.insert(.white)
-                case "Z": splice.insert(.zeno)
-                case "F": splice.insert(.flip)
-                case " ": break // skip space
-                default: PrintLog("⁉️ unknown Color shortcut")
+            case "r": rgbDef.append(Hsv(    0, 1, 1).rgb()) // red
+            case "o": rgbDef.append(Hsv( 1/12, 1, 1).rgb()) // orange
+            case "y": rgbDef.append(Hsv( 2/12, 1, 1).rgb()) // yellow
+            case "g": rgbDef.append(Hsv( 4/12, 1, 1).rgb()) // green
+            case "b": rgbDef.append(Hsv( 8/12, 1, 1).rgb()) // blue
+            case "i": rgbDef.append(Hsv( 9/12, 1, 1).rgb()) // indigo
+            case "v": rgbDef.append(Hsv(10/12, 1, 1).rgb()) // violet
+            case "k": rgbDef.append(Hsv(    0, 0, 0).rgb()) // black
+            case "w": rgbDef.append(Hsv(    0, 0, 1).rgb()) // whitecase
+            case "/": splice.insert(.gradient)
+            case "K": splice.insert(.black)
+            case "W": splice.insert(.white)
+            case "Z": splice.insert(.zeno)
+            case "F": splice.insert(.flip)
+            case " ": break // skip space
+            default: PrintLog("⁉️ unknown Color shortcut")
             }
         }
         render(size: 256)
     }
 
-    public static func fade(from: MuColor, to: MuColor, _ factor: Float) -> [Rgb] {
+    public static func fade(from: ColorRender, to: ColorRender, _ factor: Float) -> [Rgb] {
 
         var ret = [Rgb]()
         let count = min(from.rendered.count, to.rendered.count)
@@ -54,48 +54,16 @@ public struct MuColor {
         for i in 0 ..< count {
             let fromi = from.rendered[i]
             let toi = to.rendered[i]
-            let rgb = Rgb(fromi.r * invFact + toi.r * factor01,
-                          fromi.g * invFact + toi.g * factor01,
-                          fromi.b * invFact + toi.b * factor01,
-                          fromi.a * invFact + toi.a * factor01)
+            let rgb = Rgb(r: fromi.r * invFact + toi.r * factor01,
+                          g: fromi.g * invFact + toi.g * factor01,
+                          b: fromi.b * invFact + toi.b * factor01,
+                          a: fromi.a * invFact + toi.a * factor01)
             ret.append(rgb)
         }
         return ret
     }
 
-    func makeRamp(_ span: Int, _ left: Rgb, _ mid: Rgb, _ right: Rgb) -> [Rgb] {
-
-        var result = [Rgb]()
-        let span1 = span/2
-        let span2 = span-span1
-        let span1f = Float(span1)
-        let span2f = Float(span2)
-
-        for i in 0 ..< span1 {
-            let factor = Float(i)/span1f
-            let invFact = 1 - factor
-            let rgb = Rgb(left.r * invFact + mid.r * factor,
-                          left.g * invFact + mid.g * factor,
-                          left.b * invFact + mid.b * factor)
-            result.append(rgb)
-        }
-        for i in 0 ..< span2 {
-            let factor = Float(i)/span2f
-            let invFact = 1 - factor
-            let rgb = Rgb(mid.r * invFact + right.r * factor,
-                          mid.g * invFact + right.g * factor,
-                          mid.b * invFact + right.b * factor)
-            result.append(rgb)
-        }
-        return result
-    }
-    func makeHard(_ span: Int, _ mid: Rgb) -> [Rgb]  {
-        var result = [Rgb]()
-        for _ in 0 ..< span {
-            result.append(mid)
-        }
-        return result
-    }
+   
 
     /// render colors into a rgb array
     func renderSub(_ size: Int) -> [Rgb] {
@@ -128,10 +96,10 @@ public struct MuColor {
         if splice.zeno { result.append(contentsOf: renderSub((size+1)/2)) }
         return result
         func addRamp(_ span: Int, _ left: Rgb, _ mid: Rgb, _ right: Rgb) {
-            result.append(contentsOf: makeRamp(span, left, mid, right))
+            result.append(contentsOf: Rgb.makeRamp(span, left, mid, right))
         }
         func addHard(_ span: Int, _ mid: Rgb) {
-            result.append(contentsOf: makeHard(span, mid))
+            result.append(contentsOf: Rgb.makeHardRamp(span, mid))
         }
     }
 
