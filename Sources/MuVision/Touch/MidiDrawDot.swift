@@ -8,17 +8,21 @@ public class MidiDrawDot {
 
     var noteItems: [Int: MidiMpeItem] = [:]
 
-    private var root       : Flo?
-    private var dotNoteOn˚ : Flo?
-    private var dotNoteOff˚: Flo?
-    private var dotWheel˚  : Flo?
-    private var dotSlide˚  : Flo?
-    private var dotAfter˚  : Flo?
-    private var dotClear˚  : Flo?
+    private var root    : Flo! /// root of tree
+    private var base˚   : Flo! /// base flo on/off
+    private var noteOn˚ : Flo? /// midi note on
+    private var noteOff˚: Flo? /// midi note off
+    private var wheel˚  : Flo? /// pitch wheel
+    private var slide˚  : Flo? /// mpe slide pitch
+    private var after˚  : Flo? /// aftertouch
+    private var clear˚  : Flo? /// clear screen event
+    private var archive˚: ArchiveFlo?
 
     private var bufSize = CGSize.zero
     private var drawBuf: UnsafeMutablePointer<UInt32>?
-    private var archiveFlo: ArchiveFlo?
+    private var running: Bool = false
+    private var logging: Bool = false
+
     public var drawableSize = CGSize.zero
     public var drawUpdate: MTLTexture?
 
@@ -27,26 +31,30 @@ public class MidiDrawDot {
          _ path: String) {
         
         self.root = root
-        self.archiveFlo = archiveFlo
-        let base = root.bind(path) // "sky.draw.dot", "sky.draw.ripple"
-        dotNoteOn˚ = base.bind("note.on") { f,_ in self.updateNoteOn(f) }
-        dotNoteOn˚ = base.bind("note.off"){ f,_ in self.updateNoteOff(f) }
-        dotWheel˚  = base.bind("wheel")   { f,_ in self.updateWheel(f) }
-        dotSlide˚  = base.bind("slide")   { f,_ in self.updateSlide(f) }
-        dotAfter˚  = base.bind("after")   { f,_ in self.updateAfter(f) }
-        dotClear˚  = base.bind("clear")   { f,_ in self.clearCanvas() }
+        self.archive˚ = archiveFlo
+        self.base˚ = root.bind(path)    { f,_ in self.updateBase(f) }
+        noteOn˚ = base˚.bind("note.on") { f,_ in self.updateNoteOn(f) }
+        noteOn˚ = base˚.bind("note.off"){ f,_ in self.updateNoteOff(f) }
+        wheel˚  = base˚.bind("wheel")   { f,_ in self.updateWheel(f) }
+        slide˚  = base˚.bind("slide")   { f,_ in self.updateSlide(f) }
+        after˚  = base˚.bind("after")   { f,_ in self.updateAfter(f) }
+        clear˚  = base˚.bind("clear")   { f,_ in self.clearCanvas() }
+        base˚.activate()
     }
 
     func updateNoteOn(_ flo: Flo) {
+        guard running else { return }
         if let chan = flo.intVal("chan"),
            let num  = flo.intVal("num"),
            let velo = flo.intVal("velo") {
-            NoTimeLog("note\(chan)", interval: 0) { P("noteOn:  \(chan), \(num), \(velo)") }
+            if logging {
+                TimeLog("note\(chan)", interval: 0) { P("noteOn:  \(chan), \(num), \(velo)") }
+            }
             if let noteItem = noteItems[chan] {
                 noteItem.update(velo: velo, phase: .began)
                 drawMpeItem(noteItem)
             } else {
-                let noteItem = MidiMpeItem(chan,num,velo)
+                let noteItem = MidiMpeItem(chan,num,velo,logging)
                 noteItems[chan] = noteItem
                 drawMpeItem(noteItem)
             }
@@ -54,6 +62,7 @@ public class MidiDrawDot {
     }
 
     func updateNoteOff(_ flo: Flo) {
+        guard running else { return }
         if let chan = flo.intVal("chan"),
            let velo = flo.intVal("velo") {
             NoTimeLog("note\(chan)", interval: 0) { P("noteOff: \(chan), \(velo)") }
@@ -64,10 +73,13 @@ public class MidiDrawDot {
         }
     }
     func updateWheel(_ flo: Flo) {
+        guard running else { return }
         if let chan = flo.intVal("chan"),
            let val  = flo.intVal("val") {
             let val = val - 8192
-            TimeLog("wheel\(chan)", interval: 0.25) { P("wheel: \(chan), \(val)") }
+            if logging {
+                TimeLog("wheel\(chan)", interval: 0.25) { P("wheel: \(chan), \(val)") }
+            }
             if let noteItem = noteItems[chan] {
                 noteItem.update(wheel: val, phase: .moved)
                 drawMpeItem(noteItem)
@@ -75,9 +87,12 @@ public class MidiDrawDot {
         }
     }
     func updateSlide(_ flo: Flo) {
+        guard running else { return }
         if let chan = flo.intVal("chan"),
            let val  = flo.intVal("val") {
-            NoTimeLog("slide\(chan)", interval: 0.25) { P("slide: \(chan), \(val) \(val)") }
+            if logging {
+                TimeLog("slide\(chan)", interval: 0.25) { P("slide: \(chan), \(val) \(val)") }
+            }
             if let noteItem = noteItems[chan] {
                 noteItem.update(slide: val, phase: .moved)
                 drawMpeItem(noteItem)
@@ -85,17 +100,27 @@ public class MidiDrawDot {
         }
     }
     func updateAfter(_ flo: Flo) {
+        guard running else { return }
         if let chan = flo.intVal("chan"),
            let val = flo.intVal("val") {
-            NoTimeLog("_after\(chan)", interval: 0.25) { P("after: \(chan), \(val)") }
+            if logging {
+                TimeLog("after\(chan)", interval: 0.25) { P("after: \(chan), \(val)") }
+            }
             if let noteItem = noteItems[chan] {
                 noteItem.update(after: val, phase: .moved)
                 drawMpeItem(noteItem)
             }
         }
     }
+    func updateBase(_ flo: Flo) {
+        running = flo.boolVal("on")
+        logging = flo.boolVal("log")
+    }
     func clearCanvas() {
-        NoTimeLog("dot clear ", interval: 0) { P("dot clear all") }
+        guard running else { return }
+        if logging {
+            TimeLog("dot clear ", interval: 0) { P("dot clear all") }
+        }
         for (chan, item) in noteItems {
             noteItems[chan] = nil
             item.update(velo: 0, phase: .ended)

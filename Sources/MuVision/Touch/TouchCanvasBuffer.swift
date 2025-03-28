@@ -189,6 +189,7 @@ extension TouchCanvasBuffer: DoubleBufferDelegate {
         let point = item.cgPoint
         isDone = item.isDone()
 
+        // 4 point cubic smoothing of line segment(s)
         touchCubic.addPointRadius(point, radius, isDone)
         touchCubic.drawPoints(TouchDraw.shared.drawPoint)
 

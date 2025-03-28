@@ -96,7 +96,7 @@ public struct ColorRender {
         if splice.zeno { result.append(contentsOf: renderSub((size+1)/2)) }
         return result
         func addRamp(_ span: Int, _ left: Rgb, _ mid: Rgb, _ right: Rgb) {
-            result.append(contentsOf: Rgb.makeRamp(span, left, mid, right))
+            result.append(contentsOf: Rgb.makeRamp(span, left, mid, right, /* logging */ false))
         }
         func addHard(_ span: Int, _ mid: Rgb) {
             result.append(contentsOf: Rgb.makeHardRamp(span, mid))

@@ -13,6 +13,7 @@ public class MidiMpeItem {
     var slide: Int = 0
     var after: Int = 0
     var phase: UITouch.Phase = .began
+    var logging: Bool = false
 
     var radius: Float {
         var r = 0
@@ -26,12 +27,14 @@ public class MidiMpeItem {
 
     init(_ chan: Int,
          _ note: Int,
-         _ velo: Int) {
+         _ velo: Int,
+         _ logging: Bool) {
 
         self.channel = chan
         self.note = note
         self.velo = velo
         self.after = velo
+        self.logging = logging
     }
     func update(note: Int? = nil,
                 velo: Int? = nil,

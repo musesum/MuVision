@@ -51,7 +51,7 @@ public struct Rgb {
                          _ start: Rgb,
                          _ mid: Rgb,
                          _ end: Rgb,
-                         log: Bool = false) -> [Rgb] {
+                         _ log: Bool) -> [Rgb] {
 
         var result = [Rgb]()
         let span1 = span/2

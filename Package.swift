@@ -12,6 +12,7 @@ let package = Package(
     ],
     targets: [
         .target(name: "MuVision",
+
                 dependencies: [
                     .product(name: "MuFlo", package: "MuFlo"),
                     .product(name: "MuPeer", package: "MuPeer"),

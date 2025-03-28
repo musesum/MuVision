@@ -18,7 +18,7 @@ public class DrawNode: ComputeNode {
         inTex˚  = pipeFlo.superBindPath("in")
         outTex˚ = pipeFlo.superBind("out") { flo, _ in
             if let tex = flo.texture {
-                TouchDraw.shared.drawUpdate = tex
+                TouchDraw.shared.drawTex = tex
             }
         }
         shift˚  = pipeFlo.superBindPath("shift")

@@ -10,6 +10,15 @@
       }
     },
     {
+      "identity" : "mupeer",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/musesum/MuPeer.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "f88ef31d218bf47cd9649eb8fa2e07ef03c9b8e7"
+      }
+    },
+    {
       "identity" : "swift-collections",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-collections.git",
