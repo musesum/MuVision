@@ -5,6 +5,7 @@ import MuFlo
 
 public enum TouchJointStatus { case nothing, newJoint, oldJoint }
 
+@MainActor //_____
 public class HandPose {
 
     var chiral: Chiral?
@@ -124,9 +125,9 @@ public class HandPose {
         }
         func err(_ msg: String) { PrintLog("⁉️ HandFlo::parseHand \(msg)") }
     }
-    public func parseCanvas(_ touchCanvas: TouchCanvas,
-                            _ chiral: Chiral,
-                            _ root˚: Flo) {
+    @MainActor public func parseCanvas(_ touchCanvas: TouchCanvas,
+                                       _ chiral: Chiral,
+                                       _ root˚: Flo) {
 
         let hand˚ = root˚.bind("hand")
         if !hand˚.name.hasPrefix("?") {

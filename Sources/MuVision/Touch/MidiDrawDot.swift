@@ -4,9 +4,10 @@ import QuartzCore
 import UIKit
 import MuFlo
 
-public class MidiDrawDot {
+@MainActor //_____
+public class MidiDrawDot : @unchecked Sendable {
 
-    var noteItems: [Int: MidiMpeItem] = [:]
+    private var noteItems: [Int: MidiMpeItem] = [:]
 
     private var root    : Flo! /// root of tree
     private var base˚   : Flo! /// base flo on/off
@@ -22,23 +23,30 @@ public class MidiDrawDot {
     private var drawBuf: UnsafeMutablePointer<UInt32>?
     private var running: Bool = false
     private var logging: Bool = false
+    private var touchCanvas: TouchCanvas
+    private var touchDraw: TouchDraw
 
     public var drawableSize = CGSize.zero
     public var drawUpdate: MTLTexture?
 
-    init(_ root: Flo,
-         _ archiveFlo: ArchiveFlo,
-         _ path: String) {
+    
+    public init(_ root: Flo,
+                _ touchCanvas: TouchCanvas,
+                _ touchDraw: TouchDraw,
+                _ archiveFlo: ArchiveFlo,
+                _ path: String) {
         
         self.root = root
+        self.touchCanvas = touchCanvas
+        self.touchDraw = touchDraw
         self.archive˚ = archiveFlo
-        self.base˚ = root.bind(path)    { f,_ in self.updateBase(f) }
-        noteOn˚ = base˚.bind("note.on") { f,_ in self.updateNoteOn(f) }
+        self.base˚ = root.bind(path)    { f,_ in self.updateBase(f)    }
+        noteOn˚ = base˚.bind("note.on") { f,_ in self.updateNoteOn(f)  }
         noteOn˚ = base˚.bind("note.off"){ f,_ in self.updateNoteOff(f) }
-        wheel˚  = base˚.bind("wheel")   { f,_ in self.updateWheel(f) }
-        slide˚  = base˚.bind("slide")   { f,_ in self.updateSlide(f) }
-        after˚  = base˚.bind("after")   { f,_ in self.updateAfter(f) }
-        clear˚  = base˚.bind("clear")   { f,_ in self.clearCanvas() }
+        wheel˚  = base˚.bind("wheel")   { f,_ in self.updateWheel(f)   }
+        slide˚  = base˚.bind("slide")   { f,_ in self.updateSlide(f)   }
+        after˚  = base˚.bind("after")   { f,_ in self.updateAfter(f)   }
+        clear˚  = base˚.bind("clear")   { f,_ in self.clearCanvas()    }
         base˚.activate()
     }
 
@@ -129,12 +137,9 @@ public class MidiDrawDot {
         noteItems.removeAll()
     }
     func drawMpeItem(_ item: MidiMpeItem) {
-        #if os(visionOS)
-        let scale = CGFloat(3)
-        #else
-        let scale = UIScreen.main.scale
-        #endif
-        let size = TouchDraw.shared.drawableSize / scale
+
+        let scale = touchDraw.scale
+        let size = touchDraw.drawableSize / scale
         let margin = CGFloat(48)/scale
         let xs = size.width  - margin
         let ys = size.height - margin
@@ -148,7 +153,9 @@ public class MidiDrawDot {
         let point = CGPoint(x: xxx, y: yyy)
 
         let key = "midi\(item.channel)".hash
-        let item = TouchCanvasItem(key, point, radius, .zero, .zero, item.phase, Visitor(0, .midi))
-        TouchCanvas.shared.remoteItem(item)
+
+
+        let canvasItem = TouchCanvasItem(key, point, radius, .zero, .zero, item.phase.rawValue, Visitor(0, .midi))
+        touchCanvas.remoteItem(canvasItem)
     }
 }

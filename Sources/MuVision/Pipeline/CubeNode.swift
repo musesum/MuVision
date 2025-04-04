@@ -16,9 +16,8 @@ public struct VertexCube {
 }
 
 public class CubeNode: RenderNode {
-
     private let viaIndex   : Bool
-    private var cubeMesh   : CubeMesh!
+    private let cubeMesh   : CubeMesh
     private var cubeIndex  : CubemapIndex?
     private var inTex˚     : Flo?
     private var cudex˚     : Flo?
@@ -31,7 +30,7 @@ public class CubeNode: RenderNode {
         self.cubeMesh = CubeMesh()
         self.viaIndex = true
         super.init(pipeline, childFlo)
-        
+
         inTex˚  = pipeFlo.superBindPath("in")
         cudex˚  = pipeFlo.superBindPath("cudex")
         mixcube˚ = pipeFlo.superBindPath("mixcube")
@@ -39,7 +38,7 @@ public class CubeNode: RenderNode {
         makeResources()
         pipeline.rotateClosure["cudex˚"] = { self.remakeAspect() }
     }
-    
+
     func makeRenderPipeline() {
         shader = Shader(pipeline,
                         file: "render.map.cube",
@@ -153,27 +152,30 @@ public class CubeNode: RenderNode {
         }
         return texture
     }
-    // for both metal and visionOS reflection
-    override public func updateUniforms() {
 
-        let orientation = Motion.shared.updateDeviceOrientation()
-        let projection = project4x4(pipeline.layer.drawableSize)
-
-        NoTimeLog(#function, interval: 4) {
-            print("\t👁️c orientation ", orientation.digits)
-            print("\t👁️c projection  ", projection.digits)
-        }
-        cubeMesh.eyeBuf?.updateEyeUniforms(projection, orientation)
-    }
 #if os(visionOS)
-
     /// Update projection and rotation
     override public func updateUniforms(_ drawable: LayerRenderer.Drawable) {
         let cameraPos =  vector_float4([0, 0,  -4, 1]) //????
         let label = (RenderDepth.state == .immersive ? "👁️C⃝ube" : "👁️Cube")
         cubeMesh.eyeBuf?.updateEyeUniforms(drawable, cameraPos, label)
     }
-    
+#else
+    // for both metal and visionOS reflection
+    override public func updateUniforms() {
+        let projection = project4x4(pipeline.layer.drawableSize)
+
+//....       var orientation: matrix_float4x4 = matrix_identity_float4x4
+//        Task {  @MainActor in
+//            orientation =  Motion.shared.updateDeviceOrientation()
+//        }
+//        NoTimeLog(#function, interval: 4) {
+//            print("\t👁️c orientation ", orientation.digits)
+//            print("\t👁️c projection  ", projection.digits)
+//        }
+        cubeMesh.eyeBuf?.updateEyeUniforms(projection, matrix_identity_float4x4)
+
+    }
 #endif
 
 }

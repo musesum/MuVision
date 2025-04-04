@@ -4,13 +4,13 @@ import UIKit
 
 public protocol TouchDrawProtocol {
     func drawPoint(
-        _ point: CGPoint,
-        _ scale: CGFloat,
-        _ radius: CGFloat,
-        _ bufSize: CGSize,
-        _ drawableSize: CGSize,
-        _ index: UInt32, // brushIndex
-        _ drawBuf: UnsafeMutablePointer<UInt32>?)
+        point    : CGPoint,
+        scale    : CGFloat,
+        radius   : CGFloat,
+        bufSize  : CGSize,
+        drawSize : CGSize,
+        brush    : UInt32, // brushIndex
+        drawBuf  : UnsafeMutablePointer<UInt32>?)
 
     func drawIntoBuffer(
         _ drawBuf: UnsafeMutablePointer<UInt32>,
@@ -30,18 +30,18 @@ open class TouchDrawDot: TouchDrawProtocol {
 
     public init() {}
     public func drawPoint(
-        _ point: CGPoint,
-        _ scale: CGFloat,
-        _ radius: CGFloat,
-        _ bufSize: CGSize,
-        _ drawableSize: CGSize,
-        _ index: UInt32, // brushIndex
-        _ drawBuf: UnsafeMutablePointer<UInt32>?)
+        point    : CGPoint,
+        scale    : CGFloat,
+        radius   : CGFloat,
+        bufSize  : CGSize,
+        drawSize : CGSize,
+        brush    : UInt32, // brushIndex
+        drawBuf  : UnsafeMutablePointer<UInt32>?)
     {
         guard let drawBuf else { return }
         if point == .zero { return }
         let viewPoint = CGPoint(x: point.x * scale, y: point.y * scale)
-        let texPoint = touchViewToTex(viewPoint, drawableSize, bufSize)
+        let texPoint = touchViewToTex(viewPoint, drawSize, bufSize)
 
         let r = radius * 2.0 - 1
         let r2 = Int(r * r / 4.0)
@@ -62,7 +62,7 @@ open class TouchDrawDot: TouchDrawProtocol {
         while y1 < y0 { y1 += texH }
 
         if radius == 1 {
-            drawBuf[y0 * texW + x0] = index
+            drawBuf[y0 * texW + x0] = brush
             return
         }
 
@@ -79,7 +79,7 @@ open class TouchDrawDot: TouchDrawProtocol {
                     let xx = (x + texW) % texW  // wrapped pixel x index
                     let ii = (yy * texW + xx) % texMax // final pixel x, y index into buffer
 
-                    drawBuf[ii] = index     // set the buffer to value
+                    drawBuf[ii] = brush     // set the buffer to value
                 }
             }
         }

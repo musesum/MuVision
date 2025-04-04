@@ -9,6 +9,7 @@ import MuFlo
 import CompositorServices
 #endif
 
+@MainActor //_____
 open class Pipeline: NSObject {
 
     private var commandQueue: MTLCommandQueue!
@@ -41,12 +42,19 @@ open class Pipeline: NSObject {
 
     private var rotatable = [String: (MTLTexture,PipeNode,Flo)]()
     private var archive: ArchiveFlo!
-
+    public var root˚: Flo
+    public var touchDraw: TouchDraw
     public init(_ root˚: Flo,
-                _ archive: ArchiveFlo) {
+                _ archive: ArchiveFlo,
+                _ touchDraw: TouchDraw,
+                _ scale: CGFloat,
+                _ bounds: CGRect) {
 
-        super.init()
+        self.root˚ = root˚
+        self.touchDraw = touchDraw
         self.archive = archive
+        super.init()
+
         commandQueue = device.makeCommandQueue()
         library = device.makeDefaultLibrary()
         layer.device = device
@@ -55,14 +63,12 @@ open class Pipeline: NSObject {
         layer.framebufferOnly = false
         layer.contentsGravity = .resizeAspectFill
         layer.bounds = layer.frame
-
+        layer.contentsScale = scale
         #if os(visionOS)
-        layer.contentsScale = 3
         layer.frame = CGRect(x: 0, y: 0, width: pipeSize.width, height: pipeSize.height)
         pipeSize = CGSize._4K
         #else
-        layer.contentsScale = UIScreen.main.scale
-        layer.frame = UIScreen.main.bounds
+        layer.frame = bounds
         switch layer.frame.size.aspect {
         case .landscape : pipeSize = CGSize(width: 1920, height: 1080)
         default         : pipeSize = CGSize(width: 1080, height: 1920)

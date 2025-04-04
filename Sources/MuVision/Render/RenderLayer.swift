@@ -9,7 +9,7 @@ import MuFlo // NextFrame
 
 open class RenderLayer: @unchecked Sendable {
 
-    public static var viewports: [MTLViewport]!
+    nonisolated(unsafe) public static var viewports: [MTLViewport]!
     private let commandQueue: MTLCommandQueue
     private let dispatch = DispatchSemaphore(value: 3)
     public let renderer: LayerRenderer
@@ -84,7 +84,9 @@ extension RenderLayer {
         func performCpuWork() {
             // this should execute pending Flo animations
             // while ignoring the metal based renderFrame()
-            _ = NextFrame.shared.nextFrame(force: true)
+            Task { @MainActor in
+                _ = NextFrame.shared.nextFrame(force: true)
+            }
         }
     }
     public func runLayer(_ drawable: LayerRenderer.Drawable,

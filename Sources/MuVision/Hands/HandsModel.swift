@@ -3,6 +3,7 @@
 import ARKit
 import MuFlo
 
+@MainActor
 open class HandsModel {
 
     @Published var updated: Bool = false

@@ -80,7 +80,7 @@ public enum JointEnum: Int {
 #endif
 }
 #if os(visionOS)
-let ARHandJoint: [JointEnum: HandSkeleton.JointName] = [
+nonisolated(unsafe) let ARHandJoint: [JointEnum: HandSkeleton.JointName] = [
     
     .thumbKnuc   : .thumbKnuckle,
     .thumbBase   : .thumbIntermediateBase,

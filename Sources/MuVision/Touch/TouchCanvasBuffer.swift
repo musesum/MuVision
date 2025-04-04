@@ -4,24 +4,24 @@ import UIKit
 import MuFlo
 import MuPeer
 
+@MainActor //_____
 open class TouchCanvasBuffer {
 
     // repeat last touch until isDone
     private var repeatLastItem: TouchCanvasItem?
 
     // each finger or brush gets its own double buffer
-    private let buffer = DoubleBuffer<TouchCanvasItem>(internalLoop: false)
+    private var buffer = DoubleBuffer<TouchCanvasItem>(internalLoop: false)
     private var indexNow = 0
     private var touchCanvas: TouchCanvas
     private var isDone = false
     private var touchCubic = TouchCubic()
 
-    public init(_ touch: UITouch,
-                _ touchCanvas: TouchCanvas) {
+    public init(_ touch: SendTouch,
+                _ touchCanvas: TouchCanvas) async {
 
         self.touchCanvas = touchCanvas
         buffer.delegate = self
-
         addTouchItem(touch)
     }
 
@@ -56,15 +56,23 @@ open class TouchCanvasBuffer {
 
         logTouch(phase, nextXY, radius)
 
-        let item = makeTouchCanvasItem(jointState.hash, force, radius, nextXY, phase, azimuth, altitude, Visitor(0, .canvas))
+        let item = makeTouchCanvasItem(
+            hash    : jointState.hash,
+            force   : force,
+            radius  : radius,
+            nextXY  : nextXY,
+            phase   : phase.rawValue,
+            azimuth : azimuth,
+            altitude: altitude,
+            visit   : Visitor(0, .canvas))
 
         buffer.append(item)
 
-        if PeersController.shared.hasPeers {
+        if Peers.shared.hasPeers {
             let encoder = JSONEncoder()
             do {
                 let data = try encoder.encode(item)
-                PeersController.shared.sendMessage(data, viaStream: true)
+                Peers.shared.sendMessage(data, viaStream: true)
             } catch {
                 print(error)
             }
@@ -118,26 +126,26 @@ open class TouchCanvasBuffer {
         buffer.append(touchItem)
     }
 
-    public func addTouchItem(_ touch: UITouch) {
-
-        let force = touch.force
-        let radius = touch.majorRadius
-        let nextXY = touch.preciseLocation(in: nil)
-        let phase = touch.phase
-        let azimuth = touch.azimuthAngle(in: nil)
-        let altitude = touch.altitudeAngle
+    public func addTouchItem(_ touch: SendTouch) {
 
         //logTouch(phase, nextXY, radius)
-
-        let item = makeTouchCanvasItem(touch.hash, force, radius, nextXY, phase, azimuth, altitude, Visitor(0, .canvas))
+        let item = makeTouchCanvasItem(
+                hash    : touch.hash,
+                force   : touch.force,
+                radius  : touch.radius,
+                nextXY  : touch.nextXY,
+                phase   : touch.phase.rawValue,
+                azimuth : touch.azimuth,
+                altitude: touch.altitude,
+                visit   : Visitor(0, .canvas))
 
         buffer.append(item)
 
-        if PeersController.shared.hasPeers {
+        if Peers.shared.hasPeers {
             let encoder = JSONEncoder()
             do {
                 let data = try encoder.encode(item)
-                PeersController.shared.sendMessage(data, viaStream: true)
+                Peers.shared.sendMessage(data, viaStream: true)
             } catch {
                 print(error)
             }
@@ -145,14 +153,14 @@ open class TouchCanvasBuffer {
     }
 
     public func makeTouchCanvasItem(
-        _ key     : Int,
-        _ force   : CGFloat,
-        _ radius  : CGFloat,
-        _ nextXY  : CGPoint,
-        _ phase   : UITouch.Phase,
-        _ azimuth : CGFloat,
-        _ altitude: CGFloat,
-        _ visit   : Visitor) -> TouchCanvasItem {
+        hash    : Int,
+        force   : CGFloat,
+        radius  : CGFloat,
+        nextXY  : CGPoint,
+        phase   : Int,
+        azimuth : CGFloat,
+        altitude: CGFloat,
+        visit   : Visitor) -> TouchCanvasItem {
 
             let alti = (.pi/2 - altitude) / .pi/2
             let azim = CGVector(dx: -sin(azimuth) * alti, dy: cos(azimuth) * alti)
@@ -170,11 +178,13 @@ open class TouchCanvasBuffer {
             } else {
                 force = 0 // bug: always begins at 0.5
             }
-            let item = TouchCanvasItem(key, nextXY, radius, force, azim, phase, visit)
+            var item = TouchCanvasItem(hash, nextXY, radius, force, azim, phase, visit)
+            item.radius = touchCanvas.touchDraw.updateRadius(item)
             return item
         }
 
 }
+
 extension TouchCanvasBuffer: DoubleBufferDelegate {
 
     public typealias Item = TouchCanvasItem
@@ -185,13 +195,13 @@ extension TouchCanvasBuffer: DoubleBufferDelegate {
 
         repeatLastItem = item
 
-        let radius = TouchDraw.shared.updateRadius(item)
+        let radius = touchCanvas.touchDraw.updateRadius(item)
         let point = item.cgPoint
         isDone = item.isDone()
 
         // 4 point cubic smoothing of line segment(s)
-        touchCubic.addPointRadius(point, radius, isDone)
-        touchCubic.drawPoints(TouchDraw.shared.drawPoint)
+        touchCubic.addPointRadius(point, CGFloat(radius), isDone)
+        touchCubic.drawPoints(touchCanvas.touchDraw.drawPoint)
 
         return isDone
 
@@ -206,6 +216,7 @@ extension TouchCanvasBuffer: DoubleBufferDelegate {
         if buffer.isEmpty,
            touchRepeat,
            let repeatLastItem {
+
             // finger is stationary repeat last movement
             flushItem(repeatLastItem)
         } else {

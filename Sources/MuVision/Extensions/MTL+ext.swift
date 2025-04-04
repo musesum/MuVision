@@ -9,7 +9,7 @@ public let MetalRenderPixelFormat = MTLPixelFormat.bgra8Unorm
 #endif
 public let MetalComputePixelFormat = MTLPixelFormat.bgra8Unorm
 
-
+@MainActor //_____
 extension MTLDevice {
 
     func updateBuffer<T: BinaryFloatingPoint>(_ any: Any?,_ nums: [T]) {

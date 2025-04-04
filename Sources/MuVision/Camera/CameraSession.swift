@@ -8,7 +8,7 @@ import MuFlo
 
 public final class CameraSession: NSObject {
 
-    public static var shared = CameraSession(nil, position: .front)
+    nonisolated(unsafe) public static let shared = CameraSession(nil, position: .front)
 
     private var isChangingFace = false
     private var isStartingNow = false
@@ -17,7 +17,7 @@ public final class CameraSession: NSObject {
     private var cameraPos: AVCaptureDevice.Position = .front
 
     private var cameraState: CameraState  = .waiting
-    private var cameraQueue = DispatchQueue(label: "CameraQueue", attributes: [])
+    private var cameraQueue = DispatchQueue(label: "CameraQueue")
 
     private var textureCache: CVMetalTextureCache?
     private var device = MTLCreateSystemDefaultDevice()
@@ -77,13 +77,10 @@ public final class CameraSession: NSObject {
 
     /// Stop the capture session.
     public func stopCamera() {
-        cameraQueue.async {
+        if  self.cameraState != .stopped {
 
-            if  self.cameraState != .stopped {
-
-                self.captureSession.stopRunning()
-                self.cameraState = .stopped
-            }
+            self.captureSession.stopRunning()
+            self.cameraState = .stopped
         }
         isStartingNow = false
     }
@@ -202,8 +199,7 @@ public final class CameraSession: NSObject {
         let out = AVCaptureVideoDataOutput()
         out.videoSettings =  [ kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA ]
         out.alwaysDiscardsLateVideoFrames = true
-        out.setSampleBufferDelegate(videoOut,
-                                    queue: cameraQueue)
+        out.setSampleBufferDelegate(videoOut, queue: cameraQueue)
         if captureSession.canAddOutput(out) {
             self.output = out
         } else {
@@ -252,7 +248,7 @@ extension CameraSession: AVCaptureVideoDataOutputSampleBufferDelegate {
 }
 #else
 public final class CameraSession: NSObject {
-    public static var shared = CameraSession()
+    nonisolated(unsafe) public static var shared = CameraSession()
     var camTex: MTLTexture?  // optional texture
 }
 #endif

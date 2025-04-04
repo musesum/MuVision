@@ -34,7 +34,7 @@ public class CameraNode: ComputeNode {
         super.makeResources()
     }
     
-    public override func computeNode(_ computeEnc: MTLComputeCommandEncoder)  {
+    public override func computeNode(_ computeEnc: MTLComputeCommandEncoder) {
 
         guard CameraSession.shared.hasNewTex else { return }
         guard let camTex = CameraSession.shared.cameraTex else { return }

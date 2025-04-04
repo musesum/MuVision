@@ -3,7 +3,7 @@
 import UIKit
 import MuFlo
 
-public class MidiDrawRipple: MidiDrawDot {
+public class MidiDrawRipple: MidiDrawDot, @unchecked Sendable {
 
     private var ripples = Ripples.shared
 

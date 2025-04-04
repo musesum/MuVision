@@ -1,7 +1,7 @@
 import Foundation
 import MuFlo
 
-
+@MainActor //_____
 public class ColorFlo {
 
     var xfade˚: Flo? ; var xfade = Float(0) // cross fade flo between two current palettes
@@ -42,7 +42,7 @@ public class ColorFlo {
         changed = true
     }
     deinit {
-        mix?.deallocate()
+        //..... mix?.deallocate()
     }
 
     public func getMix(_ palSize: Int) -> UnsafeMutablePointer<UInt32> {

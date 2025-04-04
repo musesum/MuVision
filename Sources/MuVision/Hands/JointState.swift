@@ -4,6 +4,7 @@ import UIKit
 import simd
 import MuFlo
 
+@MainActor //_____
 public class JointState {
 
     public var flo˚: Flo?

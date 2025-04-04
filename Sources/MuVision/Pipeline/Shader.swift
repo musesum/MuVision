@@ -4,6 +4,7 @@ import MetalKit
 import QuartzCore
 import MuFlo
 
+@MainActor //_____
 public class Shader {
 
     var pipeline: Pipeline

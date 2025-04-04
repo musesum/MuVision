@@ -4,6 +4,7 @@ import UIKit
 import simd
 import MuFlo
 
+@MainActor
 public class JointCanvasState: JointState {
 
     var touchCanvas: TouchCanvas?

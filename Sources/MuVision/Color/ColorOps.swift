@@ -2,7 +2,7 @@
 
 import Foundation
 
-public struct ColorOps: OptionSet {
+public struct ColorOps: OptionSet, Sendable {
 
     public let rawValue: Int
 

@@ -5,10 +5,12 @@ import CoreMotion
 import UIKit
 import RealityKit
 
+@MainActor
 public class Motion {
-    
-    public static var shared = Motion()
-    var motion: CMMotionManager?
+
+    public static let shared = Motion()
+
+    let motion: CMMotionManager
     public var sceneOrientation: matrix_float4x4!
 
     public init() {
@@ -18,7 +20,7 @@ public class Motion {
     }
 
     func updateMotion() {
-        if let motion, motion.isDeviceMotionAvailable {
+        if motion.isDeviceMotionAvailable {
 
             motion.deviceMotionUpdateInterval = 1 / 60.0
             motion.startDeviceMotionUpdates(using: .xMagneticNorthZVertical)
@@ -26,9 +28,10 @@ public class Motion {
     }
 
     @discardableResult
+
     public func updateDeviceOrientation() -> matrix_float4x4 {
 
-        if  let motion,  motion.isDeviceMotionAvailable,
+        if  motion.isDeviceMotionAvailable,
             let deviceMotion = motion.deviceMotion {
 
             let a = deviceMotion.attitude.rotationMatrix
@@ -42,7 +45,7 @@ public class Motion {
             #if os(visionOS)
             let radians = Float.pi/2
             #else
-            let radians = UIDevice.current.orientation.rotatation()
+            let radians = DispatchQueue.main.sync { UIDevice.current.orientation.rotatation() }
             #endif
             let axis = SIMD3<Float>(x: 0, y: 0, z: 1)
             let simdRotation = matrix_float4x4(simd_quatf(angle: radians, axis: axis))
@@ -53,11 +56,11 @@ public class Motion {
     }
 }
 
-var LastDeviceOrientation = UIDeviceOrientation.unknown
+@MainActor  var LastDeviceOrientation = UIDeviceOrientation.unknown
 
-extension UIDeviceOrientation {
+@MainActor extension UIDeviceOrientation {
 
-    func guessOrientation() -> UIDeviceOrientation {
+   func guessOrientation() -> UIDeviceOrientation {
 
         if LastDeviceOrientation != .unknown {
             return LastDeviceOrientation

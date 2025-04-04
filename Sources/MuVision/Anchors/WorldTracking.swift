@@ -5,7 +5,7 @@ import CompositorServices
 import MuFlo
 
 open class WorldTracking {
-    public static var shared = WorldTracking()
+    nonisolated(unsafe) public static var shared = WorldTracking()
 
     private let arSession = ARKitSession()
     private let worldTracking = WorldTrackingProvider()

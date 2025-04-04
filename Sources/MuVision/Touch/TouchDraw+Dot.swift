@@ -5,32 +5,32 @@ import MuFlo
 
 extension TouchDraw {
     /// get radius of TouchCanvasItem
-    public func updateRadius(_ item: TouchCanvasItem) -> CGFloat {
+    public func updateRadius(_ item: TouchCanvasItem) -> Float {
 
         let visit = item.visit()
 
         // if using Apple Pencil and brush tilt is turned on
         if item.force > 0, tilt {
-            let azi = CGPoint(x: CGFloat(-item.azimY), y: CGFloat(-item.azimX))
+            let azi = CGPoint(x: CGFloat(-item.azimY),
+                              y: CGFloat(-item.azimX))
             azimuth˚?.setAnyExprs(azi, .fire, visit)
             //PrintGesture("azimuth dXY(%.2f,%.2f)", item.azimuth.dx, item.azimuth.dy)
         }
-
         // if brush press is turned on
-        var radiusNow = CGFloat(1)
         if press {
             if force > 0 || item.azimX != 0.0 {
                 force˚?.setAnyExprs(item.force, .fire, visit) // will update local azimuth via FloGraph
-                radiusNow = size
             } else {
                 radius˚?.setAnyExprs(item.radius, .fire, visit)
-                radiusNow = radius
             }
-        } else {
-            radiusNow = size
         }
-        return radiusNow
+        return Float(press
+                ? (force > 0 || item.azimX != 0.0
+                   ? size
+                   : radius)
+                : size)
     }
+
     // get normalized clipping frame
     public static func texClip(in inTex: MTLTexture?,
                                out outTex: MTLTexture?) -> CGRect? {
@@ -59,15 +59,16 @@ extension TouchDraw {
 
 extension TouchDraw {
 
-    public func drawPoint(_ point: CGPoint,
-                          _ radius: CGFloat) {
-        #if os(visionOS)
-        let scale = CGFloat(3)
-        #else
-        let scale = UIScreen.main.scale
-        #endif
-
-        drawProto?.drawPoint(point, scale, radius, bufSize, drawableSize, index, drawBuf)
+    public func drawPoint(_ point: CGPoint, _ radius: CGFloat) {
+        guard let drawProto else { return }
+        drawProto.drawPoint(
+            point    : point,
+            scale    : scale,
+            radius   : radius,
+            bufSize  : bufSize,
+            drawSize : drawableSize,
+            brush    : brush,
+            drawBuf  : drawBuf)
     }
     public func drawIntoBuffer(_ drawBuf: UnsafeMutablePointer<UInt32>,
                                _ drawSize: CGSize) {

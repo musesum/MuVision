@@ -11,7 +11,7 @@ public enum RenderState: String {
 
 public class RenderDepth {
 
-    public static var state: RenderState = .passthrough
+    nonisolated(unsafe) public static var state: RenderState = .passthrough
 
     var cull    : MTLCullMode
     var winding : MTLWinding

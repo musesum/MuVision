@@ -75,7 +75,7 @@ public class RippleItem {
 
 public class Ripples {
 
-    static var shared: Ripples = Ripples()
+    nonisolated(unsafe) static var shared: Ripples = Ripples()
 
     let palSize = 256
     var items: [Int: RippleItem] = [:]

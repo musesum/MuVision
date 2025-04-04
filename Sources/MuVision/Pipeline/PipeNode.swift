@@ -8,9 +8,9 @@ import CompositorServices
 #endif
 public enum ResourceType: String { case unknown, texture, buffer, vertex, fragment }
 
-
-open class PipeNode: FloId, Equatable {
-
+@MainActor //_____
+open class PipeNode:  Equatable {
+    let id = Visitor.nextId()
     public var pipeline: Pipeline
     public var shader: Shader?
     
@@ -24,8 +24,7 @@ open class PipeNode: FloId, Equatable {
         self.pipeName = pipeFlo.name
         self.pipeline = pipeline
         self.pipeFlo  = pipeFlo
-        super.init()
-        
+
         pipeFlo.children
             .filter { $0.val("on") != nil }
             .forEach { pipeline.makePipeNode($0, self) }
@@ -91,7 +90,7 @@ open class PipeNode: FloId, Equatable {
         }
     }
     
-    public static func == (lhs: PipeNode, rhs: PipeNode) -> Bool { return lhs.id == rhs.id }
+    nonisolated public static func == (lhs: PipeNode, rhs: PipeNode) -> Bool { return lhs.id == rhs.id }
    
     open func renderNode(_ renderEnc: MTLRenderCommandEncoder) { }
     open func updateUniforms() {}

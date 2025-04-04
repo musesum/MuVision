@@ -3,6 +3,8 @@
 import AVFoundation
 import Photos
 import MuFlo
+
+@MainActor //_____
 extension RecordNode {
     
     func removeURL(_ url: URL?) {
@@ -85,12 +87,16 @@ extension RecordNode {
                 
                 PHPhotoLibrary.requestAuthorization { auth in
                     if auth == .authorized {
-                        self.saveInPhotoLibrary(documentURL)
+                        DispatchQueue.main.async {
+                            self.saveInPhotoLibrary(documentURL)
+                        }
                     }
                 }
             case .authorized:
 
-                self.saveInPhotoLibrary(documentURL)
+                DispatchQueue.main.async {
+                    self.saveInPhotoLibrary(documentURL)
+                }
 
             default: break
             }

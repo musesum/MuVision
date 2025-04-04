@@ -3,6 +3,7 @@
 import Metal
 import MuFlo
 
+@MainActor //_____
 open class ComputeNode: PipeNode {
 
     var mtlCompute: MTLComputePipelineState? // _cellRulePipeline;
