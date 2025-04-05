@@ -31,7 +31,7 @@ open class RenderLayer: @unchecked Sendable {
         self.commandQueue = device.makeCommandQueue()!
 
         self.lastRenderTime = CACurrentMediaTime()
-        startRenderLoop()
+        
     }
 
     public func startRenderLoop() {
@@ -48,6 +48,7 @@ open class RenderLayer: @unchecked Sendable {
     /// VisionOS replacement of NextFrame.shared
     func renderLoop() {
         while true {
+
             switch renderer.state {
             case .paused:  renderer.waitUntilRunning()
             case .running: autoreleasepool {

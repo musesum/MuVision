@@ -44,7 +44,9 @@ public class JointState {
         if let flo˚ {
             flo˚.setExpr("state", self)
             updateJoint(flo˚)
-            DebugLog { P("🖐️"+flo˚.path(3)+"(on: \(self.on))") }
+            if self.on {
+                DebugLog { P("🖐️"+flo˚.path(3)+"(on: \(self.on))") }
+            }
             return on
         } else {
             PrintLog("⁉️ JointFlo::updateJoint \(joint.name) not Found")

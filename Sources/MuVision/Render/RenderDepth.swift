@@ -49,8 +49,8 @@ public class DepthRendering {
 
         RenderDepth.state = .immersive
 
-        self.immer  = immerse
-        self.metal  = immerse // not used
+        self.immer = immerse
+        self.metal = immerse // not used
         self.state = .immersive
         makeStencil()
     }
