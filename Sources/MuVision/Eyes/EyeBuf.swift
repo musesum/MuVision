@@ -45,9 +45,7 @@ open class EyeBuf {
     }
 
     public func setUniformBuf(_ renderEnc: MTLRenderCommandEncoder)  {
-
         renderEnc.setVertexBuffer(eyeBuf, offset: tripleOffset, index: 15)
-
     }
 
 }

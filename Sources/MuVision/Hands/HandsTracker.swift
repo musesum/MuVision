@@ -45,7 +45,7 @@ open class HandsTracker: ObservableObject, @unchecked Sendable {
             switch event {
             case .authorizationChanged(let type, let status):
                 if type == .handTracking && status != .allowed {
-                    // Achromsk the user to grant hand tracking authorization again in Settings.
+                    // Ask the user to grant hand tracking authorization again in Settings.
                 }
             default:
                 print("Session event \(event)")

@@ -6,26 +6,26 @@ import CompositorServices
 
 extension EyeBuf {
     /// Update projection and rotation
-    public func updateEyeUniforms(_ layer: LayerRenderer.Drawable,
+    public func updateEyeUniforms(_ drawable: LayerRenderer.Drawable,
+                                  _ deviceAnchor: DeviceAnchor?,
                                   _ cameraPos: vector_float4,
                                   _ label: String) {
 
         nextTripleUniformBuffer()
 
-        let deviceAnchor = WorldTracking.shared.deviceAnchor
         let anchorOrigin = deviceAnchor?.originFromAnchorTransform ?? matrix_identity_float4x4
 
         eyes[0].eye.0 = uniformForEyeIndex(0, label)
-        if layer.views.count > 1 {
+        if drawable.views.count > 1 {
             eyes[0].eye.1 = uniformForEyeIndex(1)
         }
 
         NoTimeLog(#function, interval: 4) {
             let tab = "\t\(label[0...1])"
 
-            if layer.views.count > 1 {
-                let view0 = layer.views[0]
-                let view1 = layer.views[1]
+            if drawable.views.count > 1 {
+                let view0 = drawable.views[0]
+                let view1 = drawable.views[1]
                 let orient0 =  (anchorOrigin * view0.transform).inverse
                 let orient1 =  (anchorOrigin * view1.transform).inverse
                 let eye0 = self.eyes[0].eye.0
@@ -36,7 +36,7 @@ extension EyeBuf {
                 print(tab+"             1:\(orient1.digits(-2))")
                 print("\t👁️ viewModel   ", "0:\(eye0.viewModel.digits(-2))")
             } else {
-                let view0 = layer.views[0]
+                let view0 = drawable.views[0]
                 let orient0 =  (anchorOrigin * view0.transform).inverse
 
                 let eye0 = self.eyes[0].eye.0 
@@ -45,22 +45,22 @@ extension EyeBuf {
                 print(tab+" viewModel   0:\(eye0.viewModel.digits(-2))")
             }
             func tangentsDepthStr(_ index: Int) -> String {
-                let view = layer.views[index]
-                return "\(view.tangents.digits(-2)); \(layer.depthRange.digits(-2))"
+                let view = drawable.views[index]
+                return "\(view.tangents.digits(-2)); \(drawable.depthRange.digits(-2))"
             }
         }
 
         func uniformForEyeIndex(_ index: Int,
                                 _ label: String? = nil) -> UniformEye {
 
-            let view = layer.views[index]
+            let view = drawable.views[index]
             let projection = ProjectiveTransform3D(
                 leftTangent   : Double(view.tangents[0]),
                 rightTangent  : Double(view.tangents[1]),
                 topTangent    : Double(view.tangents[2]),
                 bottomTangent : Double(view.tangents[3]),
-                nearZ         : Double(layer.depthRange.y),
-                farZ          : Double(layer.depthRange.x),
+                nearZ         : Double(drawable.depthRange.y),
+                farZ          : Double(drawable.depthRange.x),
                 reverseZ      : true)
 
             let orientation = (anchorOrigin * view.transform).inverse

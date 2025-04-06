@@ -4,8 +4,8 @@ import ARKit
 import CompositorServices
 import MuFlo
 
-open class WorldTracking {
-    public static var shared = WorldTracking()
+open class WorldTracker {
+    public static var shared = WorldTracker()
 
     private let arSession = ARKitSession()
     private let worldTracking = WorldTrackingProvider()
@@ -24,6 +24,13 @@ open class WorldTracking {
         }
     }
 
+    func stop() async throws {
+        Task { @MainActor in
+            arSession.stop()
+        }
+        running = false
+    }
+
     public func updateAnchor(_ drawable:  LayerRenderer.Drawable) {
         guard worldTracking.state == .running else { return }
         let time = LayerRenderer.Clock.Instant.epoch.duration(to:  drawable.frameTiming.presentationTime).timeInterval
@@ -31,19 +38,14 @@ open class WorldTracking {
         deviceAnchor = worldTracking.queryDeviceAnchor(atTimestamp: time)
         drawable.deviceAnchor = deviceAnchor
 
-        NoTimeLog(#function, interval: 1) {
+        TimeLog(#function, interval: 1) {
             if let anchorNow = self.deviceAnchor?.originFromAnchorTransform.digits(),
                self.anchorPrev != anchorNow {
                 
                 self.anchorPrev = anchorNow
-                print("👁️⚓️origin    " + anchorNow)
+                print("⚓️origin    " + anchorNow)
             }
         }
-    }
-    public func updateAnchorNow() {
-        guard worldTracking.state == .running else { return }
-        let now = Date().timeIntervalSince1970
-        deviceAnchor = worldTracking.queryDeviceAnchor(atTimestamp: now)
     }
 }
 #endif

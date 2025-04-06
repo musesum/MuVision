@@ -119,8 +119,8 @@ open class Pipeline: NSObject {
 
 extension Pipeline {
 
-    public func renderFrame() {
-
+    public func renderFrame()  {
+        
         if !pipeRunning { return }
 
         if RenderDepth.state == .immersive { return } //???
@@ -140,7 +140,7 @@ extension Pipeline {
             computeEnc.endEncoding()
         }
         // render cycle
-        if let renderEnc = commandBuf.makeRenderCommandEncoder(descriptor: makeRenderPass(drawable)) {
+        if let renderEnc = commandBuf.makeRenderCommandEncoder(descriptor: renderPassDescriptor(drawable)) {
             pipeSource.runRender(renderEnc, &logging)
             renderEnc.endEncoding()
         }
@@ -152,7 +152,7 @@ extension Pipeline {
         logging += "nil"
         ///MuLog.TimeLog(#function, interval: 4) { P("🚰 "+logging) }
     }
-    public func makeRenderPass(_ drawable: CAMetalDrawable) -> MTLRenderPassDescriptor {
+    public func renderPassDescriptor(_ drawable: CAMetalDrawable) -> MTLRenderPassDescriptor {
 
         updateDepthTex()
 

@@ -168,10 +168,11 @@ public class CubeNode: RenderNode {
 #if os(visionOS)
 
     /// Update projection and rotation
-    override public func updateUniforms(_ drawable: LayerRenderer.Drawable) {
+    override public func updateUniforms(_ drawable: LayerRenderer.Drawable,
+                                        _ deviceAnchor: DeviceAnchor?) {
         let cameraPos =  vector_float4([0, 0,  -4, 1]) //????
         let label = (RenderDepth.state == .immersive ? "👁️C⃝ube" : "👁️Cube")
-        cubeMesh.eyeBuf?.updateEyeUniforms(drawable, cameraPos, label)
+        cubeMesh.eyeBuf?.updateEyeUniforms(drawable, deviceAnchor, cameraPos, label)
     }
     
 #endif

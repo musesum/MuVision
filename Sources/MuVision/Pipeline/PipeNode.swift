@@ -98,21 +98,23 @@ open class PipeNode: FloId, Equatable {
     open func makeResources() {}
 
 #if os(visionOS)
-    open func updateUniforms(_ drawable: LayerRenderer.Drawable) {
+    open func updateUniforms(_ drawable: LayerRenderer.Drawable,
+                             _ deviceAnchor: DeviceAnchor?) {
         updateUniforms()
     }
     public func runRender(_ renderEnc: MTLRenderCommandEncoder,
                           _ drawable:  LayerRenderer.Drawable,
+                          _ deviceAnchor: DeviceAnchor?,
                           _ logging: inout String) {
 
         if let renderNode = self as? RenderNode {
             logging += renderNode.pipeName + " -> "
-            renderNode.updateUniforms(drawable)
+            renderNode.updateUniforms(drawable, deviceAnchor)
             renderNode.renderNode(renderEnc)
         }
         pipeChildren
             .filter { $0.pipeFlo.val("on") ?? 0 > 0 }
-            .forEach { $0.runRender(renderEnc, drawable, &logging) }
+            .forEach { $0.runRender(renderEnc, drawable, deviceAnchor, &logging) }
     }
 #endif
 }
