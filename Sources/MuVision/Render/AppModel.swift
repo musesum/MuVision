@@ -7,6 +7,7 @@ Shared app state and renderers.
 
 import SwiftUI
 
+#if os(visionOS)
 /// Maintains app-wide state.
 @Observable
 open class AppModel {
@@ -18,7 +19,7 @@ open class AppModel {
 
     // Limb visibility
     public var upperLimbVisibility: Visibility = .visible
-
     public init() {}
 
 }
+#endif

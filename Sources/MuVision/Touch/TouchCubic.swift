@@ -30,9 +30,9 @@ public struct TouchCubic {
         // iterate between 0 and 1
         for inter: CGFloat in stride(from: 0, to: 1, by: increment) {
 
-            let xx = max(0,x.getInter(inter)) //.... goes negative
-            let yy = max(0,y.getInter(inter)) //.... goes negative
-            let rr = max(0,r.getInter(inter)) //.... goes negative
+            let xx = max(0,x.getInter(inter)) //... goes negative
+            let yy = max(0,y.getInter(inter)) //... goes negative
+            let rr = max(0,r.getInter(inter)) //... goes negative
             drawPoint(CGPoint(x: xx, y: yy), rr)
         }
     }

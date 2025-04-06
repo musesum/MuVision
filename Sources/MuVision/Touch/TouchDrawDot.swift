@@ -89,7 +89,7 @@ open class TouchDrawDot: TouchDrawProtocol {
             _ drawableSize: CGSize,
             _ texSize: CGSize) -> CGPoint
         {
-            let clipFill = fillClip(in: texSize, out: drawableSize) //.... duplicate
+            let clipFill = fillClip(in: texSize, out: drawableSize) //... duplicate
             let clipNorm = clipFill.normalize()
 
             let clipX_ = clipNorm.minX
