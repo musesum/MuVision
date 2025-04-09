@@ -23,7 +23,7 @@ extension HandPose {
                 await jointState.updatePos(pos)
             }
         }
-        updateThumbIndex()
+        updateThumbTips()
         updateOtherHand(otherHand)
 
         TimeLog(#function, interval: 2.0) {

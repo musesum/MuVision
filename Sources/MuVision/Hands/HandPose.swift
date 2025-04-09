@@ -42,7 +42,7 @@ public class HandPose {
     var wrist       = JointState()
     var forearm     = JointState()
     // plus an extra for drawing on canvas
-    var canvas      = JointCanvasState()
+    var draw      = JointDrawState()
 
     public init() {
 
@@ -112,7 +112,7 @@ public class HandPose {
     }
 
     public func updateHand(_ chiral: Chiral,
-                          _ hand˚: Flo?) {
+                           _ hand˚: Flo?) {
         guard let hand˚ else { return err( "hand˚ is nil") }
 
         self.chiral = chiral
@@ -122,15 +122,15 @@ public class HandPose {
                 jointOn.insert(jointEnum)
             }
         }
-        func err(_ msg: String) { PrintLog("⁉️ HandFlo::parseHand \(msg)") }
+        func err(_ msg: String) { PrintLog("⁉️ HandFlo::\(#function) \(msg)") }
     }
-    public func parseCanvas(_ touchCanvas: TouchCanvas,
+    public func parseDraw(_ touchCanvas: TouchCanvas,
                             _ chiral: Chiral,
                             _ root˚: Flo) {
 
         let hand˚ = root˚.bind("hand")
         if !hand˚.name.hasPrefix("?") {
-            canvas.parseCanvas(touchCanvas, chiral, hand˚)
+            draw.bindHand(hand˚, touchCanvas, chiral, )
         } else {
             PrintLog("⁉️ HandFlo::parseCanvas `hand` not found!")
         }
@@ -152,7 +152,7 @@ public class HandPose {
         }
     }
 
-    public func updateThumbIndex() {
+    public func updateThumbTips() {
         var count = 0
         for jointEnum in touchThumb {
             if let jointState = joints[jointEnum] {

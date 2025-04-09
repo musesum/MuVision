@@ -69,7 +69,7 @@ public class JointState {
         let active = phase.rawValue < 3
 
         if  touching {
-            if active { updatePhase(.moved, "👍🔹", interval: 0.3) }
+            if active { updatePhase(.moved, "👍🔹", interval: 1.0) }
             else      { updatePhase(.began, "👍🟢", interval: 0) }
         } else {
             if active { updatePhase(.ended, "👍♦️", interval: 0) }

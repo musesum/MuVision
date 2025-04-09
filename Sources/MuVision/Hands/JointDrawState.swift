@@ -4,19 +4,19 @@ import UIKit
 import simd
 import MuFlo
 
-public class JointCanvasState: JointState {
+public class JointDrawState: JointState {
 
     var touchCanvas: TouchCanvas?
 
-    func parseCanvas(_ touchCanvas: TouchCanvas,
-                     _ chiral: Chiral,
-                     _ hand˚: Flo) {
+    func bindHand(_ hand˚: Flo,
+                  _ touchCanvas: TouchCanvas,
+                  _ chiral: Chiral) {
 
         self.touchCanvas = touchCanvas
         self.joint = .touching
         self.chiral = chiral
 
-        flo˚ = hand˚.bind("touching") { flo, visit in
+        flo˚ = hand˚.bind("draw") { flo, visit in
 
             guard let from = visit.from else { return err("visit.from == nil") }
             guard let joint = from.getExpr("state") as? JointState else { return err("not a JointState") }
@@ -32,7 +32,7 @@ public class JointCanvasState: JointState {
         if flo˚ == nil { err(flo˚?.path() ?? "flo˚ not found") }
 
         func err(_ msg: String) {
-            let title = "⁉️ JointCanvasState::parseCanvas"
+            let title = "⁉️ JointCanvasState::bindHand"
             DebugLog { P("\(title) \(msg)") }
         }
     }

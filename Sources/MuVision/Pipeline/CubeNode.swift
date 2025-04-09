@@ -32,8 +32,8 @@ public class CubeNode: RenderNode {
         self.viaIndex = true
         super.init(pipeline, childFlo)
         
-        inTex˚  = pipeFlo.superBindPath("in")
-        cudex˚  = pipeFlo.superBindPath("cudex")
+        inTex˚ = pipeFlo.superBindPath("in")
+        cudex˚ = pipeFlo.superBindPath("cudex")
         mixcube˚ = pipeFlo.superBindPath("mixcube")
         makeRenderPipeline()
         makeResources()

@@ -17,8 +17,8 @@ open class HandsModel {
             handsFlo.left .updateHand(.left,  handFlo˚.bind("left" ))
             handsFlo.right.updateHand(.right, handFlo˚.bind("right"))
         }
-        handsFlo.left .parseCanvas(touchCanvas, .left,  rootFlo)
-        handsFlo.right.parseCanvas(touchCanvas, .right, rootFlo)
+        handsFlo.left .parseDraw(touchCanvas, .left,  rootFlo)
+        handsFlo.right.parseDraw(touchCanvas, .right, rootFlo)
 
         // print(rootHandFlo?.scriptFull)
 
