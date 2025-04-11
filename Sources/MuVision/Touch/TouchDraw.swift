@@ -17,7 +17,8 @@ public class TouchDraw {
     var radius˚  : Flo? ; var radius  = CGFloat(0)
     var azimuth˚ : Flo? ; var azimuth = CGPoint.zero
     var fill˚    : Flo? ; var fill    = Float(-1)
-    
+    var immerse˚ : Flo? ; var immerse = false
+
     var bufSize = CGSize.zero
     var drawBuf: UnsafeMutablePointer<UInt32>?
     var archiveFlo: ArchiveFlo?
@@ -37,12 +38,14 @@ public class TouchDraw {
         self.drawRipple = MidiDrawRipple(root, archiveFlo, "sky.draw.ripple")
 
         let sky    = root.bind("sky"   )
+        let main   = sky .bind("main"  )
         let input  = sky .bind("input" )
         let draw   = sky .bind("draw"  )
         let brush  = draw.bind("brush" )
         let line   = draw.bind("line"  )
         let screen = draw.bind("screen")
 
+        immerse˚ = main.bind("immerse"  ){ f,_ in self.immerse = f.bool    }
         tilt˚    = input .bind("tilt"   ){ f,_ in self.tilt    = f.bool    }
         press˚   = brush .bind("press"  ){ f,_ in self.press   = f.bool    }
         size˚    = brush .bind("size"   ){ f,_ in self.size    = f.cgFloat }
@@ -53,5 +56,6 @@ public class TouchDraw {
         radius˚  = input .bind("radius" ){ f,_ in self.radius  = f.cgFloat }
         azimuth˚ = input .bind("azimuth"){ f,_ in self.azimuth = f.cgPoint }
         fill˚    = screen.bind("fill"   ){ f,_ in self.fill    = f.float   }
+
     }
 }

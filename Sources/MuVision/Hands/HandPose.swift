@@ -111,13 +111,13 @@ public class HandPose {
         ]
     }
 
-    public func updateHand(_ chiral: Chiral,
-                           _ hand˚: Flo?) {
-        guard let hand˚ else { return err( "hand˚ is nil") }
+    public func bindChiral(_ chiral: Chiral,
+                           _ chiral˚: Flo?) {
+        guard let chiral˚ else { return err( "chiral˚ is nil") }
 
         self.chiral = chiral
         for (jointEnum, jointState) in self.joints {
-            if jointState.updateJoint(chiral, hand˚, jointEnum) {
+            if jointState.bindJoint(chiral, chiral˚, jointEnum) {
                 /// parsed ok and `on == 1`
                 jointOn.insert(jointEnum)
             }
@@ -125,14 +125,14 @@ public class HandPose {
         func err(_ msg: String) { PrintLog("⁉️ HandFlo::\(#function) \(msg)") }
     }
     public func parseDraw(_ touchCanvas: TouchCanvas,
-                            _ chiral: Chiral,
-                            _ root˚: Flo) {
+                          _ chiral: Chiral,
+                          _ root˚: Flo) {
 
         let hand˚ = root˚.bind("hand")
         if !hand˚.name.hasPrefix("?") {
-            draw.bindHand(hand˚, touchCanvas, chiral, )
+            draw.bindHand(hand˚, touchCanvas, chiral)
         } else {
-            PrintLog("⁉️ HandFlo::parseCanvas `hand` not found!")
+            PrintLog("⁉️ HandFlo::parseDraw `hand` not found!")
         }
     }
 
@@ -162,8 +162,8 @@ public class HandPose {
         if count > 0, let chiral {
             TimeLog(#function, interval: 4) { P(chiral.icon + "👍\(count)") }
         }
-
     }
+
     /// reserved for toggling palette on hand
     /// with index finger of other hand
     public func updateOtherHand(_ otherHand: HandPose) {

@@ -123,7 +123,7 @@ extension Pipeline {
         
         if !pipeRunning { return }
 
-        if RenderDepth.state == .immersive { return } //???
+        if RenderDepth.state == .immersive { return }
 
         guard let pipeSource = pipeSource else { return }
         var logging = ""

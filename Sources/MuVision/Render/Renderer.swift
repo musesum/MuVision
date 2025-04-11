@@ -139,7 +139,7 @@ extension Renderer {
         func performCpuWork() {
             // this should execute pending Flo animations
             // while ignoring the metal based renderFrame()
-            _ = NextFrame.shared.nextFrame(force: true)
+            _ = NextFrame.shared.nextFrame(force: true) //.... crash here
         }
     }
     public func runLayer(_ drawable: LayerRenderer.Drawable,

@@ -32,7 +32,7 @@ extension JointState {
             TimeLog(#function+"\(hash)", log)
             func log() {
                 let prefix = (on ? "❇️" : "🅾️")
-                let path = "\(chiral.name).\(flo˚?.path() ?? "??")".pad(18)
+                let path = "\(chiral.name).\(joint˚?.path() ?? "??")".pad(18)
                 let mine = path + pos.digits(-2)
                 let index = "indexTip\(indexTip.pos.digits(-2))"
                 let label = "\(prefix)\(mine) ∆ \(index) => \(d.digits(3)) "

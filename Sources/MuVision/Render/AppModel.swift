@@ -20,6 +20,5 @@ open class AppModel {
     // Limb visibility
     public var upperLimbVisibility: Visibility = .visible
     public init() {}
-
 }
 #endif

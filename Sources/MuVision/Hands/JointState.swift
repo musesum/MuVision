@@ -6,7 +6,9 @@ import MuFlo
 
 public class JointState {
 
-    public var flo˚: Flo?
+    public var joint˚: Flo?
+    public var floDraw˚: Flo?
+    public var floMenu˚: Flo?
     public var chiral: Chiral!
     public var joint: JointEnum!
     public var pos = SIMD3<Float>.zero
@@ -14,7 +16,7 @@ public class JointState {
     public var time = TimeInterval(0)
     public var timeBegin = TimeInterval(0)
     public var timeEnded = TimeInterval(0)
-
+    public var taps = 0
     public var phase = UITouch.Phase.ended
     public var on = false
 
@@ -30,22 +32,22 @@ public class JointState {
     internal var otherTimeEnded = TimeInterval(0)
     internal var tapThreshold = TimeInterval(0.33)
 
-    func updateJoint(_ chiral: Chiral,
-                    _ hand˚: Flo,
-                    _ joint: JointEnum) -> Bool {
+    func bindJoint(_ chiral: Chiral,
+                     _ hand˚: Flo,
+                     _ joint: JointEnum) -> Bool {
 
         self.chiral = chiral
         self.joint = joint
 
-        flo˚ = hand˚.bind(joint.name) { flo,_ in
+        joint˚ = hand˚.bind(joint.name) { flo,_ in
             self.updateJoint(flo)
             flo.activate(from:flo)
         }
-        if let flo˚ {
-            flo˚.setExpr("state", self)
-            updateJoint(flo˚)
+        if let joint˚ {
+            joint˚.setExpr("state", self)
+            updateJoint(joint˚)
             if self.on {
-                DebugLog { P("🖐️"+flo˚.path(3)+"(on: \(self.on))") }
+                DebugLog { P("🖐️"+joint˚.path(3)+"(on: \(self.on))") }
             }
             return on
         } else {
@@ -80,14 +82,37 @@ public class JointState {
                          _ color: String,
                          interval: TimeInterval) {
 
+            switch phase {
+
+            case .began:
+
+                timeBegin = Date().timeIntervalSince1970
+                let delta = timeBegin - timeEnded
+                if delta > tapThreshold {
+                    taps = 0
+                }
+
+            case .ended:
+
+                timeEnded = Date().timeIntervalSince1970
+                let delta = timeEnded - timeBegin
+                if delta < tapThreshold {
+                    taps += 1
+                } else {
+                    taps = 0
+                }
+            default: break
+            }
+
             updateFlo(phase)
 
             TimeLog("\(#function).\(hash)", interval: interval) {
-                let path = "\(self.chiral?.icon ?? "") \(self.flo˚?.path(3) ?? "??")".pad(18)
+                let path = "\(self.chiral?.icon ?? "") \(self.joint˚?.path(3) ?? "??")".pad(18)
                 let mine = path + self.pos.digits(-2)
                 let thumb = "thumbTip\(thumbTip.pos.digits(-2))"
                 let hash = "👐\(self.hash) \(oldPhase) => \(phase.rawValue)"
-                let title = "\(color) \(mine) ∆ \(thumb) => \(distance.digits(3)) \(hash)"
+                let taps = "taps: \(self.taps)"
+                let title = "\(color) \(mine) ∆ \(thumb) => \(distance.digits(3)) \(hash) \(taps)"
                 print(title)
             }
         }
@@ -110,10 +135,10 @@ public class JointState {
             ("time",  Double(time )),
             ("phase", Double(phase.rawValue)),
             ("joint", Double(joint.rawValue))]
-        if let flo˚ {
-            flo˚.setDoubles(nameDoubles)
+        if let joint˚ {
+            joint˚.setDoubles(nameDoubles)
             if options == .fire {
-                flo˚.activate(from: flo˚)
+                joint˚.activate(from: joint˚)
             }
         }
     }
