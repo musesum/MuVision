@@ -9,11 +9,11 @@ import CompositorServices
 public enum ResourceType: String { case unknown, texture, buffer, vertex, fragment }
 
 
-open class PipeNode: FloId, Equatable {
-
+open class PipeNode: Equatable {
+    var id = Visitor.nextId()
+    
     public var pipeline: Pipeline
     public var shader: Shader?
-    
     public var pipeName: String
     public var pipeFlo: Flo
     public var pipeChildren = [PipeNode]()
@@ -24,7 +24,6 @@ open class PipeNode: FloId, Equatable {
         self.pipeName = pipeFlo.name
         self.pipeline = pipeline
         self.pipeFlo  = pipeFlo
-        super.init()
         
         pipeFlo.children
             .filter { $0.val("on") != nil }
