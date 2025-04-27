@@ -60,11 +60,11 @@ open class TouchCanvasBuffer {
 
         buffer.append(item)
 
-        if PeersController.shared.hasPeers {
+        if Peers.shared.hasPeers {
             let encoder = JSONEncoder()
             do {
                 let data = try encoder.encode(item)
-                PeersController.shared.sendMessage(data, viaStream: true)
+                Peers.shared.sendMessage(data, viaStream: true)
             } catch {
                 print(error)
             }
@@ -133,11 +133,11 @@ open class TouchCanvasBuffer {
 
         buffer.append(item)
 
-        if PeersController.shared.hasPeers {
+        if Peers.shared.hasPeers {
             let encoder = JSONEncoder()
             do {
                 let data = try encoder.encode(item)
-                PeersController.shared.sendMessage(data, viaStream: true)
+                Peers.shared.sendMessage(data, viaStream: true)
             } catch {
                 print(error)
             }

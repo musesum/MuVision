@@ -13,7 +13,7 @@ public protocol ImmersionDelegate {
 }
 
 
-open class TouchCanvas {
+open class TouchCanvas: @unchecked Sendable {
     
     static var touchRepeat = true
     static var touchBuffers = [Int: TouchCanvasBuffer]()
@@ -35,9 +35,9 @@ open class TouchCanvas {
 
     public init(_ touchDraw: TouchDraw) {
         self.touchDraw = touchDraw
-        PeersController.shared.peersDelegates.append(self)
+        Peers.shared.delegates["TouchCanvas"] = self
     }
-    deinit { PeersController.shared.remove(peersDelegate: self) }
+    deinit { Peers.shared.removeDelegate("TouchCanvas") }
 
     public func beginJointState(_ jointState: JointState) {
         TouchCanvas.touchBuffers[jointState.hash] = TouchCanvasBuffer(jointState, self)
