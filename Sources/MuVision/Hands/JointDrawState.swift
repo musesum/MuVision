@@ -50,7 +50,7 @@ public class JointDrawState: JointState {
             guard let joint = from.getExpr("state") as? JointState else { return err("not a JointState") }
 
             if self.phase == .ended,
-               let immersive = TouchCanvas.shared.immersiveDelegate
+               let immersive = touchCanvas.immersiveDelegate
             {
                 DebugLog { P("👐👆 from: \(from.path(3)) hash: \(joint.hash) taps: \(joint.taps)") }
                 if joint.taps > 0 {

@@ -9,16 +9,18 @@ public class DrawNode: ComputeNode {
     private var inTex˚  : Flo?
     private var outTex˚ : Flo?
     private var shift˚  : Flo?
+    private var touchDraw: TouchDraw
 
     public override init(_ pipeline : Pipeline,
                          _ childFlo : Flo) {
 
+        self.touchDraw = pipeline.touchDraw
         super.init(pipeline, childFlo)
 
         inTex˚  = pipeFlo.superBindPath("in")
         outTex˚ = pipeFlo.superBind("out") { flo, _ in
             if let tex = flo.texture {
-                TouchDraw.shared.drawTex = tex
+                self.touchDraw.drawTex = tex
             }
         }
         shift˚  = pipeFlo.superBindPath("shift")
@@ -42,7 +44,7 @@ public class DrawNode: ComputeNode {
             let region = MTLRegionMake3D(0, 0, 0, inTex.width, inTex.height, 1)
             inTex.getBytes(drawBuf, bytesPerRow: rowSize, from: region, mipmapLevel: 0)
             
-            TouchDraw.shared.drawIntoBuffer(drawBuf, pipeline.pipeSize)
+            touchDraw.drawIntoBuffer(drawBuf, pipeline.pipeSize)
             TouchCanvas.flushTouchCanvas()
 
             inTex.replace(region: region, mipmapLevel: 0, withBytes: drawBuf, bytesPerRow: rowSize)

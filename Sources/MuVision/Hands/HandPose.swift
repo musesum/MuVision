@@ -124,9 +124,9 @@ public class HandPose {
         }
         func err(_ msg: String) { PrintLog("⁉️ HandFlo::\(#function) \(msg)") }
     }
-    public func parseDraw(_ touchCanvas: TouchCanvas,
-                          _ chiral: Chiral,
-                          _ root˚: Flo) {
+    public func parseCanvas(_ touchCanvas: TouchCanvas,
+                            _ chiral: Chiral,
+                            _ root˚: Flo) {
 
         let hand˚ = root˚.bind("hand")
         if !hand˚.name.hasPrefix("?") {

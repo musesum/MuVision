@@ -67,7 +67,7 @@ extension TouchDraw {
         let scale = UIScreen.main.scale
         #endif
 
-        drawProto?.drawPoint(point, scale, radius, bufSize, drawableSize, index, drawBuf)
+        drawProto?.drawPoint(point, scale, radius, bufSize, drawableSize, brush, drawBuf)
     }
     public func drawIntoBuffer(_ drawBuf: UnsafeMutablePointer<UInt32>,
                                _ drawSize: CGSize) {

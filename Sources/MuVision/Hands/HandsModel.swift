@@ -17,8 +17,8 @@ open class HandsModel {
             handsFlo.left .bindChiral(.left,  handFlo˚.bind("left" ))
             handsFlo.right.bindChiral(.right, handFlo˚.bind("right"))
         }
-        handsFlo.left .parseDraw(touchCanvas, .left,  rootFlo)
-        handsFlo.right.parseDraw(touchCanvas, .right, rootFlo)
+        handsFlo.left .parseCanvas(touchCanvas, .left,  rootFlo)
+        handsFlo.right.parseCanvas(touchCanvas, .right, rootFlo)
 
         // print(rootHandFlo?.scriptFull)
 

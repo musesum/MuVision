@@ -14,8 +14,6 @@ public protocol ImmersionDelegate {
 
 
 open class TouchCanvas {
-
-    static public let shared = TouchCanvas()
     
     static var touchRepeat = true
     static var touchBuffers = [Int: TouchCanvasBuffer]()
@@ -31,10 +29,14 @@ open class TouchCanvas {
         }
     }
 
+    let touchDraw: TouchDraw
     public var immersiveDelegate: ImmersionDelegate?
     public var immersive = false
 
-    public init() { PeersController.shared.peersDelegates.append(self) }
+    public init(_ touchDraw: TouchDraw) {
+        self.touchDraw = touchDraw
+        PeersController.shared.peersDelegates.append(self)
+    }
     deinit { PeersController.shared.remove(peersDelegate: self) }
 
     public func beginJointState(_ jointState: JointState) {
