@@ -30,14 +30,17 @@ open class TouchCanvas: @unchecked Sendable {
     }
 
     let touchDraw: TouchDraw
+    public let peers: Peers
     public var immersiveDelegate: ImmersionDelegate?
     public var immersive = false
 
-    public init(_ touchDraw: TouchDraw) {
+    public init(_ touchDraw: TouchDraw,
+                _ peers: Peers) {
         self.touchDraw = touchDraw
-        Peers.shared.delegates["TouchCanvas"] = self
+        self.peers = peers
+        peers.delegates["TouchCanvas"] = self
     }
-    deinit { Peers.shared.removeDelegate("TouchCanvas") }
+    deinit { peers.removeDelegate("TouchCanvas") }
 
     public func beginJointState(_ jointState: JointState) {
         TouchCanvas.touchBuffers[jointState.hash] = TouchCanvasBuffer(jointState, self)

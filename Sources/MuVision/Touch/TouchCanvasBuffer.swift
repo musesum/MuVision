@@ -15,13 +15,14 @@ open class TouchCanvasBuffer {
     private var touchCanvas: TouchCanvas
     private var isDone = false
     private var touchCubic = TouchCubic()
+    private var peers: Peers!
 
     public init(_ touch: UITouch,
                 _ touchCanvas: TouchCanvas) {
 
         self.touchCanvas = touchCanvas
+        self.peers = touchCanvas.peers
         buffer.delegate = self
-
         addTouchItem(touch)
     }
 
@@ -29,6 +30,7 @@ open class TouchCanvasBuffer {
                 _ touchCanvas: TouchCanvas) {
 
         self.touchCanvas = touchCanvas
+        self.peers = touchCanvas.peers
         buffer.delegate = self
 
         addTouchCanvasItem(touchItem)
@@ -60,11 +62,11 @@ open class TouchCanvasBuffer {
 
         buffer.append(item)
 
-        if Peers.shared.hasPeers {
+        if peers.hasPeers {
             let encoder = JSONEncoder()
             do {
                 let data = try encoder.encode(item)
-                Peers.shared.sendMessage(data, viaStream: true)
+                peers.sendMessage(data, viaStream: true)
             } catch {
                 print(error)
             }
@@ -133,11 +135,11 @@ open class TouchCanvasBuffer {
 
         buffer.append(item)
 
-        if Peers.shared.hasPeers {
+        if peers.hasPeers {
             let encoder = JSONEncoder()
             do {
                 let data = try encoder.encode(item)
-                Peers.shared.sendMessage(data, viaStream: true)
+                peers.sendMessage(data, viaStream: true)
             } catch {
                 print(error)
             }
