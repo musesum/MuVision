@@ -8,7 +8,6 @@ import CompositorServices
 #endif
 public enum ResourceType: String { case unknown, texture, buffer, vertex, fragment }
 
-
 open class PipeNode: Equatable {
     var id = Visitor.nextId()
     

@@ -22,8 +22,7 @@ extension MTLDevice {
         }
     }
 
-    func updateFloNumsBuffer<T: BinaryFloatingPoint>(_ flo: Flo,
-                                                     _ nums: [T]) {
+    func updateFloNumsBuffer<T: BinaryFloatingPoint>(_ flo: Flo, _ nums: [T]) {
         let newSize = nums.count * MemoryLayout<T>.stride
         nums.withUnsafeBytes { rawBufferPointer in
             guard let baseAddress = rawBufferPointer.baseAddress else { return }
@@ -31,7 +30,7 @@ extension MTLDevice {
                buffer.allocatedSize <= newSize {
                 buffer.contents().copyMemory(from: baseAddress, byteCount: newSize)
             } else {
-                let buffer =  makeBuffer(bytes: baseAddress, length: newSize, options: [])
+                let buffer = makeBuffer(bytes: baseAddress, length: newSize, options: [])
                 buffer?.label = flo.path(2)
                 flo.buffer = buffer
             }

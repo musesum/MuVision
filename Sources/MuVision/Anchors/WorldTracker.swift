@@ -25,9 +25,7 @@ open class WorldTracker {
     }
 
     func stop() async throws {
-        Task { @MainActor in
-            arSession.stop()
-        }
+        arSession.stop()
         running = false
     }
 

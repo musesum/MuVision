@@ -93,7 +93,7 @@ open class Renderer {
             switch layerRenderer.state {
             case .invalidated:
                 print("Layer is invalidated")
-                Task { @MainActor in  arSession.stop() }
+                arSession.stop()
                 return
             case .paused:
                 layerRenderer.waitUntilRunning()

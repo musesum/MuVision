@@ -1,7 +1,6 @@
 import Foundation
 import MuFlo
 
-
 public class ColorFlo {
 
     var xfade˚: Flo? ; var xfade = Float(0) // cross fade flo between two current palettes
