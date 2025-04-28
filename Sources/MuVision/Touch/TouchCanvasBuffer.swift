@@ -15,7 +15,7 @@ open class TouchCanvasBuffer {
     private var touchCanvas: TouchCanvas
     private var isDone = false
     private var touchCubic = TouchCubic()
-    private var peers: Peers!
+    private var peers: Peers
 
     public init(_ touch: UITouch,
                 _ touchCanvas: TouchCanvas) {
@@ -40,6 +40,7 @@ open class TouchCanvasBuffer {
                 _ touchCanvas: TouchCanvas) {
 
         self.touchCanvas = touchCanvas
+        self.peers = touchCanvas.peers
         buffer.delegate = self
 
         addTouchHand(jointState)
