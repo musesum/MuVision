@@ -75,17 +75,16 @@ public class RippleItem {
 
 public class Ripples {
 
-    static var shared: Ripples = Ripples()
-
     let palSize = 256
     var items: [Int: RippleItem] = [:]
 
+    public init() {}
+    
     func update(_ pal: inout Rgbs) {
         for (channel, item) in items {
             if item.update(&pal) == false {
                 items.removeValue(forKey: channel)
-                if item.logging { print("[\(channel)]$" )
-                }
+                if item.logging { print("[\(channel)]$" ) }
             }
         }
     }

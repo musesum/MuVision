@@ -10,9 +10,9 @@ open class ComputeNode: PipeNode {
     var threadCount = MTLSize()
 
     override public init(_ pipeline : Pipeline,
-                         _ pipeFlo  : Flo) {
+                         _ pipeNode˚ : Flo) {
 
-        super.init(pipeline, pipeFlo)
+        super.init(pipeline, pipeNode˚)
     }
 
     open override func makeResources() {
@@ -30,7 +30,7 @@ open class ComputeNode: PipeNode {
                 self.mtlCompute = mtlCompute
 
             } else {
-                PrintLog("⁉️ makeComputePipe: \(pipeFlo.name) failed")
+                PrintLog("⁉️ makeComputePipe: \(pipeNode˚.name) failed")
             }
         }
 

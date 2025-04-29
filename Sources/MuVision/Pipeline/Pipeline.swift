@@ -49,7 +49,6 @@ open class Pipeline: NSObject {
                 _ scale: CGFloat,
                 _ bounds: CGRect) {
 
-
         self.root˚ = root˚
         self.touchDraw = touchDraw
         self.archive = archive

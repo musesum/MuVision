@@ -55,11 +55,11 @@ For example, let's start with an explictly declared `in(tex)`, which is shared b
 and in swift code, bind to `in(tex)` like so: 
 
 ```
-inTex˚ = pipeFlo.bind("flat.in") // in FlatNode.swift
+inTex˚ = pipeNode˚.bind("flat.in") // in FlatNode.swift
 
-inTex˚ = pipeFlo.bind("cube.in") // in CubeNode.swift
+inTex˚ = pipeNode˚.bind("cube.in") // in CubeNode.swift
 
-inTex˚ = pipeFlo.bind("plato.in") // in PlatoNode.swift
+inTex˚ = pipeNode˚.bind("plato.in") // in PlatoNode.swift
 ```
 
 Because `in(tex)` is shared by `flat`, `cube`, and `plato`, we can instead declare it under `render` like so: 
@@ -79,11 +79,11 @@ Because `in(tex)` is shared by `flat`, `cube`, and `plato`, we can instead decla
 and replace the swift bindings like so: 
 
 ```
-inTex˚ = pipeFlo.superBind("in") // in FlatNode.swift
+inTex˚ = pipeNode˚.superBind("in") // in FlatNode.swift
 ...
-inTex˚ = pipeFlo.superBind("in") // in CubeNode.swift
+inTex˚ = pipeNode˚.superBind("in") // in CubeNode.swift
 ...
-inTex˚ = pipeFlo.superBind("in")  // in PlatoNode.swift
+inTex˚ = pipeNode˚.superBind("in")  // in PlatoNode.swift
 ```
 
 this is a bit more concise. 

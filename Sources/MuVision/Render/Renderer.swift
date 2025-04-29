@@ -52,6 +52,7 @@ open class Renderer {
     private var multisampleRenderTargets: [(color: MTLTexture, depth: MTLTexture)?]
 
     public let layerRenderer: LayerRenderer
+    public let nextFrame: NextFrame
 
     // ARKit
     private let arSession: ARKitSession
@@ -59,10 +60,12 @@ open class Renderer {
 
     public init(_ layerRenderer: LayerRenderer,
                 _ pipeline: Pipeline,
+                _ nextFrame: NextFrame,
                 _ appModel: AppModel)  {
 
-        self.pipeline = pipeline
         self.layerRenderer = layerRenderer
+        self.pipeline = pipeline
+        self.nextFrame = nextFrame
         self.appModel = appModel
 
         self.device = layerRenderer.device
@@ -139,7 +142,7 @@ extension Renderer {
         func performCpuWork() {
             // this should execute pending Flo animations
             // while ignoring the metal based renderFrame()
-            _ = NextFrame.shared.nextFrame(force: true) //.... crash here
+            _ = nextFrame.nextFrame(force: true) //.... crash here
         }
     }
     public func runLayer(_ drawable: LayerRenderer.Drawable,

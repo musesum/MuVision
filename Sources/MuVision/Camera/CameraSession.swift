@@ -15,10 +15,8 @@ public final class CameraSession: NSObject {
     private var captureDevice: AVCaptureDevice?
     private var captureSession = AVCaptureSession()
     private var cameraPos: AVCaptureDevice.Position = .front
-
     private var cameraState: CameraState  = .waiting
-    private var cameraQueue = DispatchQueue(label: "CameraQueue", attributes: [])
-
+    private var cameraQueue = DispatchQueue(label: "Camera", attributes: [])
     private var textureCache: CVMetalTextureCache?
     private var device = MTLCreateSystemDefaultDevice()
     private var videoOut: AVCaptureVideoDataOutputSampleBufferDelegate!

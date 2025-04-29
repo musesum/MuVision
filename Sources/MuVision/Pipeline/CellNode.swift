@@ -17,17 +17,16 @@ public class CellNode: ComputeNode {
     private var frame = 0
 
     override public init(_ pipeline : Pipeline,
-                         _ childFlo : Flo) {
+                         _ pipeNode˚ : Flo) {
 
-        super.init(pipeline, childFlo)
+        super.init(pipeline, pipeNode˚)
+        fakeTex˚ = pipeNode˚.superBindPath("fake")
+        realTex˚ = pipeNode˚.superBindPath("real")
+        outTex˚  = pipeNode˚.superBindPath("out")
+        version˚ = pipeNode˚.superBindPath("version")
+        loops˚   = pipeNode˚.superBindPath("loops")
 
-        fakeTex˚ = pipeFlo.superBindPath("fake")
-        realTex˚ = pipeFlo.superBindPath("real")
-        outTex˚  = pipeFlo.superBindPath("out")
-        version˚ = pipeFlo.superBindPath("version")
-        loops˚   = pipeFlo.superBindPath("loops")
-
-        switch pipeFlo.name {
+        switch pipeNode˚.name {
         case "slide": shader = Shader(pipeline, file: "cell.rule.slide", kernel: "slideKernel")
         case "zha"  : shader = Shader(pipeline, file: "cell.rule.zha",   kernel: "zhaKernel" )
         case "ave"  : shader = Shader(pipeline, file: "cell.rule.ave",   kernel: "aveKernel" )
@@ -35,7 +34,7 @@ public class CellNode: ComputeNode {
         case "melt" : shader = Shader(pipeline, file: "cell.rule.melt",  kernel: "meltKernel")
         case "tunl" : shader = Shader(pipeline, file: "cell.rule.tunl",  kernel: "tunlKernel")
         case "fred" : shader = Shader(pipeline, file: "cell.rule.fred",  kernel: "fredKernel")
-        default:  PrintLog("⁉️ CellNode:: unknown shader named: \(pipeFlo.name)")
+        default:  PrintLog("⁉️ CellNode:: unknown shader named: \(pipeNode˚.name)")
         }
         makeResources()
     }

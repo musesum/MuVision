@@ -14,15 +14,15 @@ public class CamixNode: ComputeNode {
     private var front˚  : Flo?
 
     override public init(_ pipeline : Pipeline,
-                         _ childFlo : Flo) {
+                         _ pipeNode˚ : Flo) {
 
-        super.init(pipeline, childFlo)
+        super.init(pipeline, pipeNode˚)
 
-        inTex˚  = pipeFlo.superBindPath("in")
-        camTex˚ = pipeFlo.superBindPath("cam")
-        outTex˚ = pipeFlo.superBindPath("out")
-        mixcam˚ = pipeFlo.superBindPath("mixcam")
-        frame˚  = pipeFlo.superBindPath("frame")
+        inTex˚  = pipeNode˚.superBindPath("in")
+        camTex˚ = pipeNode˚.superBindPath("cam")
+        outTex˚ = pipeNode˚.superBindPath("out")
+        mixcam˚ = pipeNode˚.superBindPath("mixcam")
+        frame˚  = pipeNode˚.superBindPath("frame")
         shader  = Shader(pipeline, file: "pipe.camix", kernel: "camixKernel")
         makeResources()
     }

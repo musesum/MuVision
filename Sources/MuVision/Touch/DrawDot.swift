@@ -4,11 +4,10 @@ import QuartzCore
 import UIKit
 import MuFlo
 
-public class MidiDrawDot {
+public class DrawDot {
 
-    var noteItems: [Int: MidiMpeItem] = [:]
-
-    private var root    : Flo! /// root of tree
+    private var noteItems: [Int: MidiMpeItem] = [:]
+    private var root˚   : Flo! /// root of tree
     private var base˚   : Flo! /// base flo on/off
     private var noteOn˚ : Flo? /// midi note on
     private var noteOff˚: Flo? /// midi note off
@@ -16,29 +15,28 @@ public class MidiDrawDot {
     private var slide˚  : Flo? /// mpe slide pitch
     private var after˚  : Flo? /// aftertouch
     private var clear˚  : Flo? /// clear screen event
+
     private var archive˚: ArchiveFlo?
     private var bufSize = CGSize.zero
     private var drawBuf: UnsafeMutablePointer<UInt32>?
     private var running: Bool = false
     private var logging: Bool = false
-
     private var touchCanvas: TouchCanvas
     private var touchDraw: TouchDraw
+    private var drawableSize = CGSize.zero
+    private var drawUpdate: MTLTexture?
 
-    public var drawableSize = CGSize.zero
-    public var drawUpdate: MTLTexture?
-
-    public init(_ root: Flo,
+    public init(_ root˚: Flo,
+                _ path: String,
                 _ touchCanvas: TouchCanvas,
                 _ touchDraw: TouchDraw,
-                _ archiveFlo: ArchiveFlo,
-                _ path: String) {
+                _ archiveFlo: ArchiveFlo) {
 
-        self.root = root
+        self.root˚ = root˚
         self.touchCanvas = touchCanvas
         self.touchDraw = touchDraw
         self.archive˚ = archiveFlo
-        self.base˚ = root.bind(path)    { f,_ in self.updateBase(f) }
+        self.base˚ = root˚.bind(path)   { f,_ in self.updateBase(f) }
         noteOn˚ = base˚.bind("note.on") { f,_ in self.updateNoteOn(f) }
         noteOn˚ = base˚.bind("note.off"){ f,_ in self.updateNoteOff(f) }
         wheel˚  = base˚.bind("wheel")   { f,_ in self.updateWheel(f) }

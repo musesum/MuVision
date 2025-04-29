@@ -11,12 +11,12 @@ public class CameraNode: ComputeNode {
 
 #if !os(visionOS)
     override public init(_ pipeline : Pipeline,
-                         _ pipeFlo  : Flo) {
+                         _ pipeNode˚ : Flo) {
 
-        super.init(pipeline, pipeFlo)
-        camera˚ = pipeFlo
-        outTex˚ = pipeFlo.superBindPath("out")
-        front˚  = pipeFlo.superBindPath("front")
+        super.init(pipeline, pipeNode˚)
+        camera˚ = pipeNode˚
+        outTex˚ = pipeNode˚.superBindPath("out")
+        front˚  = pipeNode˚.superBindPath("front")
         shader  = Shader(pipeline, file: "pipe.camera", kernel: "cameraKernel")
         front˚?.addClosure { flo,_ in
             CameraSession.shared.facing(flo.bool)

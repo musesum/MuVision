@@ -26,15 +26,15 @@ public class CubeNode: RenderNode {
     private var lastAspect : Aspect?
 
     override public init(_ pipeline : Pipeline,
-                         _ childFlo : Flo) {
+                         _ pipeNode˚ : Flo) {
 
         self.cubeMesh = CubeMesh()
         self.viaIndex = true
-        super.init(pipeline, childFlo)
+        super.init(pipeline, pipeNode˚)
         
-        inTex˚ = pipeFlo.superBindPath("in")
-        cudex˚ = pipeFlo.superBindPath("cudex")
-        mixcube˚ = pipeFlo.superBindPath("mixcube")
+        inTex˚ = pipeNode˚.superBindPath("in")
+        cudex˚ = pipeNode˚.superBindPath("cudex")
+        mixcube˚ = pipeNode˚.superBindPath("mixcube")
         makeRenderPipeline()
         makeResources()
         pipeline.rotateClosure["cudex˚"] = { self.remakeAspect() }

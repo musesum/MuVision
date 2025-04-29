@@ -7,22 +7,22 @@ import MuFlo
 
 public class ColorNode: ComputeNode {
 
-    private var getPal  : GetTextureFunc?
+    private var color˚  : ColorFlo!
     private var inTex˚  : Flo?
     private var outTex˚ : Flo?
     private var palTex˚ : Flo?
     private var plane˚  : Flo?
 
-    override public init(_ pipeline : Pipeline,
-                         _ childFlo : Flo) {
+    public init(_ pipeline  : Pipeline,
+                _ pipeNode˚ : Flo,
+                _ ripples   : Ripples) {
 
-        super.init(pipeline, childFlo)
-        
-        getPal  = ColorFlo(pipeFlo.getRoot()).getMix
-        inTex˚  = pipeFlo.superBindPath("in")
-        outTex˚ = pipeFlo.superBindPath("out")
-        palTex˚ = pipeFlo.superBindPath("pal")
-        plane˚  = pipeFlo.superBindPath("plane")
+        super.init(pipeline, pipeNode˚)
+        color˚  = ColorFlo(pipeNode˚.getRoot(), ripples)
+        inTex˚  = pipeNode˚.superBindPath("in")
+        outTex˚ = pipeNode˚.superBindPath("out")
+        palTex˚ = pipeNode˚.superBindPath("pal")
+        plane˚  = pipeNode˚.superBindPath("plane")
         shader  = Shader(pipeline, file: "pipe.color", kernel: "colorKernel")
         makeResources()
     }
@@ -37,14 +37,13 @@ public class ColorNode: ComputeNode {
     override public func updateUniforms() {
         super.updateUniforms()
         // draw into palette texture
-        if let palTex = palTex˚?.texture,
-           let getPal {
+        if let palTex = palTex˚?.texture {
 
             let palSize = 256
             let pixSize = MemoryLayout<UInt32>.size
             let palRegion = MTLRegionMake3D(0, 0, 0, palSize, 1, 1)
             let bytesPerRow = palSize * pixSize
-            let palBytes = getPal(palSize)
+            let palBytes = color˚.getPal(palSize)
             palTex.replace(region: palRegion,
                            mipmapLevel: 0,
                            withBytes: palBytes,

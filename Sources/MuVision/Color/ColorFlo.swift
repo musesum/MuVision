@@ -13,11 +13,16 @@ public class ColorFlo {
 
     var mix: UnsafeMutablePointer<UInt32>! = nil
     var mixSize = 0
-    var ripples = Ripples.shared
 
-    public init(_ root: Flo) {
+    var ripples: Ripples
+
+    public init(_ pipeNode˚: Flo,
+                _ ripples: Ripples) {
         self.colors = [ColorRender(pal0), ColorRender(pal1)]
-        if let color = root.findPath("sky.color") {
+        self.ripples = ripples
+        let root˚ = pipeNode˚.getRoot()
+        if let color = root˚.findPath("sky.color") {
+
             xfade˚ = color.bind("xfade") { flo,_ in
                 let fade = flo.float
                 self.xfade = fade 
@@ -44,8 +49,8 @@ public class ColorFlo {
         mix?.deallocate()
     }
 
-    public func getMix(_ palSize: Int) -> UnsafeMutablePointer<UInt32> {
-        
+    public func getPal(_ palSize: Int) -> UnsafeMutablePointer<UInt32> {
+
         if true || changed || palSize != mixSize { //....
             changed = false
             rgbs.removeAll()

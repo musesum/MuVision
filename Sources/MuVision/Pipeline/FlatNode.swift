@@ -16,11 +16,11 @@ public class FlatNode: RenderNode {
     private var vertBuf : MTLBuffer?
 
     override public init(_ pipeline : Pipeline,
-                         _ childFlo : Flo) {
+                         _ pipeNode˚ : Flo) {
 
-        super.init(pipeline, childFlo)
+        super.init(pipeline, pipeNode˚)
 
-        inTex˚ = pipeFlo.superBindPath("in")
+        inTex˚ = pipeNode˚.superBindPath("in")
         makeRenderPipeline()
         makeResources()
         pipeline.resizeNodes.append(makeResources)
@@ -36,7 +36,7 @@ public class FlatNode: RenderNode {
         guard let device = MTLCreateSystemDefaultDevice() else { return }
         guard let shader else { return }
         let pd = MTLRenderPipelineDescriptor()
-        pd.label = pipeFlo.name
+        pd.label = pipeNode˚.name
         pd.vertexFunction = shader.vertexFunction
         pd.fragmentFunction = shader.fragmentFunction
         pd.colorAttachments[0].pixelFormat = MetalRenderPixelFormat

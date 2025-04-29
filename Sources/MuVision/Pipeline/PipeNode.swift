@@ -14,17 +14,17 @@ open class PipeNode: Equatable {
     public var pipeline: Pipeline
     public var shader: Shader?
     public var pipeName: String
-    public var pipeFlo: Flo
+    public var pipeNode˚: Flo
     public var pipeChildren = [PipeNode]()
 
-    public init(_ pipeline : Pipeline,
-                _ pipeFlo  : Flo) {
+    public init(_ pipeline  : Pipeline,
+                _ pipeNode˚ : Flo) {
 
-        self.pipeName = pipeFlo.name
+        self.pipeName = pipeNode˚.name
         self.pipeline = pipeline
-        self.pipeFlo  = pipeFlo
-        
-        pipeFlo.children
+        self.pipeNode˚ = pipeNode˚
+
+        pipeNode˚.children
             .filter { $0.val("on") != nil }
             .forEach { pipeline.makePipeNode($0, self) }
     }
@@ -39,7 +39,7 @@ open class PipeNode: Equatable {
             computeNode.computeNode(computeEnc)
         }
         pipeChildren
-            .filter { $0.pipeFlo.val("on") ?? 0 > 0 }
+            .filter { $0.pipeNode˚.val("on") ?? 0 > 0 }
             .forEach { $0.runCompute(computeEnc, &logging) }
     }
     public func runRender(_ renderEnc: MTLRenderCommandEncoder,
@@ -51,7 +51,7 @@ open class PipeNode: Equatable {
             renderNode.renderNode(renderEnc)
         }
         pipeChildren
-            .filter { $0.pipeFlo.val("on") ?? 0 > 0 }
+            .filter { $0.pipeNode˚.val("on") ?? 0 > 0 }
             .forEach { $0.runRender(renderEnc, &logging) }
     }
 
@@ -59,7 +59,7 @@ open class PipeNode: Equatable {
         guard let shader else { return err("shaderFunc == nil") }
 
         let pd = MTLRenderPipelineDescriptor()
-        pd.label = pipeFlo.name
+        pd.label = pipeNode˚.name
         pd.vertexFunction   = shader.vertexFunction
         pd.fragmentFunction = shader.fragmentFunction
         pd.vertexDescriptor = metalVD
@@ -111,7 +111,7 @@ open class PipeNode: Equatable {
             renderNode.renderNode(renderEnc)
         }
         pipeChildren
-            .filter { $0.pipeFlo.val("on") ?? 0 > 0 }
+            .filter { $0.pipeNode˚.val("on") ?? 0 > 0 }
             .forEach { $0.runRender(renderEnc, drawable, deviceAnchor, &logging) }
     }
 #endif

@@ -13,14 +13,14 @@ open class TileNode: ComputeNode {
     private var mirror˚ : Flo?
 
     override public init(_ pipeline : Pipeline,
-                         _ childFlo : Flo) {
+                         _ pipeNode˚ : Flo) {
 
-        super.init(pipeline, childFlo)
+        super.init(pipeline, pipeNode˚)
 
-        inTex˚  = pipeFlo.superBindPath("in")
-        outTex˚ = pipeFlo.superBindPath("out")
-        repeat˚ = pipeFlo.superBindPath("repeat")
-        mirror˚ = pipeFlo.superBindPath("mirror")
+        inTex˚  = pipeNode˚.superBindPath("in")
+        outTex˚ = pipeNode˚.superBindPath("out")
+        repeat˚ = pipeNode˚.superBindPath("repeat")
+        mirror˚ = pipeNode˚.superBindPath("mirror")
         shader  = Shader(pipeline, file: "kernel.tile", kernel: "tileKernel")
         makeResources()
     }

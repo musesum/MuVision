@@ -12,18 +12,18 @@ public class DrawNode: ComputeNode {
     private var touchDraw: TouchDraw
 
     public override init(_ pipeline : Pipeline,
-                         _ childFlo : Flo) {
+                         _ pipeNode˚ : Flo) {
 
         self.touchDraw = pipeline.touchDraw
-        super.init(pipeline, childFlo)
+        super.init(pipeline, pipeNode˚)
 
-        inTex˚  = pipeFlo.superBindPath("in")
-        outTex˚ = pipeFlo.superBind("out") { flo, _ in
+        inTex˚  = pipeNode˚.superBindPath("in")
+        outTex˚ = pipeNode˚.superBind("out") { flo, _ in
             if let tex = flo.texture {
                 self.touchDraw.drawTex = tex
             }
         }
-        shift˚  = pipeFlo.superBindPath("shift")
+        shift˚  = pipeNode˚.superBindPath("shift")
         shader  = Shader(pipeline, file: "pipe.draw", kernel: "drawKernel")
         makeResources()
     }

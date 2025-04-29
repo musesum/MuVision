@@ -30,12 +30,8 @@ public class TouchDraw {
 
     var fill = Float(-1)
     let scale: CGFloat
-
     var bufSize = CGSize.zero
     var drawBuf: UnsafeMutablePointer<UInt32>?
-
-    //.... var drawDot: MidiDrawDot?
-    //.... var drawRipple: MidiDrawRipple?
 
     public var drawProto: TouchDrawProtocol? = TouchDrawDot()
     public var drawableSize = CGSize.zero
@@ -47,8 +43,6 @@ public class TouchDraw {
 
         self.root = root
         self.scale = scale
-        //.... self.drawDot = MidiDrawDot(root, archiveFlo, "sky.draw.dot" )
-        //.... self.drawRipple = MidiDrawRipple(root, archiveFlo, "sky.draw.ripple")
 
         let sky    = root.bind("sky"   )
         let main   = sky .bind("main"  )
