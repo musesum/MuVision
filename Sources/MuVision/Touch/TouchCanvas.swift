@@ -7,12 +7,6 @@ import MuPeer
 public typealias TouchDrawPoint = ((CGPoint, CGFloat)->())
 public typealias TouchDrawRadius = ((TouchCanvasItem)->(CGFloat))
 
-public protocol ImmersionDelegate {
-    func updateImmersion(_ immersive: Bool) async
-    func reshowMenu() async
-}
-
-
 open class TouchCanvas: @unchecked Sendable {
     
     static var touchRepeat = true
@@ -31,7 +25,6 @@ open class TouchCanvas: @unchecked Sendable {
 
     let touchDraw: TouchDraw
     public let peers: Peers
-    public var immersiveDelegate: ImmersionDelegate?
     public var immersive = false
 
     public init(_ touchDraw: TouchDraw,

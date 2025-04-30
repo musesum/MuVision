@@ -4,6 +4,7 @@ import MetalKit
 import Spatial
 import ModelIO
 import MuFlo
+
 open class MeshMetal {
 
     private var depthRendering: DepthRendering
@@ -12,8 +13,8 @@ open class MeshMetal {
     public var eyeBuf: EyeBuf?
     public var mtlBuffer : MTLBuffer!
 
-    public init(_ depthRenderState: DepthRendering) {
-        self.depthRendering = depthRenderState
+    public init(_ depthRendering: DepthRendering) {
+        self.depthRendering = depthRendering
     }
 
     public func makeMetalVD(_ nameFormats: [VertexNameFormat],
@@ -60,11 +61,12 @@ open class MeshMetal {
         return modelVD
     }
 
-    open func drawMesh(_ renderEnc: MTLRenderCommandEncoder) {
+    open func drawMesh(_ renderEnc: MTLRenderCommandEncoder,
+                       _ renderState: RenderState) {
 
         guard let mtkMesh else { return err("mesh") }
 
-        depthRendering.setCullWindingStencil(renderEnc)
+        depthRendering.setCullWindingStencil(renderEnc, renderState)
 
         for (index, layout) in mtkMesh.vertexDescriptor.layouts.enumerated() {
             if let layout = layout as? MDLVertexBufferLayout,

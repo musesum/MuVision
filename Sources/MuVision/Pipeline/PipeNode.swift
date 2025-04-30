@@ -48,7 +48,7 @@ open class PipeNode: Equatable {
         if let renderNode = self as? RenderNode {
             logging += renderNode.pipeName + " -> "
             renderNode.updateUniforms()
-            renderNode.renderNode(renderEnc)
+            renderNode.renderNode(renderEnc, pipeline.renderState)
         }
         pipeChildren
             .filter { $0.pipeNode˚.val("on") ?? 0 > 0 }
@@ -91,7 +91,8 @@ open class PipeNode: Equatable {
     
     public static func == (lhs: PipeNode, rhs: PipeNode) -> Bool { return lhs.id == rhs.id }
    
-    open func renderNode(_ renderEnc: MTLRenderCommandEncoder) { }
+    open func renderNode(_ renderEnc: MTLRenderCommandEncoder,
+                         _ renderState: RenderState) { }
     open func updateUniforms() {}
     open func makeResources() {}
 
@@ -108,7 +109,7 @@ open class PipeNode: Equatable {
         if let renderNode = self as? RenderNode {
             logging += renderNode.pipeName + " -> "
             renderNode.updateUniforms(drawable, deviceAnchor)
-            renderNode.renderNode(renderEnc)
+            renderNode.renderNode(renderEnc, pipeline.renderState)
         }
         pipeChildren
             .filter { $0.pipeNode˚.val("on") ?? 0 > 0 }

@@ -40,7 +40,6 @@ public class JointDrawState: JointState {
         }
     }
     /// Intended to bring back a dismissed menu, this has been deferred
-    ///
     func bindFloMenu(_ hand˚: Flo,
                      _ touchCanvas: TouchCanvas) {
         #if false

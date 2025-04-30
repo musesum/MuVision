@@ -16,6 +16,8 @@ open class Pipeline: NSObject {
     private var pipeRunning = false
     private var rotateFunc: MTLFunction?
 
+    public  var renderState: RenderState
+
     public var device = MTLCreateSystemDefaultDevice()!
     public var library: MTLLibrary!
     public var pipeSource: PipeNode?
@@ -44,12 +46,14 @@ open class Pipeline: NSObject {
     public var touchDraw: TouchDraw
 
     public init(_ root˚: Flo,
+                _ renderState: RenderState,
                 _ archive: ArchiveFlo,
                 _ touchDraw: TouchDraw,
                 _ scale: CGFloat,
                 _ bounds: CGRect) {
 
         self.root˚ = root˚
+        self.renderState = renderState
         self.touchDraw = touchDraw
         self.archive = archive
         super.init()
@@ -129,7 +133,7 @@ extension Pipeline {
         
         if !pipeRunning { return }
 
-        if RenderDepth.state == .immersive { return }
+        if renderState == .immersed { return }
 
         guard let pipeSource = pipeSource else { return }
         var logging = ""

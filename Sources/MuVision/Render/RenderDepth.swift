@@ -2,16 +2,14 @@
 
 import MetalKit
 
-/// immersive DisplayLayer will changes stencil and cull requirements
+/// immersed DisplayLayer will changes stencil and cull requirements
 public enum RenderState: String {
-    case passthrough
-    case immersive
+    case windowed
+    case immersed
     public var script: String { return rawValue }
 }
 
 public class RenderDepth {
-
-    public static var state: RenderState = .passthrough
 
     var cull    : MTLCullMode
     var winding : MTLWinding
@@ -32,61 +30,55 @@ public class RenderDepth {
 
 public class DepthRendering {
 
-    var immer   : RenderDepth
-    var metal   : RenderDepth
-    var state   : RenderState
+    var immersed : RenderDepth
+    var windowed : RenderDepth
+    var renderState : RenderState
     var stencil : MTLDepthStencilState!
 
-    public init(immer : RenderDepth,
-                metal : RenderDepth) {
+    public init(_ immersed : RenderDepth,
+                _ windowed : RenderDepth,
+                _ renderState : RenderState) {
 
-        self.immer  = immer
-        self.metal  = metal
-        self.state = RenderDepth.state
-        makeStencil()
+        self.immersed = immersed
+        self.windowed = windowed
+        self.renderState = renderState
+        makeStencil(renderState)
     }
-    public init(immerse: RenderDepth) {
 
-        RenderDepth.state = .immersive
-
-        self.immer = immerse
-        self.metal = immerse // not used
-        self.state = .immersive
-        makeStencil()
-    }
-    func makeStencil() {
+    func makeStencil(_ renderState: RenderState) {
 
         guard let device = MTLCreateSystemDefaultDevice() else { return }
         let depth = MTLDepthStencilDescriptor()
 
-        switch state {
+        switch renderState {
 
-        case .immersive:
-            depth.depthCompareFunction = immer.compare
-            depth.isDepthWriteEnabled = immer.write
+        case .immersed:
+            depth.depthCompareFunction = immersed.compare
+            depth.isDepthWriteEnabled = immersed.write
 
-        case .passthrough:
-            depth.depthCompareFunction = metal.compare
-            depth.isDepthWriteEnabled = metal.write
+        case .windowed:
+            depth.depthCompareFunction = windowed.compare
+            depth.isDepthWriteEnabled = windowed.write
         }
         stencil = device.makeDepthStencilState(descriptor: depth)!
     }
-    public func setCullWindingStencil(_ renderEnc: MTLRenderCommandEncoder) {
-        // flipped between .metal and .vision state
-        if state != RenderDepth.state {
-            state = RenderDepth.state
-            makeStencil()
+    public func setCullWindingStencil(_ renderEnc: MTLRenderCommandEncoder,
+                                      _ renderState: RenderState) {
+
+        if self.renderState != renderState {
+            self.renderState = renderState
+            makeStencil(renderState)
         }
         renderEnc.setDepthStencilState(stencil)
 
-        switch state {
-        case .immersive:
-            renderEnc.setCullMode(immer.cull)
-            renderEnc.setFrontFacing(immer.winding)
+        switch renderState {
+        case .immersed:
+            renderEnc.setCullMode(immersed.cull)
+            renderEnc.setFrontFacing(immersed.winding)
 
-        case .passthrough:
-            renderEnc.setCullMode(metal.cull)
-            renderEnc.setFrontFacing(metal.winding)
+        case .windowed:
+            renderEnc.setCullMode(windowed.cull)
+            renderEnc.setFrontFacing(windowed.winding)
         }
     }
 }

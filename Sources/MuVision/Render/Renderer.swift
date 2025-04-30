@@ -40,7 +40,6 @@ open class Renderer {
     var pipeline: Pipeline
 
     // App state
-    private let appModel: AppModel
     public var deviceAnchor: DeviceAnchor?
 
     // Metal
@@ -60,23 +59,21 @@ open class Renderer {
 
     public init(_ layerRenderer: LayerRenderer,
                 _ pipeline: Pipeline,
-                _ nextFrame: NextFrame,
-                _ appModel: AppModel)  {
+                _ nextFrame: NextFrame)  {
 
         self.layerRenderer = layerRenderer
         self.pipeline = pipeline
         self.nextFrame = nextFrame
-        self.appModel = appModel
 
         self.device = layerRenderer.device
         supportsMSAA = layerRenderer.device.supportsMSAA
         self.commandQueue = self.device.makeCommandQueue()!
         multisampleRenderTargets = .init(repeating: nil, count: Int(Self.maxFramesInFlight))
 
-        let depthStateDescriptor = MTLDepthStencilDescriptor()
-        depthStateDescriptor.depthCompareFunction = MTLCompareFunction.greater
-        depthStateDescriptor.isDepthWriteEnabled = true
-        self.depthState = device.makeDepthStencilState(descriptor: depthStateDescriptor)!
+        let descriptor = MTLDepthStencilDescriptor()
+        descriptor.depthCompareFunction = MTLCompareFunction.greater
+        descriptor.isDepthWriteEnabled = true
+        self.depthState = device.makeDepthStencilState(descriptor: descriptor)!
 
         arSession = ARKitSession()
         worldTracking = WorldTrackingProvider()

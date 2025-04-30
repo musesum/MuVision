@@ -6,12 +6,12 @@ public class CubeMesh: MeshMetal {
 
     var model: CubeModel!
     
-    init() {
-
-        super.init(DepthRendering(
-            immer: RenderDepth(.none, .clockwise, .greater, true),
-            metal: RenderDepth(.none, .clockwise, .less,    false)))
-
+    init(_ renderState: RenderState) {
+        let immersed = RenderDepth(.none, .clockwise, .greater, true)
+        let windowed = RenderDepth(.none, .clockwise, .less,    false)
+        let depthRendering = DepthRendering(immersed, windowed, renderState)
+        super.init(depthRendering)
+        
         let nameFormats: [VertexNameFormat] = [
             ("position", .float4),
         ]

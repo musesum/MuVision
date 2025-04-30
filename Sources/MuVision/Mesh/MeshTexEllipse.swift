@@ -12,50 +12,50 @@ struct VertexMesh {
     let normal   : SIMD3<Float>
 }
 
-open class MeshTexEllipse: MeshTexture {
-    
-    var radius = CGFloat(1)
-    var inward = false
-
-    public init(_ device      : MTLDevice,
-                _ texName     : String,
-                _ depthRender : RenderDepth,
-                radius        : CGFloat,
-                inward        : Bool) throws {
-
-        try super.init(device, texName, depthRender)
-        self.radius = radius
-        self.inward = inward
-        
-        guard let modelMesh = modelEllipsoid(device) else {
-            throw RendererError.badVertex
-        }
-        mtkMesh = try MTKMesh(mesh: modelMesh, device: device)
-    }
-    
-    func modelEllipsoid(_ device: MTLDevice) -> MDLMesh? {
-        let allocator = MTKMeshBufferAllocator(device: device)
-        let radii = SIMD3<Float>(repeating: Float(radius))
-        let modelMesh = MDLMesh.newEllipsoid(
-            withRadii        : radii,
-            radialSegments   : 24,
-            verticalSegments : 24,
-            geometryType     : .triangles,
-            inwardNormals    : inward,
-            hemisphere       : false,
-            allocator        : allocator)
-
-        let nameFormats: [VertexNameFormat] = [
-            (MDLVertexAttributePosition,          .float3),
-            (MDLVertexAttributeTextureCoordinate, .float2),
-            (MDLVertexAttributeNormal,            .float3)
-             ]
-        let layoutStride = MemoryLayout<VertexMesh>.stride
-        makeMetalVD(nameFormats, layoutStride)
-
-        let modelVD = makeModelFromMetalVD(nameFormats, layoutStride)
-        modelMesh.vertexDescriptor = modelVD
-
-        return modelMesh
-    }
-}
+//open class MeshTexEllipse: MeshTexture {
+//    
+//    var radius = CGFloat(1)
+//    var inward = false
+//
+//    public init(_ device      : MTLDevice,
+//                _ texName     : String,
+//                _ depthRender : RenderDepth,
+//                radius        : CGFloat,
+//                inward        : Bool) throws {
+//
+//        try super.init(device, texName, depthRender)
+//        self.radius = radius
+//        self.inward = inward
+//        
+//        guard let modelMesh = modelEllipsoid(device) else {
+//            throw RendererError.badVertex
+//        }
+//        mtkMesh = try MTKMesh(mesh: modelMesh, device: device)
+//    }
+//    
+//    func modelEllipsoid(_ device: MTLDevice) -> MDLMesh? {
+//        let allocator = MTKMeshBufferAllocator(device: device)
+//        let radii = SIMD3<Float>(repeating: Float(radius))
+//        let modelMesh = MDLMesh.newEllipsoid(
+//            withRadii        : radii,
+//            radialSegments   : 24,
+//            verticalSegments : 24,
+//            geometryType     : .triangles,
+//            inwardNormals    : inward,
+//            hemisphere       : false,
+//            allocator        : allocator)
+//
+//        let nameFormats: [VertexNameFormat] = [
+//            (MDLVertexAttributePosition,          .float3),
+//            (MDLVertexAttributeTextureCoordinate, .float2),
+//            (MDLVertexAttributeNormal,            .float3)
+//             ]
+//        let layoutStride = MemoryLayout<VertexMesh>.stride
+//        makeMetalVD(nameFormats, layoutStride)
+//
+//        let modelVD = makeModelFromMetalVD(nameFormats, layoutStride)
+//        modelMesh.vertexDescriptor = modelVD
+//
+//        return modelMesh
+//    }
+//}

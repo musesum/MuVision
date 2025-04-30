@@ -4,7 +4,7 @@ import ARKit
 import MuFlo
 
 #if os(visionOS)
-open class HandsTracker: ObservableObject, @unchecked Sendable {
+open class HandsTracker: ObservableObject {
 
     let session = ARKitSession()
     var handTracking = HandTrackingProvider()

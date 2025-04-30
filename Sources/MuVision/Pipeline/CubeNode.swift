@@ -28,7 +28,7 @@ public class CubeNode: RenderNode {
     override public init(_ pipeline : Pipeline,
                          _ pipeNode˚ : Flo) {
 
-        self.cubeMesh = CubeMesh()
+        self.cubeMesh = CubeMesh(pipeline.renderState)
         self.viaIndex = true
         super.init(pipeline, pipeNode˚)
         
@@ -69,7 +69,8 @@ public class CubeNode: RenderNode {
         }
     }
 
-    override open func renderNode(_ renderEnc: MTLRenderCommandEncoder) {
+    override open func renderNode(_ renderEnc: MTLRenderCommandEncoder,
+                                  _ renderState: RenderState) {
         guard let renderPipelineState else { return }
 
         cubeMesh.eyeBuf?.setUniformBuf(renderEnc)
@@ -80,7 +81,7 @@ public class CubeNode: RenderNode {
         renderEnc.setFragmentBuffer (mixcube˚, index: 0)
 
         renderEnc.setRenderPipelineState(renderPipelineState)
-        cubeMesh.drawMesh(renderEnc)
+        cubeMesh.drawMesh(renderEnc, renderState)
         cudex˚?.activate(from: cudex˚)
     }
 
@@ -171,8 +172,7 @@ public class CubeNode: RenderNode {
     override public func updateUniforms(_ drawable: LayerRenderer.Drawable,
                                         _ deviceAnchor: DeviceAnchor?) {
         let cameraPos =  vector_float4([0, 0,  -4, 1]) //????
-        let label = (RenderDepth.state == .immersive ? "👁️C⃝ube" : "👁️Cube")
-        cubeMesh.eyeBuf?.updateEyeUniforms(drawable, deviceAnchor, cameraPos, label)
+        cubeMesh.eyeBuf?.updateEyeUniforms(drawable, deviceAnchor, cameraPos, "👁️C⃝ube")
     }
     
 #endif

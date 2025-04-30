@@ -79,7 +79,8 @@ public class FlatNode: RenderNode {
         super.makeResources()
     }
     
-    override open func renderNode(_ renderEnc: MTLRenderCommandEncoder) {
+    override open func renderNode(_ renderEnc: MTLRenderCommandEncoder,
+                                  _ renderState: RenderState) {
 
         guard let renderPipelineState else { return }
         let layer = pipeline.layer
