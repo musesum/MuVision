@@ -34,14 +34,14 @@ public class ColorFlo {
                 self.colors[0] = ColorRender(flo.string)
                 self.changed = true
             }
-            pal0˚?.activate(Visitor(0, .model))
+            pal0˚?.activate([], Visitor(0, .model))
 
             pal1˚ = color.bind("pal1") { flo,_ in
                 self.pal1 = flo.string
                 self.colors[1] = ColorRender(flo.string)
                 self.changed = true
             }
-            pal1˚?.activate(Visitor(0, .model))
+            pal1˚?.activate([], Visitor(0, .model))
         }
         changed = true
     }

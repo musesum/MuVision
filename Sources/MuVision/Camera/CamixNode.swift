@@ -51,7 +51,7 @@ public class CamixNode: ComputeNode {
         computeEnc.setBuffer (mixcam˚, index: 0)
         computeEnc.setBuffer (frame˚,  index: 1)
         super.computeNode(computeEnc)
-        outTex˚?.activate(from: outTex˚)
+        outTex˚?.activate([],from: outTex˚)
     }
 #endif
 }

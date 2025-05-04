@@ -42,7 +42,7 @@ public class CameraNode: ComputeNode {
         computeEnc.setTexture(camTex, index: 0)
         computeEnc.setTexture(outTex˚, index: 1)
         super.computeNode(computeEnc)
-        outTex˚?.activate(from: outTex˚)
+        outTex˚?.activate([],from: outTex˚)
     }
 #endif
 }

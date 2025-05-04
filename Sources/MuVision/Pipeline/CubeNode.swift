@@ -82,7 +82,7 @@ public class CubeNode: RenderNode {
 
         renderEnc.setRenderPipelineState(renderPipelineState)
         cubeMesh.drawMesh(renderEnc, renderState)
-        cudex˚?.activate(from: cudex˚)
+        cudex˚?.activate([], from: cudex˚)
     }
 
     func makeImageCube(_ names: [String]) -> MTLTexture? {

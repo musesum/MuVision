@@ -215,12 +215,12 @@ extension Pipeline {
                 if let (_,node,flo) = rotatable[name] {
                     rotatable[name] = (newTex,node,flo)
                     flo.texture = newTex
-                    flo.activate()
+                    flo.activate([])
                 }
             } else if let (_,node,flo) = rotatable[name] {
                 rotatable[name] = (tex,node,flo)
                 flo.texture = tex
-                flo.activate()
+                flo.activate([])
             } else {
                 DebugLog { P("\(name) not found in rotatable") }
             }
@@ -246,7 +246,7 @@ extension Pipeline {
 
                 rotatable[name] = (newTex,node,flo)
                 flo.texture = newTex
-                flo.activate()
+                flo.activate([])
             }
         }
         activateRotateClosures()
@@ -311,7 +311,7 @@ extension Pipeline {
         if flo.texture == nil || remake,
            let tex = makeTex() {
             flo.texture = tex
-            flo.activate()
+            flo.activate([])
             DebugLog { P("🧭 \(#function) via: \(tex.label ?? "??")") }
         }
     }
@@ -329,7 +329,7 @@ extension Pipeline {
         let path = flo.path(3)
         if let tex = device.makeComputeTex(size: size, label: path) {
             flo.texture = tex
-            flo.activate()
+            flo.activate([])
 
             if rotate {
                 rotatable[path] = (tex, node, flo)

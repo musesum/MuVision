@@ -41,7 +41,7 @@ open class TileNode: ComputeNode {
         computeEnc.setBuffer (repeat˚,  index: 0)
         computeEnc.setBuffer (mirror˚,  index: 1)
         super.computeNode(computeEnc)
-        outTex˚?.activate(from: outTex˚)
+        outTex˚?.activate([], from: outTex˚)
     }
 
 

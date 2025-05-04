@@ -45,13 +45,13 @@ public class JointState {
 
         joint˚ = hand˚.bind(joint.name) { flo,_ in
             self.updateJoint(flo)
-            flo.activate(from:flo)
+            flo.activate([], from: flo)
         }
         if let joint˚ {
             joint˚.setExpr("state", self)
             updateJoint(joint˚)
             if self.on {
-                DebugLog { P("🖐️"+joint˚.path(3)+"(on: \(self.on))") }
+                DebugLog { P("🖐️ "+joint˚.path(3)+"(on: \(self.on))") }
             }
             return on
         } else {
@@ -131,7 +131,7 @@ public class JointState {
 
     func updateFlo(_ phase: UITouch.Phase,
                    time: TimeInterval = Date().timeIntervalSince1970,
-                   _ options: SetOptions = .fire) {
+                   _ setOps: SetOps = .fire) {
         self.phase = phase
         self.time = time
         let nameDoubles: [(String,Double)] = [
@@ -142,9 +142,9 @@ public class JointState {
             ("phase", Double(phase.rawValue)),
             ("joint", Double(joint.rawValue))]
         if let joint˚ {
-            joint˚.exprs?.setFromAny(nameDoubles, Visitor(0))
-            if options == .fire {
-                joint˚.activate(from: joint˚)
+            joint˚.exprs?.setFromAny(nameDoubles, [], Visitor(0))
+            if setOps == .fire {
+                joint˚.activate([], from: joint˚)
             }
         }
     }

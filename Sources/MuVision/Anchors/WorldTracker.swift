@@ -41,7 +41,7 @@ open class WorldTracker {
                self.anchorPrev != anchorNow {
                 
                 self.anchorPrev = anchorNow
-                print("⚓️origin    " + anchorNow)
+                print("⚓️ origin    " + anchorNow)
             }
         }
     }

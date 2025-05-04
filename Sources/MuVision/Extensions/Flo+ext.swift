@@ -17,7 +17,7 @@ extension Flo {
 
         if let exprs {
             // update old expression
-            exprs.setFromAny(any, Visitor(0))
+            exprs.setFromAny(any, [], Visitor(0))
         } else {
             // create new expression
             exprs = makeAnyExprs(any)

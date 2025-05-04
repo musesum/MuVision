@@ -59,8 +59,8 @@ public class ColorNode: ComputeNode {
         computeEnc.setTexture(palTex˚, index: 2)
         computeEnc.setBuffer (plane˚,  index: 0)
         super.computeNode(computeEnc)
-        outTex˚?.activate(from: outTex˚)
-        palTex˚?.activate(from: palTex˚)
+        outTex˚?.activate([], from: outTex˚)
+        palTex˚?.activate([], from: palTex˚)
     }
 }
 

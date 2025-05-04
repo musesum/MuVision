@@ -42,7 +42,7 @@ public class DrawDot {
         slide˚  = base˚.bind("slide")   { f,_ in self.updateSlide(f) }
         after˚  = base˚.bind("after")   { f,_ in self.updateAfter(f) }
         clear˚  = base˚.bind("clear")   { f,_ in self.clearCanvas() }
-        base˚.activate()
+        base˚.activate([])
     }
 
     func updateNoteOn(_ flo: Flo) {

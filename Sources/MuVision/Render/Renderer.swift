@@ -114,7 +114,7 @@ extension Renderer {
 
         TimeLog(#function, interval: 4) {
             if let anchorNow = self.deviceAnchor?.originFromAnchorTransform.digits(){
-                print("⚓️origin    " + anchorNow)
+                print("⚓️ origin    " + anchorNow)
             }
         }
     }
@@ -146,7 +146,7 @@ extension Renderer {
                          _ commandBuf: MTLCommandBuffer) {
 
         guard let pipeSource = pipeline.pipeSource else { return }
-        var logging = ""
+        var logging = "💧 "
         if let computeEnc = commandBuf.makeComputeCommandEncoder() {
             pipeSource.runCompute(computeEnc, &logging)
             computeEnc.endEncoding()

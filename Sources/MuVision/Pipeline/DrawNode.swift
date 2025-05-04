@@ -57,6 +57,6 @@ public class DrawNode: ComputeNode {
         computeEnc.setBuffer(pipeline.aspectBuf, offset: 0, index: 1)
 
         super.computeNode(computeEnc)
-        outTex˚?.activate(from: outTex˚)
+        outTex˚?.activate([], from: outTex˚)
     }
 }
