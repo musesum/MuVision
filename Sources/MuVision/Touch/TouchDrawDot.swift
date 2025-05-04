@@ -156,8 +156,6 @@ open class TouchDrawDot: TouchDrawProtocol {
                     }
                 }
             }
-            //DebugLog { P("📋 updateDraw drawSize\(drawSize.digits(0))") }
-            //.... self.drawUpdate = nil
             return true
         }
         func drawFill(_ fill: UInt32) {

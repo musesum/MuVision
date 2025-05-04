@@ -24,7 +24,6 @@ public class DrawDot {
     private var touchCanvas: TouchCanvas
     private var touchDraw: TouchDraw
     private var drawableSize = CGSize.zero
-    private var drawUpdate: MTLTexture?
 
     public init(_ root˚: Flo,
                 _ path: String,

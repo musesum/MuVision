@@ -7,6 +7,10 @@ public enum RenderState: String {
     case windowed
     case immersed
     public var script: String { return rawValue }
+    public mutating func toggle() {
+        if self == .windowed { self = .immersed }
+        else                 { self = .windowed }
+    }
 }
 
 public class RenderDepth {

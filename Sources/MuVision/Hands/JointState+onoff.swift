@@ -10,13 +10,14 @@ extension JointState {
     /// with a quick tap on thos joint
     func updateOtherHandIndexTip(_ indexTip: JointState) -> Int {
 
-        let d = distance(indexTip.pos, pos)
-        if  d < touchTheshold {
+        let distance = distance(indexTip.pos, pos)
+
+        if  distance < touchBeganTheshold {
             if !otherTouching {
                 otherTouching = true
                 otherTimeBegin = Date().timeIntervalSince1970
             }
-        } else {
+        } else if distance > touchEndedTheshold {
             if otherTouching {
                 otherTouching = false
                 otherTimeEnded = Date().timeIntervalSince1970
@@ -35,7 +36,7 @@ extension JointState {
                 let path = "\(chiral.name).\(joint˚?.path() ?? "??")".pad(18)
                 let mine = path + pos.digits(-2)
                 let index = "indexTip\(indexTip.pos.digits(-2))"
-                let label = "\(prefix)\(mine) ∆ \(index) => \(d.digits(3)) "
+                let label = "\(prefix)\(mine) ∆ \(index) => \(distance.digits(3)) "
                 print(label)
             }
 

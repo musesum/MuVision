@@ -93,7 +93,7 @@ this is a bit more concise.
 ```
 flat (on 1) // is pipe, that discovered by a shader
 in (tex) // is a MTLTexture that can be shared between shaders
-repeat (buf, x -1…1~0, y -1…1~0) // is a MTLBuffer, with x,y values
+repeat (buf, x -1…1=0, y -1…1=0) // is a MTLBuffer, with x,y values
 ```
 
 ### Backlog: scripted runtime shaders

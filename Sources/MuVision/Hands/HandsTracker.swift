@@ -20,6 +20,8 @@ open class HandsTracker: ObservableObject {
             if HandTrackingProvider.isSupported {
                 print("ARKitSession starting.")
                 try await session.run([handTracking])
+                await updateHands()
+                await monitorSessionEvents()
             }
         } catch {
             print("ARKitSession error:", error)

@@ -19,12 +19,16 @@ public class JointState {
     public var taps = 0
     public var phase = UITouch.Phase.ended
     public var on = false
+    public var active: Bool {
+        phase.rawValue < 3 // .began, .moved, .stationary
+    }
 
     /// hash should be the same between all devices during runtime
     public var hash: Int { chiral.rawValue * 1000 + joint.rawValue }
 
     /// distance between thumb and fingerTip to register a touch
-    internal var touchTheshold = Float(0.015)
+    internal var touchBeganTheshold = Float(0.01)
+    internal var touchEndedTheshold = Float(0.02)
 
     /// toggling on/off with other hand
     internal var otherTouching = false
@@ -33,8 +37,8 @@ public class JointState {
     internal var tapThreshold = TimeInterval(0.33)
 
     func bindJoint(_ chiral: Chiral,
-                     _ hand˚: Flo,
-                     _ joint: JointEnum) -> Bool {
+                   _ hand˚: Flo,
+                   _ joint: JointEnum) -> Bool {
 
         self.chiral = chiral
         self.joint = joint
@@ -65,16 +69,19 @@ public class JointState {
     /// thumb finger tip as continuous controller or brush
     func updateThumbTip(_ thumbTip: JointState) -> Int {
 
+        // thumb tip touching another joint
+        if thumbTip.active, !self.active {
+            return 0
+        }
         let distance = distance(thumbTip.pos, pos)
-        let touching = distance < touchTheshold
+        let touching = distance < (active ? touchEndedTheshold : touchBeganTheshold)
         let oldPhase = phase.rawValue
-        let active = phase.rawValue < 3
 
         if  touching {
-            if active { updatePhase(.moved, "👍🔹", interval: 1.0) }
-            else      { updatePhase(.began, "👍🟢", interval: 0) }
+            if active { updatePhase(.moved, "👍🔹", interval: 0.5) }
+            else      { updatePhase(.began, "👍🟢", interval: 0.0) }
         } else {
-            if active { updatePhase(.ended, "👍♦️", interval: 0) }
+            if active { updatePhase(.ended, "👍♦️", interval: 0.0) }
         }
         return touching ? 1 : 0
 
@@ -104,15 +111,14 @@ public class JointState {
             default: break
             }
 
-            updateFlo(phase)
+            thumbTip.updateFlo(phase)
+            self.updateFlo(phase)
 
             TimeLog("\(#function).\(hash)", interval: interval) {
                 let path = "\(self.chiral?.icon ?? "") \(self.joint˚?.path(3) ?? "??")".pad(18)
                 let mine = path + self.pos.digits(-2)
-                let thumb = "thumbTip\(thumbTip.pos.digits(-2))"
-                let hash = "👐\(self.hash) \(oldPhase) => \(phase.rawValue)"
-                let taps = "taps: \(self.taps)"
-                let title = "\(color) \(mine) ∆ \(thumb) => \(distance.digits(3)) \(hash) \(taps)"
+                let phase = "👐phase \(oldPhase) => \(phase.rawValue) taps: \(self.taps)"
+                let title = "\(color) \(mine) ∆ thumbTip =>\(distance.digits(3)) \(phase)"
                 print(title)
             }
         }
@@ -136,7 +142,7 @@ public class JointState {
             ("phase", Double(phase.rawValue)),
             ("joint", Double(joint.rawValue))]
         if let joint˚ {
-            joint˚.setDoubles(nameDoubles)
+            joint˚.exprs?.setFromAny(nameDoubles, Visitor(0))
             if options == .fire {
                 joint˚.activate(from: joint˚)
             }
