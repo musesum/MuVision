@@ -82,7 +82,7 @@ public class JointState {
             else      { updatePhase(.began, "👍🟢", interval: 0.0) }
         } else {
             if active { updatePhase(.ended, "👍♦️", interval: 0.0) }
-        }
+        } 
         return touching ? 1 : 0
 
         func updatePhase(_ phase: UITouch.Phase,
@@ -94,32 +94,53 @@ public class JointState {
             case .began:
 
                 timeBegin = Date().timeIntervalSince1970
-                let delta = timeBegin - timeEnded
-                if delta > tapThreshold {
+                let deltaTime = timeBegin - timeEnded
+                if deltaTime > tapThreshold {
                     taps = 0
                 }
 
             case .ended:
 
                 timeEnded = Date().timeIntervalSince1970
-                let delta = timeEnded - timeBegin
-                if delta < tapThreshold {
+                let deltaTime = timeEnded - timeBegin
+                if deltaTime < tapThreshold {
                     taps += 1
                 } else {
                     taps = 0
                 }
             default: break
             }
+            /// recalibrate range after triple
+            let setOps: SetOps = taps > 2 ? [.fire, .ranging] : [.fire]
+            thumbTip.updateFlo(phase, setOps)
+            self.updateFlo(phase, setOps)
 
-            thumbTip.updateFlo(phase)
-            self.updateFlo(phase)
 
             TimeLog("\(#function).\(hash)", interval: interval) {
                 let path = "\(self.chiral?.icon ?? "") \(self.joint˚?.path(3) ?? "??")".pad(18)
-                let mine = path + self.pos.digits(-2)
-                let phase = "👐phase \(oldPhase) => \(phase.rawValue) taps: \(self.taps)"
-                let title = "\(color) \(mine) ∆ thumbTip =>\(distance.digits(3)) \(phase)"
-                print(title)
+                let mine = "\(path) \(self.pos.digits(-2))"
+
+                if self.taps > 2 {
+                    var ranges = ""
+                    if self.taps > 2,
+                       let exprs = self.joint˚?.exprs,
+                       let x = exprs.nameAny["x"] as? Scalar,
+                       let y = exprs.nameAny["y"] as? Scalar,
+                       let z = exprs.nameAny["z"] as? Scalar
+                    {
+                        let xRange = "\(x.minim.digits(2))…\(x.maxim.digits(2))"
+                        let yRange = "\(y.minim.digits(2))…\(y.maxim.digits(2))"
+                        let zRange = "\(z.minim.digits(2))…\(z.maxim.digits(2))"
+                        ranges = "🔳 (\(xRange), \(yRange), \(zRange))"
+                    }
+
+                    print("\(color) \(mine) \(ranges)")
+                } else {
+                    let phase = "👐phase \(oldPhase) => \(phase.rawValue) taps \(self.taps) \(self.taps > 2 ? "🔳" : "")"
+                    let tip =  "∆ thumbTip =>\(distance.digits(3)) \(phase)"
+                    print("\(color) \(mine) \(tip)")
+
+                }
             }
         }
     }
@@ -131,7 +152,7 @@ public class JointState {
 
     func updateFlo(_ phase: UITouch.Phase,
                    time: TimeInterval = Date().timeIntervalSince1970,
-                   _ setOps: SetOps = .fire) {
+                   _ setOps: SetOps) {
         self.phase = phase
         self.time = time
         let nameDoubles: [(String,Double)] = [
@@ -142,7 +163,7 @@ public class JointState {
             ("phase", Double(phase.rawValue)),
             ("joint", Double(joint.rawValue))]
         if let joint˚ {
-            joint˚.exprs?.setFromAny(nameDoubles, [], Visitor(0))
+            joint˚.exprs?.setFromAny(nameDoubles, setOps, Visitor(0))
             if setOps == .fire {
                 joint˚.activate([], from: joint˚)
             }

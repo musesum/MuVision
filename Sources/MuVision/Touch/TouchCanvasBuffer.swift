@@ -2,7 +2,7 @@
 
 import UIKit
 import MuFlo
-import MuPeer
+import MuPeers
 
 open class TouchCanvasBuffer {
 

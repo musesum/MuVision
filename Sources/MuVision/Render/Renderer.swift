@@ -32,14 +32,10 @@ extension MTLDevice {
     static var shared = RendererActor()
 }
 
-//@RendererActor
+//.... @RendererActor
 open class Renderer {
 
-    // original pipeline
-    public static var viewports: [MTLViewport]!
     var pipeline: Pipeline
-
-    // App state
     public var deviceAnchor: DeviceAnchor?
 
     // Metal
@@ -79,6 +75,9 @@ open class Renderer {
         worldTracking = WorldTrackingProvider()
     }
 
+    public func setLayer(_ layer: CAMetalLayer) {
+        
+    }
     public func renderLoop() async throws {
 
         // Setup ARKit Session
@@ -164,7 +163,7 @@ extension Renderer {
             commandBuf.waitUntilCompleted()
         }
         logging += "nil"
-        TimeLog(#function, interval: 4) { P(logging) }
+        NoTimeLog(#function, interval: 4) { P(logging) }
 
         func makeRenderPass(drawable: LayerRenderer.Drawable) -> MTLRenderPassDescriptor { //???? duplicate?
 
@@ -186,8 +185,8 @@ extension Renderer {
 
         func setViewMappings(_ renderEnc : MTLRenderCommandEncoder) {
 
-            Renderer.viewports = drawable.views.map { $0.textureMap.viewport }
-            renderEnc.setViewports(Renderer.viewports)
+            pipeline.viewports = drawable.views.map { $0.textureMap.viewport }
+            renderEnc.setViewports(pipeline.viewports)
             if drawable.views.count > 1 {
                 var viewMappings = (0 ..< drawable.views.count).map {
                     MTLVertexAmplificationViewMapping(
@@ -195,7 +194,7 @@ extension Renderer {
                         renderTargetArrayIndexOffset: UInt32($0))
                 }
                 renderEnc.setVertexAmplificationCount(
-                    Renderer.viewports.count,
+                    pipeline.viewports.count,
                     viewMappings: &viewMappings)
             }
         }

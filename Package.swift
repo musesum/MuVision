@@ -8,14 +8,14 @@ let package = Package(
     products: [.library(name: "MuVision", targets: ["MuVision"])],
     dependencies: [
         .package(url: "https://github.com/musesum/MuFlo.git", branch: "main"),
-        .package(url: "https://github.com/musesum/MuPeer.git", branch: "main"),
+        .package(url: "https://github.com/musesum/MuPeers.git", branch: "main"),
     ],
     targets: [
         .target(name: "MuVision",
 
                 dependencies: [
                     .product(name: "MuFlo", package: "MuFlo"),
-                    .product(name: "MuPeer", package: "MuPeer"),
+                    .product(name: "MuPeers", package: "MuPeers"),
                 ]),
         .testTarget(
             name: "MuVisionTests",

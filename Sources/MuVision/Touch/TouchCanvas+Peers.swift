@@ -1,14 +1,13 @@
 //  created by musesum on 12/19/22.
 
 import Foundation
-import MuPeer
+import MuPeers
 
 extension TouchCanvas: PeersDelegate {
 
-    public func didChange() {
-    }
+    public func didChange() {}
 
-    public func received(data: Data, viaStream: Bool) {
+    public func received(data: Data) {
 
         let decoder = JSONDecoder()
         if let item = try? decoder.decode(TouchCanvasItem.self, from: data) {

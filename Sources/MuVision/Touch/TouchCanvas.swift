@@ -2,7 +2,7 @@
 
 import UIKit
 import MuFlo
-import MuPeer
+import MuPeers
 
 public typealias TouchDrawPoint = ((CGPoint, CGFloat)->())
 public typealias TouchDrawRadius = ((TouchCanvasItem)->(CGFloat))

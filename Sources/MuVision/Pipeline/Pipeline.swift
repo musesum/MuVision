@@ -35,6 +35,7 @@ open class Pipeline: NSObject {
         }
         return _aspectBuf
     }
+    public var viewports = [MTLViewport]()
 
     public var resizeNodes = [CallVoid]()
     public var pipeSize = CGSize._4K // size of draw surface
