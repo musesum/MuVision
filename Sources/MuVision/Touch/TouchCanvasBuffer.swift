@@ -63,7 +63,7 @@ open class TouchCanvasBuffer {
 
         buffer.append(item)
         Task {
-            await peers.sendItem() {
+            await peers.sendItem(.touch) {
                 do {
                     return try JSONEncoder().encode(item)
                 } catch {
@@ -137,7 +137,7 @@ open class TouchCanvasBuffer {
         buffer.append(item)
 
         Task {
-            await peers.sendItem() {
+            await peers.sendItem(.touch) {
                 do {
                     return try JSONEncoder().encode(item)
                 } catch {
