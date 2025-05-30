@@ -31,7 +31,7 @@ open class TouchCanvas: @unchecked Sendable {
                 _ peers: Peers) {
         self.touchDraw = touchDraw
         self.peers = peers
-        peers.delegates["TouchCanvas"] = self
+        peers.setDelegate(self, for: "TouchCanvas")
     }
     deinit { peers.removeDelegate("TouchCanvas") }
 
