@@ -10,7 +10,7 @@ open class TouchCanvasBuffer {
     private var repeatLastItem: TouchCanvasItem?
 
     // each finger or brush gets its own double buffer
-    private let buffer = DoubleBuffer<TouchCanvasItem>(internalLoop: false)
+    private let buffer = TripleBuffer<TouchCanvasItem>(internalLoop: false)
     private var indexNow = 0
     private var touchCanvas: TouchCanvas
     private var isDone = false
@@ -173,47 +173,40 @@ open class TouchCanvasBuffer {
             let item = TouchCanvasItem(key, nextXY, radius, force, azim, phase, visit)
             return item
         }
-
-}
-extension TouchCanvasBuffer: DoubleBufferDelegate {
-
-    public typealias Item = TouchCanvasItem
-
-    @discardableResult
-    public func flushItem<Item>(_ item: Item) -> Bool {
-        guard let item = item as? TouchCanvasItem else { return err("not TouchCanvasItem") }
-
-        repeatLastItem = item
-
-        let radius = touchCanvas.touchDraw.updateRadius(item)
-        let point = item.cgPoint
-        isDone = item.isDone()
-
-        // 4 point cubic smoothing of line segment(s)
-        touchCubic.addPointRadius(point, radius, isDone)
-        touchCubic.drawPoints(touchCanvas.touchDraw.drawPoint)
-
-        return isDone
-
-        func err(_ msg: String) -> Bool {
-            PrintLog("⁉️ TouchCanvasBuffer::flushItem: \(msg)")
-            return false
-        }
-    }
-
     func flushTouches(_ touchRepeat: Bool) -> Bool {
 
         if buffer.isEmpty,
            touchRepeat,
-             repeatLastItem != nil {
+           repeatLastItem != nil {
             // finger is stationary repeat last movement
             // don't update touchCubic.addPointRadius
             touchCubic.drawPoints(touchCanvas.touchDraw.drawPoint)
-           
+
         } else {
             isDone = buffer.flushBuf()
         }
         return isDone
     }
+}
 
+extension TouchCanvasBuffer: TripleBufferDelegate {
+    public typealias Item = TouchCanvasItem
+
+    @discardableResult
+    public func flushItem<Item>(_ item: Item) -> Bool {
+        guard let item = item as? TouchCanvasItem else {
+            print("Error: Not a TouchCanvasItem")
+            return false
+        }
+
+        repeatLastItem = item
+        let radius = touchCanvas.touchDraw.updateRadius(item)
+        let point = item.cgPoint
+        isDone = item.isDone()
+
+        touchCubic.addPointRadius(point, radius, isDone)
+        touchCubic.drawPoints(touchCanvas.touchDraw.drawPoint)
+
+        return isDone
+    }
 }
