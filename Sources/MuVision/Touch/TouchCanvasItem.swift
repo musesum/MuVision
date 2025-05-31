@@ -2,6 +2,7 @@
 import UIKit
 import MuFlo
 
+
 public struct TouchCanvasItem: Codable {
     
     public var key    : Int      // unique id of touch
@@ -34,25 +35,8 @@ public struct TouchCanvasItem: Codable {
         self.azimY  = azimuth.dy
         self.phase  = Int(phase.rawValue)
         self.type   = visit.type.rawValue
-
     }
     
-    enum CodingKeys: String, CodingKey {
-        case key, time, nextX, nextY, radius, force, azimX, azimY, phase, type }
-
-    public init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        try key    = c.decode(Int   .self, forKey: .key   )
-        try time   = c.decode(Double.self, forKey: .time  )
-        try nextX  = c.decode(Float .self, forKey: .nextX )
-        try nextY  = c.decode(Float .self, forKey: .nextY )
-        try radius = c.decode(Float .self, forKey: .radius)
-        try force  = c.decode(Float .self, forKey: .force )
-        try azimX  = c.decode(Double.self, forKey: .azimX )
-        try azimY  = c.decode(Double.self, forKey: .azimY )
-        try phase  = c.decode(Int   .self, forKey: .phase )
-        try type   = c.decode(Int   .self, forKey: .type  )
-    }
     var cgPoint: CGPoint { get {
         CGPoint(x: CGFloat(nextX), y: CGFloat(nextY))
     }}

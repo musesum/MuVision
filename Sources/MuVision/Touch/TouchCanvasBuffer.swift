@@ -15,13 +15,11 @@ open class TouchCanvasBuffer {
     private var touchCanvas: TouchCanvas
     private var isDone = false
     private var touchCubic = TouchCubic()
-    private var peers: Peers
 
     public init(_ touch: UITouch,
                 _ touchCanvas: TouchCanvas) {
 
         self.touchCanvas = touchCanvas
-        self.peers = touchCanvas.peers
         buffer.delegate = self
         addTouchItem(touch)
     }
@@ -30,7 +28,6 @@ open class TouchCanvasBuffer {
                 _ touchCanvas: TouchCanvas) {
 
         self.touchCanvas = touchCanvas
-        self.peers = touchCanvas.peers
         buffer.delegate = self
 
         addTouchCanvasItem(touchItem)
@@ -40,7 +37,6 @@ open class TouchCanvasBuffer {
                 _ touchCanvas: TouchCanvas) {
 
         self.touchCanvas = touchCanvas
-        self.peers = touchCanvas.peers
         buffer.delegate = self
 
         addTouchHand(jointState)
@@ -63,7 +59,7 @@ open class TouchCanvasBuffer {
 
         buffer.append(item)
         Task {
-            await peers.sendItem(.touch) {
+            await touchCanvas.peers.sendItem(.touch) {
                 do {
                     return try JSONEncoder().encode(item)
                 } catch {
@@ -85,10 +81,10 @@ open class TouchCanvasBuffer {
                   _ radius: CGFloat) {
 
         switch phase {
-        case .began: logNow("\n👍🟢") ; resetRanges()
-        case .moved: logNow("🫰🔷")   ; setRanges()
-        case .ended: logNow("🖐️🛑")   ; setRanges(); logRanges()
-        default    : PrintLog("🖐️⁉️")
+        case .began : logNow("\n👍🟢") ; resetRanges()
+        case .moved : logNow("🫰🔷")   ; setRanges()
+        case .ended : logNow("🖐️🛑")   ; setRanges(); logRanges()
+        default     : PrintLog("🖐️⁉️")
         }
         func logNow(_ msg: String) {
             //PrintLog("\(msg)(\(nextXY.x.digits(0...2)), \(nextXY.y.digits(0...2)), \(radius.digits(0...2)))", terminator: " ")
@@ -131,13 +127,13 @@ open class TouchCanvasBuffer {
         let altitude = touch.altitudeAngle
 
         //logTouch(phase, nextXY, radius)
-
+        
         let item = makeTouchCanvasItem(touch.hash, force, radius, nextXY, phase, azimuth, altitude, Visitor(0, .canvas))
 
         buffer.append(item)
 
         Task {
-            await peers.sendItem(.touch) {
+            await touchCanvas.peers.sendItem(.touch) {
                 do {
                     return try JSONEncoder().encode(item)
                 } catch {
@@ -209,9 +205,11 @@ extension TouchCanvasBuffer: DoubleBufferDelegate {
 
         if buffer.isEmpty,
            touchRepeat,
-           let repeatLastItem {
+             repeatLastItem != nil {
             // finger is stationary repeat last movement
-            flushItem(repeatLastItem)
+            // don't update touchCubic.addPointRadius
+            touchCubic.drawPoints(touchCanvas.touchDraw.drawPoint)
+           
         } else {
             isDone = buffer.flushBuf()
         }

@@ -51,12 +51,12 @@ public class ColorFlo {
 
     public func getPal(_ palSize: Int) -> UnsafeMutablePointer<UInt32> {
 
-        if true || changed || palSize != mixSize { //....
+        if true || changed || palSize != mixSize { //...
             changed = false
             rgbs.removeAll()
             rgbs = ColorRender.fade(from: colors[0], to: colors[1], xfade)
 
-            ripples.update(&rgbs) //....
+            ripples.update(&rgbs) //...
 
             if mixSize != palSize {
                 mixSize = palSize

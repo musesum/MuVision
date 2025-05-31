@@ -17,6 +17,7 @@ open class TouchCanvas: @unchecked Sendable {
         for (key, buf) in touchBuffers {
             let isDone = buf.flushTouches(touchRepeat)
             if isDone { removeKeys.append(key) }
+            
         }
         for key in removeKeys {
             touchBuffers.removeValue(forKey: key)
@@ -66,15 +67,14 @@ extension TouchCanvas { // + Touch
         }
         return false
     }
-
+//....
     public func remoteItem(_ item: TouchCanvasItem) {
-
         if let touchBuffer = TouchCanvas.touchBuffers[item.key] {
             touchBuffer.addTouchCanvasItem(item)
         } else {
             TouchCanvas.touchBuffers[item.key] = TouchCanvasBuffer(item, self)
         }
     }
-
 }
+
 
