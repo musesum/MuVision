@@ -36,7 +36,7 @@ open class PipeNode: Equatable {
 
             logging += computeNode.pipeName + " -> "
             computeNode.updateUniforms()
-            computeNode.computeNode(computeEnc)
+            computeNode.computeShader(computeEnc)
         }
         pipeChildren
             .filter { $0.pipeNode˚.val("on") ?? 0 > 0 }
@@ -48,7 +48,7 @@ open class PipeNode: Equatable {
         if let renderNode = self as? RenderNode {
             logging += renderNode.pipeName + " -> "
             renderNode.updateUniforms()
-            renderNode.renderNode(renderEnc, pipeline.renderState)
+            renderNode.renderShader(renderEnc, pipeline.renderState)
         }
         pipeChildren
             .filter { $0.pipeNode˚.val("on") ?? 0 > 0 }
@@ -69,7 +69,7 @@ open class PipeNode: Equatable {
         #elseif os(visionOS )
         pd.maxVertexAmplificationCount = 2
         #endif
-        //????? this is the only difference with CubeNode and FlatNode
+        //?? this is the only difference with CubeNode and FlatNode
         // alpha blend
         pd.colorAttachments[0].isBlendingEnabled = true
         pd.colorAttachments[0].sourceRGBBlendFactor = .sourceAlpha
@@ -91,8 +91,8 @@ open class PipeNode: Equatable {
     
     public static func == (lhs: PipeNode, rhs: PipeNode) -> Bool { return lhs.id == rhs.id }
    
-    open func renderNode(_ renderEnc: MTLRenderCommandEncoder,
-                         _ renderState: RenderState) { }
+    open func renderShader(_ renderEnc: MTLRenderCommandEncoder,
+                           _ renderState: RenderState) { }
     open func updateUniforms() {}
     open func makeResources() {}
 

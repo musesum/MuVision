@@ -70,7 +70,6 @@ open class TouchCanvasBuffer {
         }
     }
 
-
     // TODO:  separate out //??
     var posX: ClosedRange<CGFloat>?
     var posY: ClosedRange<CGFloat>?
@@ -96,11 +95,11 @@ open class TouchCanvasBuffer {
             setRanges()
         }
         func setRanges() {
-            if posX == nil { posX = nextXY.x...nextXY.x }
+            if posX == nil { posX = nextXY.x ... nextXY.x }
             else if let xx = posX { posX = min(xx.lowerBound, nextXY.x)...max(xx.upperBound, nextXY.x) }
-            if posY == nil { posY = nextXY.y...nextXY.y}
+            if posY == nil { posY = nextXY.y ... nextXY.y}
             else if let yy = posY {  posY = min(yy.lowerBound, nextXY.y)...max(yy.upperBound, nextXY.y) }
-            if radi == nil { radi = radius...radius }
+            if radi == nil { radi = radius ... radius }
             else if let rr = radi { radi = min(rr.lowerBound, radius)...max(rr.upperBound, radius) }
         }
         func logRanges() {
@@ -159,7 +158,7 @@ open class TouchCanvasBuffer {
             var force = Float(force)
             var radius = Float(radius)
 
-            if let repeatLastItem {
+        if let repeatLastItem {
 
                 let forceFilter = Float(0.90)
                 force = (repeatLastItem.force * forceFilter) + (force * (1-forceFilter))
@@ -198,11 +197,10 @@ extension TouchCanvasBuffer: TripleBufferDelegate {
             print("Error: Not a TouchCanvasItem")
             return false
         }
-
-        repeatLastItem = item
         let radius = touchCanvas.touchDraw.updateRadius(item)
         let point = item.cgPoint
         isDone = item.isDone()
+        repeatLastItem = isDone ? nil : item
 
         touchCubic.addPointRadius(point, radius, isDone)
         touchCubic.drawPoints(touchCanvas.touchDraw.drawPoint)

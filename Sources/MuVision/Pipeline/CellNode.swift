@@ -53,21 +53,21 @@ public class CellNode: ComputeNode {
         super.updateUniforms()
     }
 
-    override public func computeNode(_ computeEnc: MTLComputeCommandEncoder)  {
+    override public func computeShader(_ computeEnc: MTLComputeCommandEncoder)  {
 
         version˚?.updateMtlBuffer()
 
         computeEnc.setBuffer (version˚, index: 0)
         computeEnc.setTexture(realTex˚, index: 0)
         computeEnc.setTexture(outTex˚,  index: 1)
-        super.computeNode(computeEnc)
+        super.computeShader(computeEnc)
 
         let loopi = Int(loops)
         if loopi > 0 {
             for counter in 1 ... Int(loops) {
                 computeEnc.setTexture(fakeTex˚, index: (counter + 0) % 2)
                 computeEnc.setTexture(outTex˚,  index: (counter + 1) % 2)
-                super.computeNode(computeEnc)
+                super.computeShader(computeEnc)
             }
         }
         outTex˚?.activate([], from: outTex˚)

@@ -34,14 +34,14 @@ public class CameraNode: ComputeNode {
         super.makeResources()
     }
     
-    public override func computeNode(_ computeEnc: MTLComputeCommandEncoder)  {
+    public override func computeShader(_ computeEnc: MTLComputeCommandEncoder)  {
 
         guard CameraSession.shared.hasNewTex else { return }
         guard let camTex = CameraSession.shared.cameraTex else { return }
         pipeline.updateTexture(self, outTex˚, rotate: false)
         computeEnc.setTexture(camTex, index: 0)
         computeEnc.setTexture(outTex˚, index: 1)
-        super.computeNode(computeEnc)
+        super.computeShader(computeEnc)
         outTex˚?.activate([],from: outTex˚)
     }
 #endif

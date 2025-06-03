@@ -31,16 +31,16 @@ open class TileNode: ComputeNode {
         super.makeResources()
     }
     
-    override public func computeNode(_ computeEnc: MTLComputeCommandEncoder)  {
+    override public func computeShader(_ computeEnc: MTLComputeCommandEncoder)  {
 
         repeat˚?.updateMtlBuffer()
         mirror˚?.updateMtlBuffer()
 
-        computeEnc.setTexture(inTex˚,   index: 0)
-        computeEnc.setTexture(outTex˚,  index: 1)
-        computeEnc.setBuffer (repeat˚,  index: 0)
-        computeEnc.setBuffer (mirror˚,  index: 1)
-        super.computeNode(computeEnc)
+        computeEnc.setTexture(inTex˚,  index: 0)
+        computeEnc.setTexture(outTex˚, index: 1)
+        computeEnc.setBuffer (repeat˚, index: 0)
+        computeEnc.setBuffer (mirror˚, index: 1)
+        super.computeShader(computeEnc)
         outTex˚?.activate([], from: outTex˚)
     }
 

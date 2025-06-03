@@ -33,7 +33,7 @@ public class DrawNode: ComputeNode {
         super.makeResources()
     }
 
-    override public func computeNode(_ computeEnc: MTLComputeCommandEncoder)  {
+    override public func computeShader(_ computeEnc: MTLComputeCommandEncoder)  {
 
         if let inTex = inTex˚?.texture {
 
@@ -56,7 +56,7 @@ public class DrawNode: ComputeNode {
         computeEnc.setBuffer (shift˚,  index: 0)
         computeEnc.setBuffer(pipeline.aspectBuf, offset: 0, index: 1)
 
-        super.computeNode(computeEnc)
+        super.computeShader(computeEnc)
         outTex˚?.activate([], from: outTex˚)
     }
 }

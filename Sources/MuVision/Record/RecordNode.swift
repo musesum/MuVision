@@ -11,6 +11,6 @@ public class RecordNode: ComputeNode {
     var assetBuffer: AVAssetWriterInputPixelBufferAdaptor?
     var documentURL: URL?
 
-    override public func computeNode(_ : MTLComputeCommandEncoder) {
+    override public func computeShader(_ : MTLComputeCommandEncoder) {
     }
 }

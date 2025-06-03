@@ -48,7 +48,7 @@ open class ComputeNode: PipeNode {
             print("\(pipeName) (\(width),\(height))")// thread size(\(threadSize.width),\(threadSize.height))  count(\(threadCount.width),\(threadCount.height)) remainder(\(drawW-threadSize.width*threadCount.width), \(drawH-threadSize.height*threadCount.height))")
         }
     }
-    public func computeNode(_ computeEnc: MTLComputeCommandEncoder)  {
+    public func computeShader(_ computeEnc: MTLComputeCommandEncoder)  {
         // setup and execute compute textures
 
         if let mtlCompute {

@@ -52,13 +52,13 @@ public class ColorNode: ComputeNode {
         plane˚?.updateMtlBuffer()
     }
 
-    override public func computeNode(_ computeEnc: MTLComputeCommandEncoder)  {
+    override public func computeShader(_ computeEnc: MTLComputeCommandEncoder)  {
 
         computeEnc.setTexture(inTex˚,  index: 0)
         computeEnc.setTexture(outTex˚, index: 1)
         computeEnc.setTexture(palTex˚, index: 2)
         computeEnc.setBuffer (plane˚,  index: 0)
-        super.computeNode(computeEnc)
+        super.computeShader(computeEnc)
         outTex˚?.activate([], from: outTex˚)
         palTex˚?.activate([], from: palTex˚)
     }

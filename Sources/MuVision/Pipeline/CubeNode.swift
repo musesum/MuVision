@@ -69,8 +69,8 @@ public class CubeNode: RenderNode {
         }
     }
 
-    override open func renderNode(_ renderEnc: MTLRenderCommandEncoder,
-                                  _ renderState: RenderState) {
+    override open func renderShader(_ renderEnc: MTLRenderCommandEncoder,
+                                    _ renderState: RenderState) {
         guard let renderPipelineState else { return }
 
         cubeMesh.eyeBuf?.setUniformBuf(renderEnc)

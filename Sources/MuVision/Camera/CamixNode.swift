@@ -33,7 +33,7 @@ public class CamixNode: ComputeNode {
         super.makeResources()
     }
 #if !os(visionOS)
-    public override func computeNode(_ computeEnc: MTLComputeCommandEncoder)  {
+    public override func computeShader(_ computeEnc: MTLComputeCommandEncoder)  {
 
         guard CameraSession.shared.hasNewTex else { return }
 
@@ -50,7 +50,7 @@ public class CamixNode: ComputeNode {
         computeEnc.setTexture(camTex˚, index: 3)
         computeEnc.setBuffer (mixcam˚, index: 0)
         computeEnc.setBuffer (frame˚,  index: 1)
-        super.computeNode(computeEnc)
+        super.computeShader(computeEnc)
         outTex˚?.activate([],from: outTex˚)
     }
 #endif
