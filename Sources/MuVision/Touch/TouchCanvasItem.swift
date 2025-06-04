@@ -36,7 +36,43 @@ public struct TouchCanvasItem: Codable {
         self.phase  = Int(phase.rawValue)
         self.type   = visit.type.rawValue
     }
-    
+    init(_ lastItem: TouchCanvasItem? = nil,
+         _ key     : Int,
+         _ force   : CGFloat,
+         _ radius  : CGFloat,
+         _ next    : CGPoint,
+         _ phase   : UITouch.Phase,
+         _ azimuth : CGFloat,
+         _ altitude: CGFloat,
+         _ visit   : Visitor) {
+
+        let alti = (.pi/2 - altitude) / .pi/2
+        let azim = CGVector(dx: -sin(azimuth) * alti, dy: cos(azimuth) * alti)
+        var force = Float(force)
+        var radius = Float(radius)
+
+        if let lastItem {
+
+            let forceFilter = Float(0.90)
+            force = (lastItem.force * forceFilter) + (force * (1-forceFilter))
+
+            let radiusFilter = Float(0.95)
+            radius = (lastItem.radius * radiusFilter) + (radius * (1-radiusFilter))
+            //print(String(format: "* %.3f -> %.3f", lastItem.force, force))
+        } else {
+            force = 0 // bug: always begins at 0.5
+        }
+        self.time   = Date().timeIntervalSince1970
+        self.key    = key
+        self.nextX  = Float(next.x)
+        self.nextY  = Float(next.y)
+        self.radius = Float(radius)
+        self.force  = Float(force)
+        self.azimX  = azim.dx
+        self.azimY  = azim.dy
+        self.phase  = Int(phase.rawValue)
+        self.type   = visit.type.rawValue
+    }
     var cgPoint: CGPoint { get {
         CGPoint(x: CGFloat(nextX), y: CGFloat(nextY))
     }}

@@ -55,8 +55,8 @@ open class TouchCanvasBuffer {
         
         touchLog.log(phase, nextXY, radius)
         
-        let item = makeTouchCanvasItem(joint.hash, force, radius, nextXY, phase, azimuth, altitude, Visitor(0, .canvas))
-        
+        let item = TouchCanvasItem(repeatLastItem, joint.hash, force, radius, nextXY, phase, azimuth, altitude, Visitor(0, .canvas))
+
         buffer.addItem(item, bufferType: .local)
         Task {
             await canvas.peers.sendItem(.touchFrame) {
@@ -81,8 +81,8 @@ open class TouchCanvasBuffer {
         
         //touchLog.log(phase, nextXY, radius)
         
-        let item = makeTouchCanvasItem(touch.hash, force, radius, nextXY, phase, azimuth, altitude, Visitor(0, .canvas))
-        
+        let item = TouchCanvasItem(repeatLastItem, touch.hash, force, radius, nextXY, phase, azimuth, altitude, Visitor(0, .canvas))
+
         buffer.addItem(item, bufferType: .local)
         
         Task {
@@ -97,35 +97,7 @@ open class TouchCanvasBuffer {
         }
     }
     
-    public func makeTouchCanvasItem(_ key     : Int,
-                                    _ force   : CGFloat,
-                                    _ radius  : CGFloat,
-                                    _ nextXY  : CGPoint,
-                                    _ phase   : UITouch.Phase,
-                                    _ azimuth : CGFloat,
-                                    _ altitude: CGFloat,
-                                    _ visit   : Visitor) -> TouchCanvasItem {
-        
-
-        let alti = (.pi/2 - altitude) / .pi/2
-        let azim = CGVector(dx: -sin(azimuth) * alti, dy: cos(azimuth) * alti)
-        var force = Float(force)
-        var radius = Float(radius)
-        
-        if let repeatLastItem {
-            
-            let forceFilter = Float(0.90)
-            force = (repeatLastItem.force * forceFilter) + (force * (1-forceFilter))
-            
-            let radiusFilter = Float(0.95)
-            radius = (repeatLastItem.radius * radiusFilter) + (radius * (1-radiusFilter))
-            //print(String(format: "* %.3f -> %.3f", lastItem.force, force))
-        } else {
-            force = 0 // bug: always begins at 0.5
-        }
-        let item = TouchCanvasItem(key, nextXY, radius, force, azim, phase, visit)
-        return item
-    }
+    
     func flushTouches(_ touchRepeat: Bool) -> Bool {
         
         if buffer.isEmpty,
