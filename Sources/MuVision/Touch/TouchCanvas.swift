@@ -17,13 +17,12 @@ open class TouchCanvas: @unchecked Sendable {
         for (key, buf) in touchBuffers {
             let isDone = buf.flushTouches(touchRepeat)
             if isDone { removeKeys.append(key) }
-            
         }
         for key in removeKeys {
             touchBuffers.removeValue(forKey: key)
         }
     }
-
+    
     let touchDraw: TouchDraw
     public let peers: Peers
     public var immersive = false
@@ -32,7 +31,7 @@ open class TouchCanvas: @unchecked Sendable {
                 _ peers: Peers) {
         self.touchDraw = touchDraw
         self.peers = peers
-        peers.setDelegate(self, for: .touch)
+        peers.setDelegate(self, for: .touchFrame)
     }
     deinit { peers.removeDelegate(self) }
 
@@ -52,7 +51,7 @@ open class TouchCanvas: @unchecked Sendable {
     }
 }
 
-extension TouchCanvas { // + Touch
+extension TouchCanvas { // + UITouch
 
     public func beginTouch(_ touch: UITouch) -> Bool {
         if immersive { return true }
@@ -67,10 +66,9 @@ extension TouchCanvas { // + Touch
         }
         return false
     }
-//....
     public func remoteItem(_ item: TouchCanvasItem) {
         if let touchBuffer = TouchCanvas.touchBuffers[item.key] {
-            touchBuffer.addTouchCanvasItem(item)
+            touchBuffer.buffer.addItem(item, bufferType: .remote)
         } else {
             TouchCanvas.touchBuffers[item.key] = TouchCanvasBuffer(item, self)
         }
