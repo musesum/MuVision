@@ -109,7 +109,7 @@ open class PipeNode: Equatable {
         if let renderNode = self as? RenderNode {
             logging += renderNode.pipeName + " -> "
             renderNode.updateUniforms(drawable, deviceAnchor)
-            renderNode.renderNode(renderEnc, pipeline.renderState)
+            renderNode.renderShader(renderEnc, pipeline.renderState)
         }
         pipeChildren
             .filter { $0.pipeNode˚.val("on") ?? 0 > 0 }

@@ -16,7 +16,10 @@ open class TouchCanvasBuffer {
     private var isDone = false
     private var touchCubic = TouchCubic()
     private var touchLog = TouchLog()
-    
+
+    private var timeLag: TimeInterval = 0.2
+    private var timeNext: TimeInterval?
+
     public init(_ touch: UITouch,
                 _ canvas: TouchCanvas) {
         
@@ -109,7 +112,17 @@ open class TouchCanvasBuffer {
             
         } else {
             let state = buffer.flushBuf()
-            isDone = (state == .done)
+            switch state {
+            case .done:
+                isDone = true
+            case .wait:
+                if touchRepeat,
+                   repeatLastItem != nil {
+                    touchCubic.drawPoints(canvas.touchDraw.drawPoint)
+                }
+            case .continue: break
+
+            }
         }
         return isDone
     }
@@ -123,6 +136,17 @@ extension TouchCanvasBuffer: CircleBufferDelegate {
             print("Error: Not a TouchCanvasItem")
             return .continue
         }
+        let timeNow = Date().timeIntervalSince1970
+
+        if type == .remote {
+            // already waiting?
+            let timeNext = timeNext ?? timeLag + item.time
+            if timeNow < timeNext {
+                return .wait // try later
+            } else {
+                self.timeNext = nil // process now
+            }
+        }
         let radius = canvas.touchDraw.updateRadius(item)
         let point = item.cgPoint
         isDone = item.isDone()
@@ -134,3 +158,4 @@ extension TouchCanvasBuffer: CircleBufferDelegate {
         return isDone ? .done : .continue
     }
 }
+
