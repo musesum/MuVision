@@ -68,7 +68,7 @@ extension TouchCanvas { // + UITouch
     }
     public func remoteItem(_ item: TouchCanvasItem) {
         if let touchBuffer = TouchCanvas.touchBuffers[item.key] {
-            touchBuffer.buffer.addItem(item, bufferType: .remote)
+            touchBuffer.buffer.addItem(item, bufType: .remoteBuf)
         } else {
             TouchCanvas.touchBuffers[item.key] = TouchCanvasBuffer(item, self)
         }

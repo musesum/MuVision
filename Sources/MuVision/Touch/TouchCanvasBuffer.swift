@@ -33,7 +33,7 @@ open class TouchCanvasBuffer {
 
         self.canvas = canvas
         buffer.delegate = self
-        buffer.addItem(item, bufferType: .remote)
+        buffer.addItem(item, bufType: .remoteBuf)
     }
     
     public init(_ joint: JointState,
@@ -60,7 +60,7 @@ open class TouchCanvasBuffer {
         
         let item = TouchCanvasItem(repeatLastItem, joint.hash, force, radius, nextXY, phase, azimuth, altitude, Visitor(0, .canvas))
 
-        buffer.addItem(item, bufferType: .local)
+        buffer.addItem(item, bufType: .localBuf)
         Task {
             await canvas.peers.sendItem(.touchFrame) {
                 do {
@@ -86,7 +86,7 @@ open class TouchCanvasBuffer {
         
         let item = TouchCanvasItem(repeatLastItem, touch.hash, force, radius, nextXY, phase, azimuth, altitude, Visitor(0, .canvas))
 
-        buffer.addItem(item, bufferType: .local)
+        buffer.addItem(item, bufType: .localBuf)
         
         Task {
             await canvas.peers.sendItem(.touchFrame) {
@@ -113,14 +113,14 @@ open class TouchCanvasBuffer {
         } else {
             let state = buffer.flushBuf()
             switch state {
-            case .done:
+            case .doneBuf:
                 isDone = true
-            case .wait:
+            case .waitBuf:
                 if touchRepeat,
                    repeatLastItem != nil {
                     touchCubic.drawPoints(canvas.touchDraw.drawPoint)
                 }
-            case .continue: break
+            case .nextBuf: break
 
             }
         }
@@ -131,18 +131,18 @@ open class TouchCanvasBuffer {
 extension TouchCanvasBuffer: CircleBufferDelegate {
     public typealias Item = TouchCanvasItem
 
-    public func flushItem<Item>(_ item: Item, _ type: BufferType) -> FlushState {
+    public func flushItem<Item>(_ item: Item, _ type: BufType) -> BufState {
         guard let item = item as? TouchCanvasItem else {
             print("Error: Not a TouchCanvasItem")
-            return .continue
+            return .nextBuf
         }
         let timeNow = Date().timeIntervalSince1970
 
-        if type == .remote {
+        if type == .remoteBuf {
             // already waiting?
             let timeNext = timeNext ?? timeLag + item.time
             if timeNow < timeNext {
-                return .wait // try later
+                return .waitBuf // try later
             } else {
                 self.timeNext = nil // process now
             }
@@ -155,7 +155,7 @@ extension TouchCanvasBuffer: CircleBufferDelegate {
         touchCubic.addPointRadius(point, radius, isDone)
         touchCubic.drawPoints(canvas.touchDraw.drawPoint)
         
-        return isDone ? .done : .continue
+        return isDone ? .doneBuf : .nextBuf
     }
 }
 
