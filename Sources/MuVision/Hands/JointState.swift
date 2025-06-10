@@ -151,10 +151,9 @@ public class JointState {
     }
 
     func updateFlo(_ phase: UITouch.Phase,
-                   time: TimeInterval = Date().timeIntervalSince1970,
                    _ setOps: SetOps) {
         self.phase = phase
-        self.time = time
+        self.time = Date().timeIntervalSince1970
         let nameDoubles: [(String,Double)] = [
             ("x",     Double(pos.x)),
             ("y",     Double(pos.y)),
