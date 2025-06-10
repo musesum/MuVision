@@ -10,21 +10,21 @@ open class TouchCanvasBuffer {
     private var repeatLastItem: TouchCanvasItem?
     
     // each finger or brush gets its own double buffer
-    public let buffer = CircleBuffer<TouchCanvasItem>(capacity: 5, internalLoop: false)
+    public let buffer = TimedBuffer<TouchCanvasItem>(capacity: 5, internalLoop: false)
     private var indexNow = 0
     private var canvas: TouchCanvas
     private var isDone = false
     private var touchCubic = TouchCubic()
     private var touchLog = TouchLog()
 
-    private var timeLag: TimeInterval = 0.2
-    private var timeNext: TimeInterval?
+    // timeLag moved to TimedBuffer
 
     public init(_ touch: UITouch,
                 _ canvas: TouchCanvas) {
         
         self.canvas = canvas
         buffer.delegate = self
+        buffer.timeLag = 0.2
         addTouchItem(touch)
     }
     
@@ -33,6 +33,7 @@ open class TouchCanvasBuffer {
 
         self.canvas = canvas
         buffer.delegate = self
+        buffer.timeLag = 0.2
         buffer.addItem(item, bufType: .remoteBuf)
     }
     
@@ -41,6 +42,7 @@ open class TouchCanvasBuffer {
         
         self.canvas = canvas
         buffer.delegate = self
+        buffer.timeLag = 0.2
         
         addTouchHand(joint)
     }
@@ -128,7 +130,7 @@ open class TouchCanvasBuffer {
     }
 }
 
-extension TouchCanvasBuffer: CircleBufferDelegate {
+extension TouchCanvasBuffer: TimedBufferDelegate {
     public typealias Item = TouchCanvasItem
 
     public func flushItem<Item>(_ item: Item, _ type: BufType) -> BufState {
@@ -136,17 +138,8 @@ extension TouchCanvasBuffer: CircleBufferDelegate {
             print("Error: Not a TouchCanvasItem")
             return .nextBuf
         }
-        let timeNow = Date().timeIntervalSince1970
-
-        if type == .remoteBuf {
-            // already waiting?
-            let timeNext = timeNext ?? timeLag + item.time
-            if timeNow < timeNext {
-                return .waitBuf // try later
-            } else {
-                self.timeNext = nil // process now
-            }
-        }
+        // Timing logic is now handled in TimedBuffer.flushBuf()
+        
         let radius = canvas.touchDraw.updateRadius(item)
         let point = item.cgPoint
         isDone = item.isDone()

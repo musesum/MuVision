@@ -3,7 +3,7 @@ import UIKit
 import MuFlo
 
 
-public struct TouchCanvasItem: Codable {
+public struct TouchCanvasItem: Codable, TimedItem {
     
     public var key    : Int      // unique id of touch
     public var time   : Double   // time event was created
