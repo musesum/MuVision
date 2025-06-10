@@ -25,6 +25,9 @@ open class TouchCanvasBuffer {
         self.canvas = canvas
         buffer.delegate = self
         buffer.timeLag = 0.2
+        buffer.autoAdjustLag = true
+        buffer.catchUpRate = 0.9
+        buffer.maxBacklog = 0.4 // 2x packet delay
         addTouchItem(touch)
     }
     
@@ -34,6 +37,9 @@ open class TouchCanvasBuffer {
         self.canvas = canvas
         buffer.delegate = self
         buffer.timeLag = 0.2
+        buffer.autoAdjustLag = true
+        buffer.catchUpRate = 0.9
+        buffer.maxBacklog = 0.4 // 2x packet delay
         buffer.addItem(item, bufType: .remoteBuf)
     }
     
@@ -43,6 +49,9 @@ open class TouchCanvasBuffer {
         self.canvas = canvas
         buffer.delegate = self
         buffer.timeLag = 0.2
+        buffer.autoAdjustLag = true
+        buffer.catchUpRate = 0.9
+        buffer.maxBacklog = 0.4 // 2x packet delay
         
         addTouchHand(joint)
     }
