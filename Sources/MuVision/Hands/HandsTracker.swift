@@ -57,5 +57,5 @@ open class HandsTracker: ObservableObject {
 }
 #else
 /// this is a stub for non-visionOS devices to
-/// accept HandTracker events via MuPeer (Bonjour)
+/// accept HandTracker events via MuPeers (Bonjour)
 #endif

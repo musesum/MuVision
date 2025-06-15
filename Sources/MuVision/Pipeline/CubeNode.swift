@@ -74,7 +74,12 @@ public class CubeNode: RenderNode {
         guard let renderPipelineState else { return }
 
         cubeMesh.eyeBuf?.setUniformBuf(renderEnc)
-        mixcube˚?.updateMtlBuffer()
+        if let mixcube˚ {
+            #if os(visionOS) //.....
+            mixcube˚.setVal("x", 1, .sneak)
+            #endif
+            mixcube˚.updateMtlBuffer()
+        }
 
         renderEnc.setFragmentTexture(inTex˚, index: 0)
         renderEnc.setFragmentTexture(cudex˚, index: 1)
