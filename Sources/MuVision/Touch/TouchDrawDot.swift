@@ -21,7 +21,7 @@ public protocol TouchDrawProtocol {
 
 #if DEBUG
 /// this is a problem with SPM not allowing targeted optimizations
-/// The solution would be to compile binararies for each target.
+/// The solution would be to compile binaries for each target.
 /// Not worth the complexity of workflow for naive coders.
 #warning("TouchDrawDot drawing large Dots will be slow in DEBUG mode.")
 #endif
