@@ -151,7 +151,7 @@ extension TouchCanvasBuffer: TimedBufferDelegate {
         
         let radius = canvas.touchDraw.updateRadius(item)
         let point = item.cgPoint
-        isDone = item.isDone()
+        isDone = item.isDone
         repeatLastItem = isDone ? nil : item
         
         touchCubic.addPointRadius(point, radius, isDone)
