@@ -5,7 +5,7 @@ import MuFlo
 import MuPeers
 
 open class TouchCanvasBuffer {
-    
+    let id = Visitor.nextId()
     // repeat last touch until isDone
     private var repeatLastItem: TouchCanvasItem?
     
@@ -17,8 +17,9 @@ open class TouchCanvasBuffer {
     private var touchCubic = TouchCubic()
     private var touchLog = TouchLog()
 
-    // timeLag moved to TimedBuffer
-
+    deinit {
+        Panic.remove(id)
+    }
     public init(_ touch: UITouch,
                 _ canvas: TouchCanvas) {
         
@@ -29,6 +30,7 @@ open class TouchCanvasBuffer {
         buffer.catchUpRate = 0.9
         buffer.maxBacklog = 0.4 // 2x packet delay
         addTouchItem(touch)
+        Panic.add(id,self)
     }
     
     public init(_ item: TouchCanvasItem,
@@ -41,6 +43,7 @@ open class TouchCanvasBuffer {
         buffer.catchUpRate = 0.9
         buffer.maxBacklog = 0.4 // 2x packet delay
         buffer.addItem(item, bufType: .remoteBuf)
+        Panic.add(id,self)
     }
     
     public init(_ joint: JointState,
@@ -52,8 +55,8 @@ open class TouchCanvasBuffer {
         buffer.autoAdjustLag = true
         buffer.catchUpRate = 0.9
         buffer.maxBacklog = 0.4 // 2x packet delay
-        
         addTouchHand(joint)
+        Panic.add(id,self)
     }
     
     public func addTouchHand(_ joint: JointState) {
@@ -161,3 +164,13 @@ extension TouchCanvasBuffer: TimedBufferDelegate {
     }
 }
 
+extension TouchCanvasBuffer: PanicReset {
+    public func reset() {
+        buffer.reset() // assuming reset() empties the buffer; replace with buffer.clear() if that is the correct API
+        repeatLastItem = nil
+        indexNow = 0
+        isDone = false
+        touchCubic = TouchCubic()
+        touchLog = TouchLog()
+    }
+}
