@@ -6,6 +6,7 @@ import CompositorServices
 
 extension EyeBuf {
     /// Update projection and rotation
+    @available(visionOS 2.0, *)
     public func updateEyeUniforms(_ drawable: LayerRenderer.Drawable,
                                   _ deviceAnchor: DeviceAnchor?,
                                   _ cameraPos: vector_float4,
@@ -53,15 +54,13 @@ extension EyeBuf {
         func uniformForEyeIndex(_ index: Int,
                                 _ label: String? = nil) -> UniformEye {
 
+
+
+
+
+
             let view = drawable.views[index]
-            let projection = ProjectiveTransform3D(
-                leftTangent   : Double(view.tangents[0]),
-                rightTangent  : Double(view.tangents[1]),
-                topTangent    : Double(view.tangents[2]),
-                bottomTangent : Double(view.tangents[3]),
-                nearZ         : Double(drawable.depthRange.y),
-                farZ          : Double(drawable.depthRange.x),
-                reverseZ      : true)
+            let projection = drawable.computeProjection(viewIndex: index)
 
             let orientation = (anchorOrigin * view.transform).inverse
             var viewModel = orientation

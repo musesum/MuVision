@@ -4,7 +4,8 @@ import PackageDescription
 
 let package = Package(
     name: "MuVision",
-    platforms: [.iOS(.v17)],
+    platforms: [.iOS(.v17),
+                .visionOS(.v2)],
     products: [.library(name: "MuVision", targets: ["MuVision"])],
     dependencies: [
         .package(url: "https://github.com/musesum/MuFlo.git", branch: "main"),

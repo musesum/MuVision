@@ -176,8 +176,13 @@ public class CubeNode: RenderNode {
     /// Update projection and rotation
     override public func updateUniforms(_ drawable: LayerRenderer.Drawable,
                                         _ deviceAnchor: DeviceAnchor?) {
+        
         let cameraPos =  vector_float4([0, 0,  -4, 1]) //????
-        cubeMesh.eyeBuf?.updateEyeUniforms(drawable, deviceAnchor, cameraPos, "👁️C⃝ube")
+        if #available(visionOS 2.0, *) {
+            cubeMesh.eyeBuf?.updateEyeUniforms(drawable, deviceAnchor, cameraPos, "👁️C⃝ube")
+        } else {
+            // Fallback on earlier versions
+        }
     }
     
 #endif
