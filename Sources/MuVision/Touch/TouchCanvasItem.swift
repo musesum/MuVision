@@ -2,19 +2,18 @@
 import UIKit
 import MuFlo
 
-
 public struct TouchCanvasItem: Codable, TimedItem {
     
-    public var key    : Int      // unique id of touch
-    public var time   : Double   // time event was created
-    public var nextX  : Float    // touch point x
-    public var nextY  : Float    // touch point y
-    public var force  : Float    // pencil pressure
-    public var radius : Float    // size of dot
-    public var azimX  : Double   // pencil tilt X
-    public var azimY  : Double   // pencil tilt Y
-    public var phase  : Int      // UITouch.Phase.rawValue
-    public var type   : Int      // Visitor.type
+    public var key    : Int    // unique id of touch
+    public var time   : Double // time event was created
+    public var nextX  : Float  // touch point x
+    public var nextY  : Float  // touch point y
+    public var force  : Float  // pencil pressure
+    public var radius : Float  // size of dot
+    public var azimX  : Double // pencil tilt X
+    public var azimY  : Double // pencil tilt Y
+    public var phase  : Int    // UITouch.Phase.rawValue
+    public var type   : Int    // Visitor.type
 
     public init(_ key     : Int,
                 _ next    : CGPoint,
@@ -36,7 +35,7 @@ public struct TouchCanvasItem: Codable, TimedItem {
         self.phase  = Int(phase.rawValue)
         self.type   = visit.type.rawValue
     }
-    init(_ lastItem: TouchCanvasItem? = nil,
+    init(_ prevItem: TouchCanvasItem? = nil,
          _ key     : Int,
          _ force   : CGFloat,
          _ radius  : CGFloat,
@@ -51,17 +50,17 @@ public struct TouchCanvasItem: Codable, TimedItem {
         var force = Float(force)
         var radius = Float(radius)
 
-        if let lastItem {
-
+        if let prevItem {
             let forceFilter = Float(0.90)
-            force = (lastItem.force * forceFilter) + (force * (1-forceFilter))
+            force = (prevItem.force * forceFilter) + (force * (1-forceFilter))
 
             let radiusFilter = Float(0.95)
-            radius = (lastItem.radius * radiusFilter) + (radius * (1-radiusFilter))
+            radius = (prevItem.radius * radiusFilter) + (radius * (1-radiusFilter))
             //print(String(format: "* %.3f -> %.3f", lastItem.force, force))
         } else {
             force = 0 // bug: always begins at 0.5
         }
+
         self.time   = Date().timeIntervalSince1970
         self.key    = key
         self.nextX  = Float(next.x)
@@ -73,6 +72,23 @@ public struct TouchCanvasItem: Codable, TimedItem {
         self.phase  = Int(phase.rawValue)
         self.type   = visit.type.rawValue
     }
+    init(repeated: TouchCanvasItem) {
+
+        self.time   = Date().timeIntervalSince1970
+        self.key    = repeated.key
+        self.nextX  = repeated.nextX
+        self.nextY  = repeated.nextY
+        self.radius = repeated.radius
+        self.force  = repeated.force
+        self.azimX  = repeated.azimX
+        self.azimY  = repeated.azimY
+        self.phase  = repeated.phase
+        self.type   = repeated.type
+    }
+    func repeated() -> TouchCanvasItem {
+        return TouchCanvasItem(repeated: self)
+    }
+
     var cgPoint: CGPoint { get {
         CGPoint(x: CGFloat(nextX), y: CGFloat(nextY))
     }}

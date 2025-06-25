@@ -7,7 +7,7 @@ import MuPeers
 open class TouchCanvasBuffer {
     let id = Visitor.nextId()
     // repeat last touch until isDone
-    private var repeatLastItem: TouchCanvasItem?
+    private var repeatItem: TouchCanvasItem?
     
     // each finger or brush gets its own double buffer
     public let buffer = TimedBuffer<TouchCanvasItem>(capacity: 5, internalLoop: false)
@@ -25,10 +25,6 @@ open class TouchCanvasBuffer {
         
         self.canvas = canvas
         buffer.delegate = self
-        buffer.timeLag = 0.2
-        buffer.autoAdjustLag = true
-        buffer.catchUpRate = 0.9
-        buffer.maxBacklog = 0.4 // 2x packet delay
         addTouchItem(touch)
         Panic.add(id,self)
     }
@@ -38,10 +34,6 @@ open class TouchCanvasBuffer {
 
         self.canvas = canvas
         buffer.delegate = self
-        buffer.timeLag = 0.2
-        buffer.autoAdjustLag = true
-        buffer.catchUpRate = 0.9
-        buffer.maxBacklog = 0.4 // 2x packet delay
         buffer.addItem(item, bufType: .remoteBuf)
         Panic.add(id,self)
     }
@@ -51,10 +43,6 @@ open class TouchCanvasBuffer {
         
         self.canvas = canvas
         buffer.delegate = self
-        buffer.timeLag = 0.2
-        buffer.autoAdjustLag = true
-        buffer.catchUpRate = 0.9
-        buffer.maxBacklog = 0.4 // 2x packet delay
         addTouchHand(joint)
         Panic.add(id,self)
     }
@@ -72,7 +60,7 @@ open class TouchCanvasBuffer {
         
         touchLog.log(phase, nextXY, radius)
         
-        let item = TouchCanvasItem(repeatLastItem, joint.hash, force, radius, nextXY, phase, azimuth, altitude, Visitor(0, .canvas))
+        let item = TouchCanvasItem(repeatItem, joint.hash, force, radius, nextXY, phase, azimuth, altitude, Visitor(0, .canvas))
 
         buffer.addItem(item, bufType: .localBuf)
         Task {
@@ -98,7 +86,7 @@ open class TouchCanvasBuffer {
         
         //touchLog.log(phase, nextXY, radius)
         
-        let item = TouchCanvasItem(repeatLastItem, touch.hash, force, radius, nextXY, phase, azimuth, altitude, Visitor(0, .canvas))
+        let item = TouchCanvasItem(repeatItem, touch.hash, force, radius, nextXY, phase, azimuth, altitude, Visitor(0, .canvas))
 
         buffer.addItem(item, bufType: .localBuf)
         
@@ -119,7 +107,7 @@ open class TouchCanvasBuffer {
         
         if buffer.isEmpty,
            touchRepeat,
-           repeatLastItem != nil {
+           repeatItem != nil {
             // finger is stationary repeat last movement
             // don't update touchCubic.addPointRadius
             touchCubic.drawPoints(canvas.touchDraw.drawPoint)
@@ -131,7 +119,7 @@ open class TouchCanvasBuffer {
                 isDone = true
             case .waitBuf:
                 if touchRepeat,
-                   repeatLastItem != nil {
+                   repeatItem != nil {
                     touchCubic.drawPoints(canvas.touchDraw.drawPoint)
                 }
             case .nextBuf: break
@@ -146,16 +134,11 @@ extension TouchCanvasBuffer: TimedBufferDelegate {
     public typealias Item = TouchCanvasItem
 
     public func flushItem<Item>(_ item: Item, _ type: BufType) -> BufState {
-        guard let item = item as? TouchCanvasItem else {
-            print("Error: Not a TouchCanvasItem")
-            return .nextBuf
-        }
-        // Timing logic is now handled in TimedBuffer.flushBuf()
-        
+        guard let item = item as? TouchCanvasItem else { return .nextBuf }
         let radius = canvas.touchDraw.updateRadius(item)
         let point = item.cgPoint
         isDone = item.isDone
-        repeatLastItem = isDone ? nil : item
+        repeatItem = isDone ? nil : item.repeated()
         
         touchCubic.addPointRadius(point, radius, isDone)
         touchCubic.drawPoints(canvas.touchDraw.drawPoint)
@@ -167,7 +150,7 @@ extension TouchCanvasBuffer: TimedBufferDelegate {
 extension TouchCanvasBuffer: PanicReset {
     public func reset() {
         buffer.reset() // assuming reset() empties the buffer; replace with buffer.clear() if that is the correct API
-        repeatLastItem = nil
+        repeatItem = nil
         indexNow = 0
         isDone = false
         touchCubic = TouchCubic()
