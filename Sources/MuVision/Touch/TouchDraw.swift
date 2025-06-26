@@ -40,7 +40,6 @@ public class TouchDraw {
     public init(_ root: Flo,
                 _ scale: CGFloat) {
         
-
         self.root = root
         self.scale = scale
 

@@ -8,7 +8,7 @@ import MuFlo
 
 public final class CameraSession: NSObject {
 
-    public static var shared = CameraSession(nil, position: .front)
+    nonisolated(unsafe) public static var shared = CameraSession(nil, position: .front)
 
     private var isChangingFace = false
     private var isStartingNow = false
@@ -250,7 +250,7 @@ extension CameraSession: AVCaptureVideoDataOutputSampleBufferDelegate {
 }
 #else
 public final class CameraSession: NSObject {
-    public static var shared = CameraSession()
+    nonisolated(unsafe) public static var shared = CameraSession()
     var camTex: MTLTexture?  // optional texture
 }
 #endif

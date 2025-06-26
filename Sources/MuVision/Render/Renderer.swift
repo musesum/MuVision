@@ -29,7 +29,7 @@ extension MTLDevice {
 }
 
 @globalActor actor RendererActor {
-    static var shared = RendererActor()
+    nonisolated(unsafe) static var shared = RendererActor()
 }
 
 //.... @RendererActor

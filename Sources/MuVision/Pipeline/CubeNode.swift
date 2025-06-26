@@ -15,7 +15,7 @@ public struct VertexCube {
     var position : vector_float4 = .zero
 }
 
-public class CubeNode: RenderNode {
+public class CubeNode: RenderNode, @unchecked Sendable {
 
     private let viaIndex   : Bool
     private var cubeMesh   : CubeMesh!
@@ -161,23 +161,28 @@ public class CubeNode: RenderNode {
     }
     // for both metal and visionOS reflection
     override public func updateUniforms() {
+        guard let eyebuf = cubeMesh.eyeBuf else { return }
+        let drawableSize = pipeline.layer.drawableSize
 
-        let orientation = Motion.shared.updateDeviceOrientation()
-        let projection = project4x4(pipeline.layer.drawableSize)
+        Task {
+            let orientation = await Motion.shared.updateDeviceOrientation()
 
-        NoTimeLog(#function, interval: 4) {
-            print("\t👁️c orientation ", orientation.digits)
-            print("\t👁️c projection  ", projection.digits)
+            let projection = project4x4(drawableSize)
+            NoTimeLog(#function, interval: 4) {
+                print("\t👁️c orientation ", orientation.digits)
+                print("\t👁️c projection  ", projection.digits)
+            }
+            eyebuf.updateEyeUniforms(projection, orientation)
         }
-        cubeMesh.eyeBuf?.updateEyeUniforms(projection, orientation)
     }
+
 #if os(visionOS)
 
     /// Update projection and rotation
     override public func updateUniforms(_ drawable: LayerRenderer.Drawable,
                                         _ deviceAnchor: DeviceAnchor?) {
         
-        let cameraPos =  vector_float4([0, 0,  -4, 1]) //????
+        let cameraPos = vector_float4([0, 0,  -4, 1])
         if #available(visionOS 2.0, *) {
             cubeMesh.eyeBuf?.updateEyeUniforms(drawable, deviceAnchor, cameraPos, "👁️C⃝ube")
         } else {

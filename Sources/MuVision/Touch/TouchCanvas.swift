@@ -9,8 +9,8 @@ public typealias TouchDrawRadius = ((TouchCanvasItem)->(CGFloat))
 
 open class TouchCanvas: @unchecked Sendable {
     
-    static var touchRepeat = true
-    static var touchBuffers = [Int: TouchCanvasBuffer]()
+    nonisolated(unsafe) static var touchRepeat = true
+    nonisolated(unsafe) static var touchBuffers = [Int: TouchCanvasBuffer]()
 
     public static func flushTouchCanvas() {
         var removeKeys = [Int]()
@@ -58,10 +58,13 @@ extension TouchCanvas { // + UITouch
         TouchCanvas.touchBuffers[touch.hash] = TouchCanvasBuffer(touch, self)
         return true
     }
+
     public func updateTouch(_ touch: UITouch) -> Bool {
         if immersive { return true }
         if let touchBuffer = TouchCanvas.touchBuffers[touch.hash] {
-            touchBuffer.addTouchItem(touch)
+            Task {
+                touchBuffer.addTouchItem(touch)
+            }
             return true
         }
         return false

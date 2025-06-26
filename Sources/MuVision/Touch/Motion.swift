@@ -5,58 +5,76 @@ import CoreMotion
 import UIKit
 import RealityKit
 
+import simd
+
+actor MotionActor {
+    private var sceneOrientation: matrix_float4x4 = matrix_identity_float4x4
+
+    func setOrientation(_ mat: matrix_float4x4) {
+        sceneOrientation = mat
+    }
+    func getOrientation() -> matrix_float4x4 {
+        sceneOrientation
+    }
+}
+
+
+@MainActor
 public class Motion {
-    
+
     public static var shared = Motion()
     var motion: CMMotionManager?
-    public var sceneOrientation: matrix_float4x4!
+    private let orientationActor = MotionActor() // ← new actor
 
     public init() {
         motion = CMMotionManager()
-        sceneOrientation = matrix_identity_float4x4
         updateMotion()
     }
 
     func updateMotion() {
         if let motion, motion.isDeviceMotionAvailable {
-
             motion.deviceMotionUpdateInterval = 1 / 60.0
             motion.startDeviceMotionUpdates(using: .xMagneticNorthZVertical)
         }
     }
 
-    @discardableResult
-    public func updateDeviceOrientation() -> matrix_float4x4 {
-
-        if  let motion,  motion.isDeviceMotionAvailable,
+    public func updateDeviceOrientation() async -> matrix_float4x4 {
+        var mat = matrix_identity_float4x4
+        if  let motion, motion.isDeviceMotionAvailable,
             let deviceMotion = motion.deviceMotion {
 
             let a = deviceMotion.attitude.rotationMatrix
 
-            // permute rotation matrix from Core Motion to get scene orientation
             let X = vector_float4([a.m12, a.m22, a.m32, 0])
             let Y = vector_float4([a.m13, a.m23, a.m33, 0])
             let Z = vector_float4([a.m11, a.m21, a.m31, 0])
             let W = vector_float4([    0,     0,     0, 1])
-            let mat = matrix_float4x4(X,Y,Z,W)
-            #if os(visionOS)
+            mat = matrix_float4x4(X,Y,Z,W)
+#if os(visionOS)
             let radians = Float.pi/2
-            #else
+#else
             let radians = UIDevice.current.orientation.rotatation()
-            #endif
+#endif
             let axis = SIMD3<Float>(x: 0, y: 0, z: 1)
             let simdRotation = matrix_float4x4(simd_quatf(angle: radians, axis: axis))
-
-            sceneOrientation = simdRotation * mat
+            mat = simdRotation * mat
         }
-        return sceneOrientation
+        // store orientation in actor
+        await orientationActor.setOrientation(mat)
+        // return latest value
+        return await orientationActor.getOrientation()
+    }
+
+    public func currentOrientation() async -> matrix_float4x4 {
+        await orientationActor.getOrientation()
     }
 }
 
-var LastDeviceOrientation = UIDeviceOrientation.unknown
+nonisolated(unsafe) var LastDeviceOrientation = UIDeviceOrientation.unknown
 
 extension UIDeviceOrientation {
 
+    @MainActor
     func guessOrientation() -> UIDeviceOrientation {
 
         if LastDeviceOrientation != .unknown {
@@ -75,7 +93,7 @@ extension UIDeviceOrientation {
             return self
         }
     }
-
+    @MainActor
     private func transform(_ a: CMAttitude) -> Transform {
 
         switch self {
@@ -109,6 +127,7 @@ extension UIDeviceOrientation {
             }
         }
     }
+    @MainActor
     func rotatation() -> Float {
 
         func rotation(for orientation: UIDeviceOrientation) -> Float {

@@ -73,7 +73,8 @@ open class Pipeline: NSObject {
         layer.frame = CGRect(x: 0, y: 0, width: pipeSize.width, height: pipeSize.height)
         pipeSize = CGSize._4K
         #else
-        layer.frame = UIScreen.main.bounds
+        
+        self.layer.frame = bounds
         switch layer.frame.size.aspect {
         case .landscape : pipeSize = CGSize(width: 1920, height: 1080)
         default         : pipeSize = CGSize(width: 1080, height: 1920)

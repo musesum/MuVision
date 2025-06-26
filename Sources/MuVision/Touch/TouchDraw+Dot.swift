@@ -61,12 +61,7 @@ extension TouchDraw {
 
     public func drawPoint(_ point: CGPoint,
                           _ radius: CGFloat) {
-        #if os(visionOS)
-        let scale = CGFloat(3)
-        #else
-        let scale = UIScreen.main.scale
-        #endif
-
+       
         drawProto?.drawPoint(point, scale, radius, bufSize, drawableSize, brush, drawBuf)
     }
     public func drawIntoBuffer(_ drawBuf: UnsafeMutablePointer<UInt32>,
