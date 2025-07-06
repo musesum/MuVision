@@ -51,11 +51,10 @@ public class TouchDraw {
         let line   = draw.bind("line"  )
         let screen = draw.bind("screen")
 
-        immerse˚ = main.bind("immerse"  ) { f,_ in self.immerse = f.bool    }
         tilt˚    = input .bind("tilt"   ) { f,_ in self.tilt    = f.bool    }
         press˚   = brush .bind("press"  ) { f,_ in self.press   = f.bool    }
         size˚    = brush .bind("size"   ) { f,_ in self.size    = f.cgFloat }
-        index˚   = brush .bind("index"  ) { f,_ in self.brush   = f.uint32  } //... index
+        index˚   = brush .bind("index"  ) { f,_ in self.brush   = f.uint32  }
         prev˚    = line  .bind("prev"   ) { f,_ in self.prev    = f.cgPoint }
         next˚    = line  .bind("next"   ) { f,_ in self.next    = f.cgPoint }
         force˚   = input .bind("force"  ) { f,_ in self.force   = f.cgFloat }

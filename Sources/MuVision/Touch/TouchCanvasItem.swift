@@ -35,15 +35,13 @@ public struct TouchCanvasItem: Codable, TimedItem, Sendable {
         self.type   = visit.type.rawValue
     }
     init(_ prevItem: TouchCanvasItem? = nil,
-         _ touch: UITouch) async {
-
-        let actor = TouchDataActor()
-        let touch = await actor.make(from: touch)
-        var force = touch.force
-        var radius = touch.radius
+         _ touchData: TouchData) {
         
-        let alti = (.pi/2 - touch.altitude) / .pi/2
-        let azim = CGVector(dx: -sin(touch.azimuth) * alti, dy: cos(touch.azimuth) * alti)
+        var force = touchData.force
+        var radius = touchData.radius
+        
+        let alti = (.pi/2 - touchData.altitude) / .pi/2
+        let azim = CGVector(dx: -sin(touchData.azimuth) * alti, dy: cos(touchData.azimuth) * alti)
         if let prevItem {
             let forceFilter = Float(0.90)
             force = (prevItem.force * forceFilter) + (force * (1-forceFilter))
@@ -56,15 +54,16 @@ public struct TouchCanvasItem: Codable, TimedItem, Sendable {
         }
 
         self.time   = Date().timeIntervalSince1970
-        self.key    = touch.key
-        self.nextX  = Float(touch.nextXY.x)
-        self.nextY  = Float(touch.nextXY.y)
-        self.radius = Float(touch.radius)
+        self.key    = touchData.key
+        self.nextX  = Float(touchData.nextXY.x)
+        self.nextY  = Float(touchData.nextXY.y)
+        self.radius = Float(touchData.radius)
         self.force  = force
         self.azimX  = azim.dx
         self.azimY  = azim.dy
-        self.phase  = touch.phase
+        self.phase  = touchData.phase
         self.type   = VisitType.canvas.rawValue
+        logTouch()
     }
 
     init(_ lastItem: TouchCanvasItem? = nil,
@@ -131,9 +130,8 @@ public struct TouchCanvasItem: Codable, TimedItem, Sendable {
         return Visitor(0, VisitType(rawValue: type))
     }
     func logTouch() {
-        if phase == UITouch.Phase.began.rawValue { print() } // space for new stroke
-        print(String(format:"%.3f →(%3.f,%3.f) 𝝙%5.1f f: %.3f r: %.2f %s",
-                     time, nextX, nextY, force, radius, visitFrom))
+        PrintLog("touchCanvasItem: \(nextX.digits(3)),\(nextY.digits(3))" )
+
     }
     var isDone:  Bool {
         return (phase == UITouch.Phase.ended    .rawValue ||

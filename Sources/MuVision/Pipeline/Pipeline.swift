@@ -137,7 +137,7 @@ extension Pipeline {
 
         if renderState == .immersed { return }
 
-        guard let pipeSource = pipeSource else { return }
+        guard let pipeSource else { return }
         var logging = ""
 
         //performCpuWork()

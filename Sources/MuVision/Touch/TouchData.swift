@@ -2,28 +2,29 @@
 
 import UIKit
 
-struct TouchData {
-    var force    : Float
-    var radius   : Float
-    var nextXY   : CGPoint
-    var phase    : Int
-    var azimuth  : CGFloat
-    var altitude : CGFloat
-    var key      : Int
-}
+public struct TouchData {
+    let force    : Float
+    let radius   : Float
+    let nextXY   : CGPoint
+    let phase    : Int
+    let azimuth  : CGFloat
+    let altitude : CGFloat
+    let key      : Int
 
-actor TouchDataActor {
-    func make(from touch: UITouch) async -> TouchData {
-        await MainActor.run {
-            TouchData(
-                force    : Float(touch.force),
-                radius   : Float(touch.majorRadius),
-                nextXY   : touch.preciseLocation(in: nil),
-                phase    : touch.phase.rawValue,
-                azimuth  : touch.azimuthAngle(in: nil),
-                altitude : touch.altitudeAngle,
-                key      : touch.hash
-            )
-        }
+    public init(force    : Float,
+                radius   : Float,
+                nextXY   : CGPoint,
+                phase    : Int,
+                azimuth  : CGFloat,
+                altitude : CGFloat,
+                key      : Int) {
+
+        self.force    = force
+        self.radius   = radius
+        self.nextXY   = nextXY
+        self.phase    = phase
+        self.azimuth  = azimuth
+        self.altitude = altitude
+        self.key      = key
     }
 }

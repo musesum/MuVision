@@ -22,7 +22,7 @@ open class TouchCanvasBuffer: @unchecked Sendable {
         Panic.remove(id)
     }
 
-    public init(_ touch: UITouch,
+    public init(_ touch: TouchData,
                 _ canvas: TouchCanvas) {
         
         self.canvas = canvas
@@ -77,11 +77,11 @@ open class TouchCanvasBuffer: @unchecked Sendable {
         }
     }
 
-    public func addTouchItem(_ touch: UITouch) {
+    public func addTouchItem(_ touch: TouchData) {
 
+        let item = TouchCanvasItem(previousItem, touch)
+        buffer.addItem(item, bufType: .localBuf)
         Task {
-            let item = await TouchCanvasItem(previousItem, touch)
-            buffer.addItem(item, bufType: .localBuf)
             await canvas.peers.sendItem(.touchFrame) {
                 do {
                     return try JSONEncoder().encode(item)
@@ -92,7 +92,6 @@ open class TouchCanvasBuffer: @unchecked Sendable {
             }
         }
     }
-
     func flushTouches(_ touchRepeat: Bool) -> Bool {
         
         if buffer.isEmpty,

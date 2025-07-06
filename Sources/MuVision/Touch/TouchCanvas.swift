@@ -51,23 +51,19 @@ open class TouchCanvas: @unchecked Sendable {
     }
 }
 
-extension TouchCanvas { // + UITouch
+extension TouchCanvas { // + TouchData
 
-    public func beginTouch(_ touch: UITouch) -> Bool {
-        if immersive { return true }
-        TouchCanvas.touchBuffers[touch.hash] = TouchCanvasBuffer(touch, self)
-        return true
+    public func beginTouch(_ touchData: TouchData) {
+        if immersive { return }
+
+        TouchCanvas.touchBuffers[touchData.key] = TouchCanvasBuffer(touchData, self)
     }
 
-    public func updateTouch(_ touch: UITouch) -> Bool {
-        if immersive { return true }
-        if let touchBuffer = TouchCanvas.touchBuffers[touch.hash] {
-            Task {
-                touchBuffer.addTouchItem(touch)
-            }
-            return true
+    public func updateTouch(_ touchData: TouchData) {
+        if immersive { return }
+        if let touchBuffer = TouchCanvas.touchBuffers[touchData.key] {
+            touchBuffer.addTouchItem(touchData)
         }
-        return false
     }
     public func remoteItem(_ item: TouchCanvasItem) {
         if let touchBuffer = TouchCanvas.touchBuffers[item.key] {
