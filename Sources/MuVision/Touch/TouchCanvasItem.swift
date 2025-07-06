@@ -130,7 +130,7 @@ public struct TouchCanvasItem: Codable, TimedItem, Sendable {
         return Visitor(0, VisitType(rawValue: type))
     }
     func logTouch() {
-        PrintLog("touchCanvasItem: \(nextX.digits(3)),\(nextY.digits(3))" )
+        //PrintLog("touchCanvasItem: \(nextX.digits(3)),\(nextY.digits(3))" )
 
     }
     var isDone:  Bool {
