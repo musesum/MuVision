@@ -77,7 +77,7 @@ extension EyeBuf {
         }
         /// rotate model
         func updateRotation() -> matrix_float4x4 {
-            //???? rotation += 0.01
+            //?? rotation += 0.01
             return cameraPos.translate * SIMD3<Float>(1, 1, 0).rotate(radians: rotation)
         }
     }
