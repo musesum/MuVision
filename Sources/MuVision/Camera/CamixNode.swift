@@ -11,11 +11,13 @@ public class CamixNode: ComputeNode {
     private var camTex˚ : Flo?
     private var mixcam˚ : Flo?
     private var frame˚  : Flo?
-    private var front˚  : Flo?
+    private var camera  : CameraSession
 
-    override public init(_ pipeline : Pipeline,
-                         _ pipeNode˚ : Flo) {
+    public init(_ pipeline: Pipeline,
+                _ pipeNode˚: Flo,
+                _ camera: CameraSession) {
 
+        self.camera = camera
         super.init(pipeline, pipeNode˚)
 
         inTex˚  = pipeNode˚.superBindPath("in")
@@ -35,10 +37,10 @@ public class CamixNode: ComputeNode {
 #if !os(visionOS)
     public override func computeShader(_ computeEnc: MTLComputeCommandEncoder)  {
 
-        guard CameraSession.shared.hasNewTex else { return }
+        guard camera.hasNewTex else { return }
 
         if frame˚?.texture == nil,
-           let camTex = CameraSession.shared.cameraTex,
+           let camTex = camera.cameraTex,
            let outTex = outTex˚?.texture,
            let frame = texClip(in: camTex, out: outTex) {
             frame˚?.updateFloScalars(frame)

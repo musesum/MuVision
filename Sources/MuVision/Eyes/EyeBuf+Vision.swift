@@ -46,8 +46,8 @@ extension EyeBuf {
                 print(tab+" viewModel   0:\(eye0.viewModel.digits(-2))")
             }
             func tangentsDepthStr(_ index: Int) -> String {
-                let view = drawable.views[index]
-                return "\(view.tangents.digits(-2)); \(drawable.depthRange.digits(-2))"
+                let projection = drawable.computeProjection(viewIndex: index)
+                return "\(projection.digits(-2)); \(drawable.depthRange.digits(-2))"
             }
         }
 
@@ -83,3 +83,4 @@ extension EyeBuf {
     }
 }
 #endif
+

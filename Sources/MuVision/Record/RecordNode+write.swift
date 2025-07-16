@@ -3,6 +3,7 @@
 import AVFoundation
 import Photos
 import MuFlo
+
 extension RecordNode {
     
     func removeURL(_ url: URL?) {
@@ -89,7 +90,6 @@ extension RecordNode {
                     }
                 }
             case .authorized:
-
                 self.saveInPhotoLibrary(documentURL)
 
             default: break
