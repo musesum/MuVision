@@ -111,7 +111,7 @@ extension RecordNode {
             } else { err("failed: \(saveURL.absoluteString)")
             }
         }
-        func err(_ msg: String) {
+        @Sendable func err(_ msg: String) {
             PrintLog("⁉️ RecordNode::saveInPhotoLibrary \(msg)")
         }
     }

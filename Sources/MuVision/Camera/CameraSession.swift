@@ -56,19 +56,18 @@ public final class CameraSession: NSObject, @unchecked Sendable {
             case .streaming: break
         }
         isStartingNow = false
+    }
+    private func initCamera() {
 
-        func initCamera() {
+        captureSession.beginConfiguration()
+        initCaptureInput()
+        initCaptureOutput()
+        updateOrientation()
+        captureSession.commitConfiguration()
 
-            captureSession.beginConfiguration()
-            initCaptureInput()
-            initCaptureOutput()
-            updateOrientation()
-            captureSession.commitConfiguration()
-
-            initTextureCache()
-            captureSession.startRunning()
-            cameraState = .streaming
-        }
+        initTextureCache()
+        captureSession.startRunning()
+        cameraState = .streaming
     }
 
     /// Stop the capture session.

@@ -9,7 +9,7 @@ import MuFlo
 import CompositorServices
 #endif
 
-open class Pipeline: NSObject {
+open class Pipeline {
 
     private var commandQueue: MTLCommandQueue!
     private var depthTex: MTLTexture!
@@ -57,7 +57,6 @@ open class Pipeline: NSObject {
         self.renderState = renderState
         self.touchDraw = touchDraw
         self.archive = archive
-        super.init()
 
         commandQueue = device.makeCommandQueue()
         library = device.makeDefaultLibrary()

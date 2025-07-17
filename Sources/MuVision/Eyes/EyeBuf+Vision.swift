@@ -53,12 +53,7 @@ extension EyeBuf {
 
         func uniformForEyeIndex(_ index: Int,
                                 _ label: String? = nil) -> UniformEye {
-
-
-
-
-
-
+            
             let view = drawable.views[index]
             let projection = drawable.computeProjection(viewIndex: index)
 

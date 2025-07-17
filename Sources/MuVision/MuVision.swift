@@ -14,7 +14,7 @@ public struct MuVision {
             return nil
         }
         do {
-            return try String(contentsOfFile: path) }
+            return try String(contentsOfFile: path, encoding: .utf8) }
         catch {
             PrintLog("⁉️ MuVision::read err: \(error) loading contents of:\(path)")
         }

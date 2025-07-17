@@ -28,11 +28,7 @@ extension MTLDevice {
     }
 }
 
-@globalActor actor RendererActor {
-    nonisolated(unsafe) static var shared = RendererActor()
-}
 
-//.... @RendererActor
 open class Renderer {
 
     var pipeline: Pipeline
@@ -138,7 +134,7 @@ extension Renderer {
         func performCpuWork() {
             // this should execute pending Flo animations
             // while ignoring the metal based renderFrame()
-            _ = nextFrame.nextFrame(force: true) //.... crash here
+            _ = nextFrame.nextFrame(force: true) //..... crash here
         }
     }
     public func runLayer(_ drawable: LayerRenderer.Drawable,

@@ -10,11 +10,15 @@ public class DrawNode: ComputeNode {
     private var outTex˚ : Flo?
     private var shift˚  : Flo?
     private var touchDraw: TouchDraw
+    private var touchCanvas: TouchCanvas
 
-    public override init(_ pipeline : Pipeline,
-                         _ pipeNode˚ : Flo) {
+    public init(_ pipeline : Pipeline,
+                _ pipeNode˚ : Flo,
+                _ touchCanvas : TouchCanvas) {
 
         self.touchDraw = pipeline.touchDraw
+        self.touchCanvas = touchCanvas
+
         super.init(pipeline, pipeNode˚)
 
         inTex˚  = pipeNode˚.superBindPath("in")
@@ -45,7 +49,7 @@ public class DrawNode: ComputeNode {
             inTex.getBytes(drawBuf, bytesPerRow: rowSize, from: region, mipmapLevel: 0)
             
             touchDraw.drawIntoBuffer(drawBuf, CGSize(width: CGFloat(inTex.width), height: CGFloat(inTex.height)))
-            TouchCanvas.flushTouchCanvas()
+            touchCanvas.flushTouchCanvas()
 
             inTex.replace(region: region, mipmapLevel: 0, withBytes: drawBuf, bytesPerRow: rowSize)
             free(drawBuf)

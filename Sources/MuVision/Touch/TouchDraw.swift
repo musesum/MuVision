@@ -44,7 +44,6 @@ public class TouchDraw {
         self.scale = scale
 
         let sky    = root.bind("sky"   )
-        let main   = sky .bind("main"  )
         let input  = sky .bind("input" )
         let draw   = sky .bind("draw"  )
         let brush  = draw.bind("brush" )

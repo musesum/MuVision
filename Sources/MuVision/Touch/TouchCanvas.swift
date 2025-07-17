@@ -9,10 +9,10 @@ public typealias TouchDrawRadius = ((TouchCanvasItem)->(CGFloat))
 
 open class TouchCanvas: @unchecked Sendable {
     
-    nonisolated(unsafe) static var touchRepeat = true
-    nonisolated(unsafe) static var touchBuffers = [Int: TouchCanvasBuffer]()
+    var touchRepeat = true
+    var touchBuffers = [Int: TouchCanvasBuffer]()
 
-    public static func flushTouchCanvas() {
+    public func flushTouchCanvas() {
         var removeKeys = [Int]()
         for (key, buf) in touchBuffers {
             let isDone = buf.flushTouches(touchRepeat)
@@ -33,15 +33,15 @@ open class TouchCanvas: @unchecked Sendable {
         self.peers = peers
         peers.setDelegate(self, for: .touchFrame)
     }
-    deinit { peers.removeDelegate(self) }
+    //..... deinit { peers.removeDelegate(self) }
 
     public func beginJointState(_ jointState: JointState) {
-        TouchCanvas.touchBuffers[jointState.hash] = TouchCanvasBuffer(jointState, self)
+        touchBuffers[jointState.hash] = TouchCanvasBuffer(jointState, self)
         //DebugLog { P("👐 beginJoint \(jointState.joint˚?.path(2) ?? "??")") }
     }
 
     public func updateJointState(_ jointState: JointState) {
-        if let touchBuffer = TouchCanvas.touchBuffers[jointState.hash] {
+        if let touchBuffer = touchBuffers[jointState.hash] {
             touchBuffer.addTouchHand(jointState)
             // DebugLog { P("👐 updateHand hash: \(jointState.hash)") }
         } else {
@@ -56,20 +56,20 @@ extension TouchCanvas { // + TouchData
     public func beginTouch(_ touchData: TouchData) {
         if immersive { return }
 
-        TouchCanvas.touchBuffers[touchData.key] = TouchCanvasBuffer(touchData, self)
+        touchBuffers[touchData.key] = TouchCanvasBuffer(touchData, self)
     }
 
     public func updateTouch(_ touchData: TouchData) {
         if immersive { return }
-        if let touchBuffer = TouchCanvas.touchBuffers[touchData.key] {
+        if let touchBuffer = touchBuffers[touchData.key] {
             touchBuffer.addTouchItem(touchData)
         }
     }
     public func remoteItem(_ item: TouchCanvasItem) {
-        if let touchBuffer = TouchCanvas.touchBuffers[item.key] {
+        if let touchBuffer = touchBuffers[item.key] {
             touchBuffer.buffer.addItem(item, bufType: .remoteBuf)
         } else {
-            TouchCanvas.touchBuffers[item.key] = TouchCanvasBuffer(item, self)
+            touchBuffers[item.key] = TouchCanvasBuffer(item, self)
         }
     }
 }
