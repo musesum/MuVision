@@ -15,7 +15,6 @@ public class TouchDraw {
     var radius˚  : Flo?
     var azimuth˚ : Flo?
     var fill˚    : Flo?
-    var immerse˚ : Flo?
 
     public private(set) var tilt    = false
     public private(set) var press   = true
@@ -26,7 +25,6 @@ public class TouchDraw {
     public private(set) var force   = CGFloat(0)
     public private(set) var radius  = CGFloat(0)
     public private(set) var azimuth = CGPoint.zero
-    public private(set) var immerse = false
 
     var fill = Float(-1)
     let scale: CGFloat

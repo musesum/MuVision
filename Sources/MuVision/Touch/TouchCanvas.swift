@@ -33,7 +33,6 @@ open class TouchCanvas: @unchecked Sendable {
         self.peers = peers
         peers.setDelegate(self, for: .touchFrame)
     }
-    //..... deinit { peers.removeDelegate(self) }
 
     public func beginJointState(_ jointState: JointState) {
         touchBuffers[jointState.hash] = TouchCanvasBuffer(jointState, self)
