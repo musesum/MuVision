@@ -17,6 +17,8 @@ open class ImmersionModel {
     public var goImmersive = false
     public var isImmersive = false
     public var immersionStyle: ImmersionStyle = .mixed
+    public var isSkyViewVisible = true
+    public var shouldRestoreSkyView = false
     public init() {}
 
     public func changed(_ action: OpenImmersiveSpaceAction.Result) {
@@ -31,6 +33,11 @@ open class ImmersionModel {
         @unknown default:    isImmersive = false
                              goImmersive = false
         }
+    }
+
+    public func skyViewAppeared() {
+        isSkyViewVisible = true
+        shouldRestoreSkyView = false
     }
 }
 #endif

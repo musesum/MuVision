@@ -112,8 +112,8 @@ public class JointState {
             }
             /// recalibrate range after triple
             let setOps: SetOps = taps > 2 ? [.fire, .ranging] : [.fire]
-            thumbTip.updateFlo(phase, setOps)
-            self.updateFlo(phase, setOps)
+            thumbTip.updateFlo(phase, setOps, taps)
+            self.updateFlo(phase, setOps, taps )
 
             TimeLog("\(#function).\(hash)", interval: interval) {
                 let path = "\(self.chiral?.icon ?? "") \(self.joint˚?.path(3) ?? "??")".pad(18)
@@ -146,11 +146,12 @@ public class JointState {
 
     func updatePos(_ pos: SIMD3<Float>) async {
         self.pos = pos
-        updateFlo(phase,.sneak)
+        updateFlo(phase, .sneak, 0)
     }
 
     func updateFlo(_ phase: UITouch.Phase,
-                   _ setOps: SetOps) {
+                   _ setOps: SetOps,
+                   _ taps: Int) {
         self.phase = phase
         self.time = Date().timeIntervalSince1970
         let nameDoubles: [(String,Double)] = [
@@ -159,6 +160,7 @@ public class JointState {
             ("z",     Double(pos.z)),
             ("time",  Double(time )),
             ("phase", Double(phase.rawValue)),
+            ("taps",  Double(taps)),
             ("joint", Double(joint.rawValue))]
         if let joint˚ {
             joint˚.exprs?.setFromAny(nameDoubles, setOps, Visitor(0))

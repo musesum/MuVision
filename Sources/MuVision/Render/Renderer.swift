@@ -107,7 +107,7 @@ extension Renderer {
         deviceAnchor = worldTracking.queryDeviceAnchor(atTimestamp: time)
         drawable.deviceAnchor = deviceAnchor
 
-        TimeLog(#function, interval: 4) {
+        NoTimeLog(#function, interval: 4) {
             if let anchorNow = self.deviceAnchor?.originFromAnchorTransform.digits(){
                 print("⚓️ origin    " + anchorNow)
             }

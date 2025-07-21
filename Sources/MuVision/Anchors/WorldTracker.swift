@@ -36,7 +36,7 @@ open class WorldTracker {
         deviceAnchor = worldTracking.queryDeviceAnchor(atTimestamp: time)
         drawable.deviceAnchor = deviceAnchor
 
-        TimeLog(#function, interval: 1) {
+        NoTimeLog(#function, interval: 1) {
             if let anchorNow = self.deviceAnchor?.originFromAnchorTransform.digits(),
                self.anchorPrev != anchorNow {
                 
