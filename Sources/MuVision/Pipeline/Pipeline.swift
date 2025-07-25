@@ -120,7 +120,7 @@ open class Pipeline {
         let clipNorm = clipFill.normalize()
         self.clipBuf = device.makeBuffer(clipNorm, "clipBuf")
 
-        DebugLog { P("🧭 resizeFrame\(self.layer.drawableSize.digits()) clipNorm\(clipNorm.digits(2))") }
+        NoDebugLog { P("🧭 resizeFrame\(self.layer.drawableSize.digits()) clipNorm\(clipNorm.digits(2))") }
 
         for resizeNode in resizeNodes {
             resizeNode()
@@ -296,7 +296,7 @@ extension Pipeline {
             if let tex = device.makeComputeTex(size: size,
                                                label: inTex.label,
                                                format: inTex.pixelFormat) {
-                DebugLog { P("🧭 makeRotateTex for: \(tex.label ?? "??")") }
+                NoDebugLog { P("🧭 makeRotateTex for: \(tex.label ?? "??")") }
                 return tex
             }
             return nil
@@ -379,7 +379,7 @@ extension Pipeline {
            let tex = makeTex() {
             flo.texture = tex
             flo.activate([])
-            DebugLog { P("🧭 \(#function) via: \(tex.label ?? "??")") }
+            NoDebugLog { P("🧭 \(#function) via: \(tex.label ?? "??")") }
         }
     }
 
@@ -401,7 +401,7 @@ extension Pipeline {
             if rotate {
                 rotatable[path] = (tex, node, flo)
             }
-            DebugLog { P("🧭 updateTexture\(size.digits(0)) \(path)") }
+            NoDebugLog { P("🧭 updateTexture\(size.digits(0)) \(path)") }
             return tex
         }
         return nil

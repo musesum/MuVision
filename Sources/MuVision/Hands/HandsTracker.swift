@@ -4,10 +4,11 @@ import ARKit
 import MuFlo
 
 #if os(visionOS)
+
 open class HandsTracker: ObservableObject {
 
     let session = ARKitSession()
-    var handTracking = HandTrackingProvider()
+    var handTracking: HandTrackingProvider?
     let handsPose: LeftRight<HandPose>
 
     public init(_ handsFlo: LeftRight<HandPose>) {
@@ -18,19 +19,22 @@ open class HandsTracker: ObservableObject {
     public func startHands() async {
 
         do {
-            if HandTrackingProvider.isSupported {
-                print("ARKitSession starting.")
-                try await session.run([handTracking])
+            if HandTrackingProvider.isSupported,
+              handTracking == nil
+            {
+                PrintLog("🤲 start handTracking.")
+                handTracking = HandTrackingProvider()
+                try await session.run([handTracking!])
                 await updateHands()
                 await monitorSessionEvents()
             }
         } catch {
-            print("ARKitSession error:", error)
+            print("⁉️ 🤲 handTracking error:", error)
         }
     }
 
     public func updateHands() async {
-
+        guard let handTracking else { return }
         for await update in handTracking.anchorUpdates {
             
             if update.event == .updated,

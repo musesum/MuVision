@@ -115,7 +115,7 @@ public class JointState {
             thumbTip.updateFlo(phase, setOps, taps)
             self.updateFlo(phase, setOps, taps )
 
-            TimeLog("\(#function).\(hash)", interval: interval) {
+            NoTimeLog("\(#function).\(hash)", interval: interval) {
                 let path = "\(self.chiral?.icon ?? "") \(self.joint˚?.path(3) ?? "??")".pad(18)
                 let mine = "\(path) \(self.pos.digits(-2))"
 

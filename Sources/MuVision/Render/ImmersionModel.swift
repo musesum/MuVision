@@ -1,9 +1,3 @@
-/*
-See the LICENSE.txt file for this sample’s licensing information.
-
-Abstract:
-Shared app state and renderers.
-*/
 
 import SwiftUI
 import MuFlo
@@ -13,31 +7,25 @@ import MuFlo
 /// Maintains app-wide immersion state.
 @Observable
 open class ImmersionModel {
-    public var isFirstLaunch = true
     public var goImmersive = false
     public var isImmersive = false
-    public var immersionStyle: ImmersionStyle = .mixed
-    public var isSkyViewVisible = true
-    public var shouldRestoreSkyView = false
     public init() {}
 
-    public func changed(_ action: OpenImmersiveSpaceAction.Result) {
-        switch action {
+    func toggleImmersion() {
+
+    }
+    public func changed(_ result: OpenImmersiveSpaceAction.Result) {
+        switch result {
 
         case .opened:        isImmersive = true
 
-        case .userCancelled: break //showMenu = false
+        case .userCancelled: fallthrough
 
         case .error:         fallthrough
 
         @unknown default:    isImmersive = false
                              goImmersive = false
         }
-    }
-
-    public func skyViewAppeared() {
-        isSkyViewVisible = true
-        shouldRestoreSkyView = false
     }
 }
 #endif

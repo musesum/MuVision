@@ -43,6 +43,7 @@ open class Renderer {
     private var multisampleRenderTargets: [(color: MTLTexture, depth: MTLTexture)?]
 
     public let layerRenderer: LayerRenderer
+    private var renderState: LayerRenderer.State = .invalidated
     public let nextFrame: NextFrame
 
     // ARKit
@@ -71,10 +72,7 @@ open class Renderer {
         worldTracking = WorldTrackingProvider()
     }
 
-    public func setLayer(_ layer: CAMetalLayer) {
-        
-    }
-    public func renderLoop() async throws {
+    public func renderLoop(_ id: Int) async throws {
 
         // Setup ARKit Session
         let authorizations: [ARKitSession.AuthorizationType] = WorldTrackingProvider.requiredAuthorizations
@@ -87,13 +85,25 @@ open class Renderer {
         while true {
             switch layerRenderer.state {
             case .invalidated:
-                print("Layer is invalidated")
                 arSession.stop()
+                renderState = .invalidated
+                PrintLog("🔄 RenderLoop .invalidated return id: \(id)")
                 return
             case .paused:
                 layerRenderer.waitUntilRunning()
             default:
                 try await renderFrame()
+            }
+            if renderState != layerRenderer.state {
+                renderState = layerRenderer.state
+                var msg = ""
+                switch layerRenderer.state {
+                case .invalidated : msg = ".invalidated"
+                case .paused      : msg = ".paused"
+                case .running     : msg = ".running"
+                default: break
+                }
+                PrintLog("🔄 RenderLoop \(msg) id: \(id)")
             }
         }
     }
