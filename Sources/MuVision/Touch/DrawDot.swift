@@ -3,6 +3,7 @@
 import QuartzCore
 import UIKit
 import MuFlo
+import MuHands // Touch*
 
 public class DrawDot {
 

@@ -2,6 +2,7 @@
 
 import UIKit
 import MuFlo
+import MuHands // touch
 
 public class DrawPal: DrawDot {
 

@@ -48,12 +48,12 @@ public func texClip(in inTex: MTLTexture?,
     if  let inTex,
         let outTex {
 
-        // input
+        // input i
         let iw = CGFloat(inTex.width)
         let ih = CGFloat(inTex.height)
         let ia = iw/ih // in aspect
 
-        // output
+        // output o
         let ow = CGFloat(outTex.width)
         let oh = CGFloat(outTex.height)
         let oa = ow/oh // out aspect
