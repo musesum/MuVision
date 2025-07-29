@@ -66,7 +66,7 @@ extension EyeBuf {
             } else {
                 viewModel *= updateRotation() //??
             }
-            let uniformEye = UniformEye(.init(projection), viewModel)
+            let uniformEye = UniformEye(projection, viewModel)
 
             return uniformEye
         }
@@ -78,4 +78,5 @@ extension EyeBuf {
     }
 }
 #endif
+
 
