@@ -34,29 +34,6 @@ public final class CameraSession: NSObject, @unchecked Sendable {
     public var hasNewTex: Bool {
         cameraState == .streaming && cameraTex != nil
     }
-    public func startCamera() {
-        if isStartingNow { return }
-        isStartingNow = true
-        DebugLog { P("📷 startCamera state: \(self.cameraState)") }
-
-        switch cameraState {
-            case .waiting:
-
-                requestCameraAccess()
-                cameraQueue.async(execute: initCamera)
-
-            case .ready, .stopped:
-
-                cameraQueue.async {
-                    self.captureSession.startRunning()
-                    self.updateOrientation()
-                }
-                cameraState = .streaming
-
-            case .streaming: break
-        }
-        isStartingNow = false
-    }
     private func initCamera() {
 
         captureSession.beginConfiguration()
@@ -70,11 +47,42 @@ public final class CameraSession: NSObject, @unchecked Sendable {
         cameraState = .streaming
     }
 
+    public func cameraStart() {
+
+        if isStartingNow { return }
+        isStartingNow = true
+
+
+        switch cameraState {
+            case .waiting:
+
+                requestCameraAccess()
+                cameraQueue.async(execute: initCamera)
+
+            case .ready, .stopped:
+
+                cameraQueue.async {
+                    DebugLog { P("📷 \(#function) from state: \(self.cameraState)") }
+                    Panic.reset()
+
+                    self.captureSession.startRunning()
+                    self.updateOrientation()
+                }
+                cameraState = .streaming
+
+            case .streaming: break
+        }
+        isStartingNow = false
+    }
+
     /// Stop the capture session.
-    public func stopCamera() {
+    public func cameraStop() {
+
         cameraQueue.async {
 
             if  self.cameraState != .stopped {
+                DebugLog { P("📷 \(#function) from state: \(self.cameraState)") }
+                Panic.reset()
 
                 self.captureSession.stopRunning()
                 self.cameraState = .stopped
@@ -87,11 +95,11 @@ public final class CameraSession: NSObject, @unchecked Sendable {
 
         if isOn {
             if cameraState != .streaming {
-                startCamera()
+                cameraStart()
             }
         } else {
             if cameraState == .streaming {
-                stopCamera()
+                cameraStop()
             }
         }
     }

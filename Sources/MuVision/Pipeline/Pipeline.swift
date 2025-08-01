@@ -115,7 +115,9 @@ open class Pipeline {
         // drawBuf
         self.drawBuf = device.makeBuffer(layer.drawableSize, "drawBuf")
 
-        alignTextures()
+        rotateTextures() {
+            PrintLog("*** Pipeline done aligning textures ***")
+        }
 
         let clipFill = fillClip(in: pipeSize, out: layer.drawableSize)
         let clipNorm = clipFill.normalize()
@@ -206,8 +208,8 @@ extension Pipeline {
 
     /// rotate textures to fit landscape/portrait aspect
     /// when user loads archive from other orientation
-    public func alignNameTex() {
-
+    public func alignNameTex(_ done: @escaping CallVoid) {
+        Panic.reset()
         for (name,tex) in archive.nameTex {
             guard let tex else { continue }
 
@@ -227,31 +229,31 @@ extension Pipeline {
                 DebugLog { P("\(name) not found in rotatable") }
             }
         }
-        activateRotateClosures()
+        activateRotateClosures(done)
     }
 
-    public func activateRotateClosures() {
+    public func activateRotateClosures(_ done: @escaping CallVoid) {
         for closure in rotateClosure.values {
             closure()
         }
+        done()
     }
 
     /// adjust textures between landscape/portrait
     /// usually when user rotates iphone
-    public func alignTextures() {
+    public func rotateTextures(_ done: @escaping CallVoid) {
 
         guard layer.aspect != pipeSize.aspect else { return }
         pipeSize = pipeSize.withAspect(layer.aspect)
 
         for (name,(tex,node,flo)) in rotatable {
             if let newTex = rotateTexture(tex) {
-
                 rotatable[name] = (newTex,node,flo)
                 flo.texture = newTex
                 flo.activate([])
             }
         }
-        activateRotateClosures()
+        activateRotateClosures(done)
     }
 
     @inline(__always)
