@@ -4,6 +4,7 @@ import AVFoundation
 import CoreImage
 import CoreImage.CIFilterBuiltins
 import Vision
+import MuFlo
 #if os(visionOS)
 #else
 public protocol FacePoseDelegate {
@@ -42,9 +43,8 @@ open class FacePose: NSObject {
         super.init()
         guard let device = MTLCreateSystemDefaultDevice() else { return }
         ciContext = CIContext(mtlDevice: device)
-        camSession = CameraSession(self, position: .front)
-        camSession.cameraStart()
-
+        camSession = CameraSession(self, position: .front, pipeline.nextFrame)
+        camSession.setCameraOn(true)
         setupFacePose()
     }
 

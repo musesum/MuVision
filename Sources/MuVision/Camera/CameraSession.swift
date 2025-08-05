@@ -18,14 +18,18 @@ public final class CameraSession: NSObject, @unchecked Sendable {
     private var textureCache: CVMetalTextureCache?
     private var device = MTLCreateSystemDefaultDevice()
     private var videoOut: AVCaptureVideoDataOutputSampleBufferDelegate!
+    private var nextFrame: NextFrame
 
     public var cameraTex: MTLTexture?
 
     public init(_ videoOut: AVCaptureVideoDataOutputSampleBufferDelegate?,
-                position: AVCaptureDevice.Position ) {
+                position: AVCaptureDevice.Position,
+                _ nextFrame: NextFrame) {
+        self.nextFrame = nextFrame
         super.init()
         self.cameraPos = position
         self.videoOut = videoOut ?? self
+
         let errorName = NSNotification.Name.AVCaptureSessionRuntimeError
         let notification = NotificationCenter.default
         notification.addObserver(self, selector: #selector(captureError), name: errorName, object: nil)
@@ -47,53 +51,52 @@ public final class CameraSession: NSObject, @unchecked Sendable {
         cameraState = .streaming
     }
 
-    public func cameraStart() {
+    private func cameraStart() {
 
         if isStartingNow { return }
         isStartingNow = true
 
 
         switch cameraState {
-            case .waiting:
+        case .waiting:
 
-                requestCameraAccess()
-                cameraQueue.async(execute: initCamera)
+            requestCameraAccess()
+            cameraQueue.async(execute: initCamera)
 
-            case .ready, .stopped:
+        case .ready, .stopped:
 
-                cameraQueue.async {
-                    DebugLog { P("📷 \(#function) from state: \(self.cameraState)") }
-                    Panic.reset()
+            cameraQueue.async {
 
-                    self.captureSession.startRunning()
-                    self.updateOrientation()
-                }
-                cameraState = .streaming
+                self.captureSession.startRunning()
+                self.updateOrientation()
+            }
+            cameraState = .streaming
 
-            case .streaming: break
+        case .streaming: break
         }
         isStartingNow = false
+        nextFrame.addBetweenFrame {
+            Panic.reset()
+        }
     }
 
     /// Stop the capture session.
-    public func cameraStop() {
+    private func cameraStop() {
 
         cameraQueue.async {
 
             if  self.cameraState != .stopped {
-                DebugLog { P("📷 \(#function) from state: \(self.cameraState)") }
-                Panic.reset()
-
                 self.captureSession.stopRunning()
                 self.cameraState = .stopped
             }
         }
         isStartingNow = false
+
     }
 
-    public func setCameraOn(_ isOn: Bool) {
+    public func setCameraOn(_ on: Bool) {
 
-        if isOn {
+        if on {
             if cameraState != .streaming {
                 cameraStart()
             }
@@ -101,6 +104,10 @@ public final class CameraSession: NSObject, @unchecked Sendable {
             if cameraState == .streaming {
                 cameraStop()
             }
+        }
+        DebugLog { P("📷 setCameraOn(\(on))") }
+        nextFrame.addBetweenFrame {
+            Panic.reset()
         }
     }
 

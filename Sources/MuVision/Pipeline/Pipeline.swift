@@ -44,6 +44,7 @@ open class Pipeline {
 
     private var rotatable = [String: (MTLTexture,PipeNode,Flo)]()
     private var archive: ArchiveFlo!
+    public var nextFrame: NextFrame
     public var root˚: Flo
     public var touchDraw: TouchDraw
 
@@ -52,12 +53,14 @@ open class Pipeline {
                 _ archive: ArchiveFlo,
                 _ touchDraw: TouchDraw,
                 _ scale: CGFloat,
-                _ bounds: CGRect) {
+                _ bounds: CGRect,
+                _ nextFrame: NextFrame) {
 
         self.root˚ = root˚
         self.renderState = renderState
         self.touchDraw = touchDraw
         self.archive = archive
+        self.nextFrame = nextFrame
 
         commandQueue = device.makeCommandQueue()
         library = device.makeDefaultLibrary()
@@ -209,7 +212,9 @@ extension Pipeline {
     /// rotate textures to fit landscape/portrait aspect
     /// when user loads archive from other orientation
     public func alignNameTex(_ done: @escaping CallVoid) {
-        Panic.reset()
+        nextFrame.addBetweenFrame {
+            Panic.reset()
+        }
         for (name,tex) in archive.nameTex {
             guard let tex else { continue }
 
