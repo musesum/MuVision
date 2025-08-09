@@ -24,11 +24,12 @@ open class ComputeNode: PipeNode {
 
             if let shader,
                let kernelFunction = shader.kernelFunction,
-               let device = MTLCreateSystemDefaultDevice(),
-               let mtlCompute = try? device.makeComputePipelineState(function: kernelFunction) {
-
-                self.mtlCompute = mtlCompute
-
+               let device = MTLCreateSystemDefaultDevice() {
+                do {
+                    self.mtlCompute  = try device.makeComputePipelineState(function: kernelFunction)
+                } catch{
+                    PrintLog("⁉️ makeComputePipe: \(pipeNode˚.name) failed error \(error)")
+                }
             } else {
                 PrintLog("⁉️ makeComputePipe: \(pipeNode˚.name) failed")
             }
