@@ -12,7 +12,7 @@ open class ImmersionModel {
     public init() {}
 
     func toggleImmersion() {
-
+        goImmersive.toggle()
     }
     public func changed(_ result: OpenImmersiveSpaceAction.Result) {
         switch result {
