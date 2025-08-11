@@ -76,7 +76,7 @@ public final class CameraSession: NSObject, @unchecked Sendable {
         }
         isStartingNow = false
         nextFrame.addBetweenFrame {
-            Panic.reset()
+            Reset.reset()
         }
     }
 
@@ -107,7 +107,7 @@ public final class CameraSession: NSObject, @unchecked Sendable {
         }
         DebugLog { P("📷 setCameraOn(\(on))") }
         nextFrame.addBetweenFrame {
-            Panic.reset()
+            Reset.reset()
         }
     }
 
