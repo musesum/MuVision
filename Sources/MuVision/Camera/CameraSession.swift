@@ -56,8 +56,8 @@ public final class CameraSession: NSObject, @unchecked Sendable {
         if isStartingNow { return }
         isStartingNow = true
 
-
         switch cameraState {
+
         case .waiting:
 
             requestCameraAccess()
@@ -91,7 +91,6 @@ public final class CameraSession: NSObject, @unchecked Sendable {
             }
         }
         isStartingNow = false
-
     }
 
     public func setCameraOn(_ on: Bool) {
@@ -129,7 +128,7 @@ public final class CameraSession: NSObject, @unchecked Sendable {
     internal var inputDevice: AVCaptureDeviceInput? {
         didSet {
             if let oldValue {
-                print("   \(#function): \(oldValue) -> \(inputDevice!)")
+                DebugLog { P("📷 inputDevice: \(oldValue.device.position.rawValue) => \(self.inputDevice?.device.position.rawValue ?? 0)") }
                 captureSession.removeInput(oldValue)
             }
             if let inputDevice {
@@ -142,7 +141,7 @@ public final class CameraSession: NSObject, @unchecked Sendable {
     internal var output: AVCaptureVideoDataOutput? {
         didSet {
             if let oldValue {
-                print("   \(#function): \(oldValue) -> \(output!)")
+                DebugLog { P("📷 output: \(oldValue) => \(self.output!)") }
                 captureSession.removeOutput(oldValue)
             }
             if let output {
@@ -155,7 +154,7 @@ public final class CameraSession: NSObject, @unchecked Sendable {
     fileprivate func requestCameraAccess() {
         AVCaptureDevice.requestAccess(for: .video) { granted in
             if !granted {
-                PrintLog("⁉️ \(#function) not granted")
+                PrintLog("⁉️ requestCameraAccess not granted")
             }  else if self.cameraState != .streaming {
                 self.cameraState = .ready
             }
