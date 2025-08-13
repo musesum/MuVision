@@ -76,7 +76,7 @@ public class CubeNode: RenderNode, @unchecked Sendable {
         cubeMesh.eyeBuf?.setUniformBuf(renderEnc)
         if let mixcube˚ {
             #if os(visionOS) //....
-            mixcube˚.setVal("x", 1, .sneak)
+            mixcube˚.setNameNums([("x", 1)], .sneak)
             #endif
             mixcube˚.updateMtlBuffer()
         }
