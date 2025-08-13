@@ -13,7 +13,8 @@ extension Flo {
         }
     }
 
-    public func updateFloScalars(_ any: Any) {
+    // update the MTL Buffer
+    public func updateFloMTLBuffer(_ any: Any) {
 
         if let exprs {
             // update old expression
