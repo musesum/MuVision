@@ -12,30 +12,16 @@ public let MetalComputePixelFormat = MTLPixelFormat.bgra8Unorm
 
 extension MTLDevice {
 
-    func updateBuffer<T: BinaryFloatingPoint>(_ any: Any?,_ nums: [T]) {
-        if let buffer = any as? MTLBuffer {
-            let size =  nums.count * MemoryLayout<T>.stride
-            nums.withUnsafeBytes { rawBufferPointer in
-                guard let baseAddress = rawBufferPointer.baseAddress else { return }
-                buffer.contents().copyMemory(from: baseAddress, byteCount: size)
-            }
-        }
-    }
+//    func updateMTLBuffer<T: BinaryFloatingPoint>(_ any: Any?,_ nums: [T]) {
+//        if let buffer = any as? MTLBuffer {
+//            let size =  nums.count * MemoryLayout<T>.stride
+//            nums.withUnsafeBytes { rawBufferPointer in
+//                guard let baseAddress = rawBufferPointer.baseAddress else { return }
+//                buffer.contents().copyMemory(from: baseAddress, byteCount: size)
+//            }
+//        }
+//    }
 
-    func updateFloNumsBuffer<T: BinaryFloatingPoint>(_ flo: Flo, _ nums: [T]) {
-        let newSize = nums.count * MemoryLayout<T>.stride
-        nums.withUnsafeBytes { rawBufferPointer in
-            guard let baseAddress = rawBufferPointer.baseAddress else { return }
-            if let buffer = flo.buffer,
-               buffer.allocatedSize <= newSize {
-                buffer.contents().copyMemory(from: baseAddress, byteCount: newSize)
-            } else {
-                let buffer = makeBuffer(bytes: baseAddress, length: newSize, options: [])
-                buffer?.label = flo.path(2)
-                flo.buffer = buffer
-            }
-        }
-    }
     public func makeComputeTex(size: CGSize,
                                label: String?,
                                format: MTLPixelFormat? = nil) -> MTLTexture? {
