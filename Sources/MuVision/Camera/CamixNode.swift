@@ -43,7 +43,14 @@ public class CamixNode: ComputeNode {
            let camTex = camera.cameraTex,
            let outTex = outTex˚?.texture,
            let frame = texClip(in: camTex, out: outTex) {
-            frame˚?.updateFloMTLNums(frame.floats())
+            
+            let nameNums = [("x", Float(frame.minX)),
+                            ("y", Float(frame.minY)),
+                            ("w", Float(frame.width)),
+                            ("h", Float(frame.height))]
+
+            frame˚?.updateFloMTLNameNums(nameNums)
+             //frame˚?.setNameNums(nameNums, [], Visitor(0))
         }
 
         mixcam˚?.updateMtlBuffer()

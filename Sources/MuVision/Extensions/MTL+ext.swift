@@ -11,17 +11,7 @@ public let MetalComputePixelFormat = MTLPixelFormat.bgra8Unorm
 
 
 extension MTLDevice {
-
-//    func updateMTLBuffer<T: BinaryFloatingPoint>(_ any: Any?,_ nums: [T]) {
-//        if let buffer = any as? MTLBuffer {
-//            let size =  nums.count * MemoryLayout<T>.stride
-//            nums.withUnsafeBytes { rawBufferPointer in
-//                guard let baseAddress = rawBufferPointer.baseAddress else { return }
-//                buffer.contents().copyMemory(from: baseAddress, byteCount: size)
-//            }
-//        }
-//    }
-
+    
     public func makeComputeTex(size: CGSize,
                                label: String?,
                                format: MTLPixelFormat? = nil) -> MTLTexture? {
