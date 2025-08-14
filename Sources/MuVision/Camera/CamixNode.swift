@@ -49,8 +49,7 @@ public class CamixNode: ComputeNode {
                             ("w", Float(frame.width)),
                             ("h", Float(frame.height))]
 
-            frame˚?.updateFloMTLNameNums(nameNums)
-             //frame˚?.setNameNums(nameNums, [], Visitor(0))
+            frame˚?.updateFloShader(nameNums)
         }
 
         mixcam˚?.updateMtlBuffer()

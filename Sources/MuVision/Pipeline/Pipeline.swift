@@ -222,12 +222,12 @@ extension Pipeline {
                 if let (_,node,flo) = rotatable[name] {
                     rotatable[name] = (newTex,node,flo)
                     flo.texture = aspectFill(newTex) ?? newTex
-                    flo.activate([])
+                    flo.activate()
                 }
             } else if let (_,node,flo) = rotatable[name] {
                 rotatable[name] = (tex,node,flo)
                 flo.texture = aspectFill(tex) ?? tex
-                flo.activate([])
+                flo.activate()
             } else {
                 DebugLog { P("\(name) not found in rotatable") }
             }

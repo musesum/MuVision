@@ -9,36 +9,28 @@ extension Flo { // MTLBuffer
         if let device = MTLCreateSystemDefaultDevice(),
            let nums = exprs?.getFloatNums() {
 
-            device.updateFloNumsBuffer(self, nums)
+            device.updateFloMTLBuffer(self, nums)
         }
     }
-    public func updateFloMTLNums<T: BinaryFloatingPoint>(_ nums: [T]) {
+
+    /// update Flo expression and Flo's MTL shader uniforms
+    public func updateFloShader<T: BinaryFloatingPoint>(_ nameNums: [(String,T)]) {
+
+        // update Flo Exprs
         if let exprs {
-            exprs.setFromAny(nums, [], Visitor(0))
-        } else {
-            if let device = MTLCreateSystemDefaultDevice() {
-                device.updateFloNumsBuffer(self, nums)
-            }
-        }
-    }
-    public func updateFloMTLNameNums<T: BinaryFloatingPoint>(_ nameNums: [(String,T)]) {
-        if let exprs {
-            exprs.setFromAny(nameNums, [], Visitor(0))
-        }
-        var nums = [T]()
-        for (_,v) in nameNums {
-            nums.append(v)
+            exprs.setFromNameNums(nameNums, [], Visitor(0))
         }
 
+        // extract nums and update Flo's MTL shader uniform buffer
         if let device = MTLCreateSystemDefaultDevice() {
-            device.updateFloNumsBuffer(self, nums)
+            device.updateFloMTLBuffer(self, nameNums.map { $0.1 })
         }
     }
 }
 
 extension MTLDevice {
     
-    func updateFloNumsBuffer<T: BinaryFloatingPoint>(_ flo: Flo, _ nums: [T]) {
+    func updateFloMTLBuffer<T: BinaryFloatingPoint>(_ flo: Flo, _ nums: [T]) {
         let newSize = nums.count * MemoryLayout<T>.stride
         nums.withUnsafeBytes { rawBufferPointer in
             guard let baseAddress = rawBufferPointer.baseAddress else { return }
