@@ -5,6 +5,16 @@ import MetalKit
 import MuFlo
 import MuHands // touch
 
+fileprivate struct MetalDot {
+    var point: SIMD2<Float>
+    var radius: Float
+    var color: Float
+    init(_ point: SIMD2<Float>, _ radius: Float, _ color: Float) {
+        self.point = point
+        self.radius = radius
+        self.color = color
+    }
+}
 public class DrawNode: ComputeNode {
 
     private var inTex˚  : Flo?
@@ -12,6 +22,8 @@ public class DrawNode: ComputeNode {
     private var shift˚  : Flo?
     private var touchDraw: TouchDraw
     private var touchCanvas: TouchCanvas
+    private var dotsBuf: MTLBuffer?
+    private var dotCountBuf: MTLBuffer
 
     public init(_ pipeline : Pipeline,
                 _ pipeNode˚ : Flo,
@@ -19,7 +31,7 @@ public class DrawNode: ComputeNode {
 
         self.touchDraw = pipeline.touchDraw
         self.touchCanvas = touchCanvas
-
+        self.dotCountBuf = pipeline.device.makeBuffer(length: MemoryLayout<UInt32>.stride, options: .storageModeShared)!
         super.init(pipeline, pipeNode˚)
 
         inTex˚  = pipeNode˚.superBindPath("in")
@@ -29,7 +41,7 @@ public class DrawNode: ComputeNode {
             }
         }
         shift˚  = pipeNode˚.superBindPath("shift")
-        shader  = Shader(pipeline, file: "pipe.draw", kernel: "drawKernel")
+        shader  = Shader(pipeline, file: "pipe.draw", kernel: "drawDotKernel")
         makeResources()
     }
     
@@ -38,23 +50,47 @@ public class DrawNode: ComputeNode {
         super.makeResources()
     }
 
+    func updateDotsBuffer(_ computeEnc: MTLComputeCommandEncoder) {
+        touchCanvas.flushTouchCanvas() //.....
+        // Build dots from touch input
+
+        guard let inTex = inTex˚?.texture else { return }
+        let texSize = CGSize(width: inTex.width, height: inTex.height)
+
+        let drawPoints = touchCanvas.touchDraw.drawPoints
+        var normPoints = [DrawPoint]()
+        for drawPoint in drawPoints {
+            let normPoint = drawPoint.normalize(touchDraw.drawableSize, texSize)
+            normPoints.append(normPoint)
+        }
+        touchCanvas.touchDraw.drawPoints.removeAll()
+
+        // dotCount buffer (index 3)
+        let count = UInt32(normPoints.count)
+        dotCountBuf.contents().assumingMemoryBound(to: UInt32.self).pointee = count
+        computeEnc.setBuffer(dotCountBuf, offset: 0, index: 3)
+
+        // dots buffer (index 2)
+        if normPoints.isEmpty {
+            computeEnc.setBuffer(nil, offset: 0, index: 2)
+        } else {
+            let byteCount = normPoints.count * MemoryLayout<MetalDot>.stride
+            if dotsBuf == nil || dotsBuf!.length < byteCount {
+                dotsBuf = pipeline.device.makeBuffer(length: byteCount, options: .storageModeShared)
+            }
+            if let dotsBuf {
+                normPoints.withUnsafeBytes { src in
+                    if let base = src.baseAddress { memcpy(dotsBuf.contents(), base, min(src.count, dotsBuf.length)) }
+                }
+                computeEnc.setBuffer(dotsBuf, offset: 0, index: 2)
+            }
+
+        }
+    }
     override public func computeShader(_ computeEnc: MTLComputeCommandEncoder)  {
 
-        if let inTex = inTex˚?.texture {
-
-            let pixSize = MemoryLayout<UInt32>.size
-            let rowSize = inTex.width * pixSize
-            let texSize = inTex.width * inTex.height * pixSize
-            let drawBuf = UnsafeMutablePointer<UInt32>.allocate(capacity: texSize)
-            let region = MTLRegionMake3D(0, 0, 0, inTex.width, inTex.height, 1)
-            inTex.getBytes(drawBuf, bytesPerRow: rowSize, from: region, mipmapLevel: 0)
-            
-            touchDraw.drawIntoBuffer(drawBuf, CGSize(width: CGFloat(inTex.width), height: CGFloat(inTex.height)))
-            touchCanvas.flushTouchCanvas()
-
-            inTex.replace(region: region, mipmapLevel: 0, withBytes: drawBuf, bytesPerRow: rowSize)
-            free(drawBuf)
-        }
+        updateDotsBuffer(computeEnc)
+        
         shift˚?.updateMtlBuffer()
         computeEnc.setTexture(inTex˚,  index: 0)
         computeEnc.setTexture(outTex˚, index: 1)
