@@ -7,7 +7,8 @@ import MuHands // Touch*
 
 public class DrawDot {
 
-    private var noteItems: [Int: MidiMpeItem] = [:]
+    private var midiMpeItems: [Int: MidiMpeItem] = [:]
+
     private var root˚   : Flo! /// root of tree
     private var base˚   : Flo! /// base flo on/off
     private var noteOn˚ : Flo? /// midi note on
@@ -47,13 +48,13 @@ public class DrawDot {
             if logging {
                 TimeLog("note\(chan)", interval: 0) { P("noteOn:  \(chan), \(num), \(velo)") }
             }
-            if let noteItem = noteItems[chan] {
-                noteItem.update(velo: velo, phase: .began)
-                drawMpeItem(noteItem)
+            if let item = midiMpeItems[chan] {
+                item.update(velo: velo, phase: .began)
+                drawMpeItem(item)
             } else {
-                let noteItem = MidiMpeItem(chan,num,velo,logging)
-                noteItems[chan] = noteItem
-                drawMpeItem(noteItem)
+                let item = MidiMpeItem(chan,num,velo,logging)
+                midiMpeItems[chan] = item
+                drawMpeItem(item)
             }
         }
     }
@@ -63,9 +64,9 @@ public class DrawDot {
         if let chan = flo.intVal("chan"),
            let velo = flo.intVal("velo") {
             NoTimeLog("note\(chan)", interval: 0) { P("noteOff: \(chan), \(velo)") }
-            if let noteItem = noteItems[chan] {
-                noteItem.update(lift: velo, phase: .ended)
-                drawMpeItem(noteItem)
+            if let item = midiMpeItems[chan] {
+                item.update(lift: velo, phase: .ended)
+                drawMpeItem(item)
             }
         }
     }
@@ -77,9 +78,9 @@ public class DrawDot {
             if logging {
                 TimeLog("wheel\(chan)", interval: 0.25) { P("wheel: \(chan), \(val)") }
             }
-            if let noteItem = noteItems[chan] {
-                noteItem.update(wheel: val, phase: .moved)
-                drawMpeItem(noteItem)
+            if let item = midiMpeItems[chan] {
+                item.update(wheel: val, phase: .moved)
+                drawMpeItem(item)
             }
         }
     }
@@ -90,9 +91,9 @@ public class DrawDot {
             if logging {
                 TimeLog("slide\(chan)", interval: 0.25) { P("slide: \(chan), \(val) \(val)") }
             }
-            if let noteItem = noteItems[chan] {
-                noteItem.update(slide: val, phase: .moved)
-                drawMpeItem(noteItem)
+            if let item = midiMpeItems[chan] {
+                item.update(slide: val, phase: .moved)
+                drawMpeItem(item)
             }
         }
     }
@@ -103,9 +104,9 @@ public class DrawDot {
             if logging {
                 TimeLog("after\(chan)", interval: 0.25) { P("after: \(chan), \(val)") }
             }
-            if let noteItem = noteItems[chan] {
-                noteItem.update(after: val, phase: .moved)
-                drawMpeItem(noteItem)
+            if let item = midiMpeItems[chan] {
+                item.update(after: val, phase: .moved)
+                drawMpeItem(item)
             }
         }
     }
@@ -118,12 +119,12 @@ public class DrawDot {
         if logging {
             TimeLog("dot clear ", interval: 0) { P("dot clear all") }
         }
-        for (chan, item) in noteItems {
-            noteItems[chan] = nil
+        for (chan, item) in midiMpeItems {
+            midiMpeItems[chan] = nil
             item.update(velo: 0, phase: .ended)
             drawMpeItem(item)
         }
-        noteItems.removeAll()
+        midiMpeItems.removeAll()
     }
     func drawMpeItem(_ item: MidiMpeItem) {
         let scale = touchCanvas.scale
