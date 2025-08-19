@@ -24,6 +24,7 @@ public class DrawNode: ComputeNode {
     private var touchCanvas: TouchCanvas
     private var dotsBuf: MTLBuffer?
     private var dotCountBuf: MTLBuffer
+    private var drawTex: MTLTexture?
 
     public init(_ pipeline : Pipeline,
                 _ pipeNode˚ : Flo,
@@ -37,7 +38,7 @@ public class DrawNode: ComputeNode {
         inTex˚  = pipeNode˚.superBindPath("in")
         outTex˚ = pipeNode˚.superBind("out") { flo, _ in
             if let tex = flo.texture {
-                self.touchDraw.drawTex = tex
+                self.drawTex = tex
             }
         }
         shift˚  = pipeNode˚.superBindPath("shift")
@@ -50,8 +51,43 @@ public class DrawNode: ComputeNode {
         super.makeResources()
     }
 
+    public func updateInputBuffer() -> Bool {
+
+        guard drawTex != nil  else { return false }
+        guard let inTex˚ else { return false }
+        if inTex˚.texture == nil {
+            inTex˚.texture = drawTex
+            self.drawTex = nil
+            return true
+        }
+        guard let inTex = inTex˚.texture else { return false }
+        guard let updateData = drawTex?.rawDataNoCopy() else { return false }
+
+        let pixSize = MemoryLayout<UInt32>.size
+        let rowSize = inTex.width * pixSize
+        let texSize = inTex.width * inTex.height * pixSize
+        let drawBuf = UnsafeMutablePointer<UInt32>.allocate(capacity: texSize)
+        let region = MTLRegionMake3D(0, 0, 0, inTex.width, inTex.height, 1)
+        let drawWidth  = max(inTex.width, inTex.height)
+        let drawHeight = min(inTex.width, inTex.height)
+
+        updateData.withUnsafeBytes {
+            let ptr = $0.bindMemory(to: UInt32.self)
+            for y in 0 ..< drawHeight {
+                for x in 0 ..< drawWidth {
+                    let i = y * drawWidth + x
+                    drawBuf[i] = ptr[i]
+                }
+            }
+        }
+        inTex.replace(region: region, mipmapLevel: 0, withBytes: drawBuf, bytesPerRow: rowSize)
+        free(drawBuf)
+        self.drawTex = nil
+        return true
+    }
     func updateDotsBuffer(_ computeEnc: MTLComputeCommandEncoder) {
-        touchCanvas.flushTouchCanvas() //.....
+        touchCanvas.flushTouchCanvas()
+
         // Build dots from touch input
 
         guard let inTex = inTex˚?.texture else { return }
@@ -60,7 +96,7 @@ public class DrawNode: ComputeNode {
         let drawPoints = touchCanvas.touchDraw.drawPoints
         var normPoints = [DrawPoint]()
         for drawPoint in drawPoints {
-            let normPoint = drawPoint.normalize(touchDraw.drawableSize, texSize)
+            let normPoint = drawPoint.normalize(touchCanvas.drawableSize, texSize)
             normPoints.append(normPoint)
         }
         touchCanvas.touchDraw.drawPoints.removeAll()
@@ -84,13 +120,14 @@ public class DrawNode: ComputeNode {
                 }
                 computeEnc.setBuffer(dotsBuf, offset: 0, index: 2)
             }
-
         }
     }
     override public func computeShader(_ computeEnc: MTLComputeCommandEncoder)  {
-
-        updateDotsBuffer(computeEnc)
-        
+        if updateInputBuffer() {
+            touchCanvas.touchDraw.drawPoints.removeAll()
+        } else {
+            updateDotsBuffer(computeEnc)
+        }
         shift˚?.updateMtlBuffer()
         computeEnc.setTexture(inTex˚,  index: 0)
         computeEnc.setTexture(outTex˚, index: 1)

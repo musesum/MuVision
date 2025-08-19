@@ -17,25 +17,18 @@ public class DrawDot {
     private var after˚  : Flo? /// aftertouch
     private var clear˚  : Flo? /// clear screen event
 
-    private var archive˚: ArchiveFlo?
     private var bufSize = CGSize.zero
     private var drawBuf: UnsafeMutablePointer<UInt32>?
     private var running: Bool = false
     private var logging: Bool = false
     private var touchCanvas: TouchCanvas
-    private var touchDraw: TouchDraw
-    private var drawableSize = CGSize.zero
 
     public init(_ root˚: Flo,
                 _ path: String,
-                _ touchCanvas: TouchCanvas,
-                _ touchDraw: TouchDraw,
-                _ archiveFlo: ArchiveFlo) {
+                _ touchCanvas: TouchCanvas) {
 
         self.root˚ = root˚
         self.touchCanvas = touchCanvas
-        self.touchDraw = touchDraw
-        self.archive˚ = archiveFlo
         self.base˚ = root˚.bind(path)   { f,_ in self.updateBase(f) }
         noteOn˚ = base˚.bind("note.on") { f,_ in self.updateNoteOn(f) }
         noteOn˚ = base˚.bind("note.off"){ f,_ in self.updateNoteOff(f) }
@@ -133,8 +126,8 @@ public class DrawDot {
         noteItems.removeAll()
     }
     func drawMpeItem(_ item: MidiMpeItem) {
-        let scale = touchDraw.scale
-        let size = touchDraw.drawableSize / scale
+        let scale = touchCanvas.scale
+        let size = touchCanvas.drawableSize / scale
         let margin = CGFloat(48)/scale
         let xs = size.width  - margin
         let ys = size.height - margin

@@ -11,11 +11,9 @@ public class DrawPal: DrawDot {
     public init(_ root˚: Flo,
                 _ path: String,
                 _ touchCanvas: TouchCanvas,
-                _ touchDraw: TouchDraw,
-                _ archiveFlo: ArchiveFlo,
                 _ ripples: Ripples) {
         self.ripples = ripples
-        super.init(root˚, path, touchCanvas, touchDraw, archiveFlo)
+        super.init(root˚, path, touchCanvas)
     }
     override func drawMpeItem(_ item: MidiMpeItem) {
 

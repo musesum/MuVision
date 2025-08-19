@@ -43,7 +43,7 @@ open class Pipeline {
     public var rotateClosure = [String: CallVoid]()
 
     private var rotatable = [String: (MTLTexture,PipeNode,Flo)]()
-    private var archive: ArchiveFlo!
+    private var archive: ArchiveFlo
     public var nextFrame: NextFrame
     public var root˚: Flo
     public var touchDraw: TouchDraw
