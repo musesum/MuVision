@@ -7,32 +7,39 @@ import MuFlo
 
 public class ColorNode: ComputeNode {
 
-    private var color˚  : ColorFlo!
-    private var inTex˚  : Flo?
-    private var outTex˚ : Flo?
-    private var palTex˚ : Flo?
-    private var plane˚  : Flo?
+    private var color˚     : ColorFlo!
+    private var inTex˚     : Flo?
+    private var palTex˚    : Flo?
+    private var outTex˚    : Flo?
+    private var displace˚ : Flo?
+    private var plane˚     : Flo?
+    private var height˚    : Flo?
 
     public init(_ pipeline  : Pipeline,
                 _ pipeNode˚ : Flo,
                 _ ripples   : Ripples) {
 
         super.init(pipeline, pipeNode˚)
-        color˚  = ColorFlo(pipeNode˚.getRoot(), ripples)
-        inTex˚  = pipeNode˚.superBindPath("in")
-        outTex˚ = pipeNode˚.superBindPath("out")
-        palTex˚ = pipeNode˚.superBindPath("pal")
-        plane˚  = pipeNode˚.superBindPath("plane")
-        shader  = Shader(pipeline, file: "pipe.color", kernel: "colorKernel")
+        color˚    = ColorFlo(pipeNode˚.getRoot(), ripples)
+        inTex˚    = pipeNode˚.superBindPath("in")
+        palTex˚   = pipeNode˚.superBindPath("pal")
+        outTex˚   = pipeNode˚.superBindPath("out")
+        displace˚ = pipeNode˚.superBindPath("displace")
+        plane˚    = pipeNode˚.superBindPath("plane")
+        height˚   = pipeNode˚.superBindPath("height")
+        shader    = Shader(pipeline,
+                           file: "pipe.color",
+                           kernel: "colorKernel")
         makeResources()
     }
 
     public override func makeResources() {
-        pipeline.updateTexture(self, outTex˚)
-        let palSize = CGSize(width: 256, height: 1)
-        pipeline.updateTexture(self, palTex˚, palSize, rotate: false)
+        computeTexture(outTex˚)
+        paletteTexture(palTex˚)
+        displaceTexture(displace˚)
         super.makeResources()
     }
+    
 
     override public func updateUniforms() {
         super.updateUniforms()
@@ -50,17 +57,21 @@ public class ColorNode: ComputeNode {
                            bytesPerRow: bytesPerRow)
         }
         plane˚?.updateMtlBuffer()
+        height˚?.updateMtlBuffer()
     }
 
     override public func computeShader(_ computeEnc: MTLComputeCommandEncoder)  {
 
-        computeEnc.setTexture(inTex˚,  index: 0)
-        computeEnc.setTexture(outTex˚, index: 1)
-        computeEnc.setTexture(palTex˚, index: 2)
-        computeEnc.setBuffer (plane˚,  index: 0)
+        computeEnc.setTexture(inTex˚,    index: 0)
+        computeEnc.setTexture(palTex˚,   index: 1)
+        computeEnc.setTexture(outTex˚,   index: 2)
+        computeEnc.setTexture(displace˚, index: 3)
+        computeEnc.setBuffer (plane˚,    index: 0)
+        computeEnc.setBuffer (height˚,   index: 1)
         super.computeShader(computeEnc)
-        outTex˚?.activate([], from: outTex˚)
-        palTex˚?.activate([], from: palTex˚)
+        outTex˚?.reactivate()
+        palTex˚?.reactivate()
+        displace˚?.reactivate()
     }
 }
 

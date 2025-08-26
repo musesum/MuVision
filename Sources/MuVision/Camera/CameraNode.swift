@@ -48,11 +48,10 @@ public class CameraNode: ComputeNode {
 
         guard camera.hasNewTex else { return }
         guard let camTex = camera.cameraTex else { return }
-        pipeline.updateTexture(self, outTex˚, rotate: false)
+        computeTexture(outTex˚, rotate: false)
         computeEnc.setTexture(camTex, index: 0)
         computeEnc.setTexture(outTex˚, index: 1)
         super.computeShader(computeEnc)
-        outTex˚?.activate([],from: outTex˚)
     }
 #endif
 }

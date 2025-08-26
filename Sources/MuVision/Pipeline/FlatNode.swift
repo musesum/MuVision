@@ -29,9 +29,9 @@ public class FlatNode: RenderNode {
     func makeRenderPipeline() {
 
         shader = Shader(pipeline,
-                        file: "render.map.flat",
-                        vertex: "flatVertex",
-                        fragment: "flatFragment")
+                        file     : "render.map.flat",
+                        vertex   : "flatVertex",
+                        fragment : "flatFragment")
 
         guard let device = MTLCreateSystemDefaultDevice() else { return }
         guard let shader else { return }
@@ -39,7 +39,7 @@ public class FlatNode: RenderNode {
         pd.label = pipeNode˚.name
         pd.vertexFunction = shader.vertexFunction
         pd.fragmentFunction = shader.fragmentFunction
-        pd.colorAttachments[0].pixelFormat = MetalRenderPixelFormat
+        pd.colorAttachments[0].pixelFormat = MuRenderPixelFormat
         pd.depthAttachmentPixelFormat = .depth32Float
         #if targetEnvironment(simulator)
         #elseif os(visionOS)
@@ -89,10 +89,9 @@ public class FlatNode: RenderNode {
         renderEnc.setViewport(MTLViewport(portSize))
         renderEnc.setRenderPipelineState(renderPipelineState)
 
-        renderEnc.setVertexBuffer (vertBuf, offset: 0, index: 0)
+        renderEnc.setVertexBuffer (vertBuf,          offset: 0, index: 0)
         renderEnc.setVertexBuffer (pipeline.drawBuf, offset: 0, index: 1)
         renderEnc.setVertexBuffer (pipeline.clipBuf, offset: 0, index: 2)
-
         renderEnc.setFragmentTexture(inTex˚, index: 0)
 
         // cull stencil

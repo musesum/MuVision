@@ -22,6 +22,7 @@ public class CubeNode: RenderNode, @unchecked Sendable {
     private var cubeIndex  : CubemapIndex?
     private var inTex˚     : Flo?
     private var cudex˚     : Flo?
+    private var displace˚  : Flo?
     private var mixcube˚   : Flo?
     private var lastAspect : Aspect?
 
@@ -32,12 +33,13 @@ public class CubeNode: RenderNode, @unchecked Sendable {
         self.viaIndex = true
         super.init(pipeline, pipeNode˚)
         
-        inTex˚ = pipeNode˚.superBindPath("in")
-        cudex˚ = pipeNode˚.superBindPath("cudex")
-        mixcube˚ = pipeNode˚.superBindPath("mixcube")
+        inTex˚    = pipeNode˚.superBindPath("in")
+        cudex˚    = pipeNode˚.superBindPath("cudex")
+        displace˚ = pipeNode˚.superBindPath("displace")
+        mixcube˚  = pipeNode˚.superBindPath("mixcube")
         makeRenderPipeline()
         makeResources()
-        pipeline.rotateClosure["cudex˚"] = { self.remakeAspect() }
+        pipeline.rotateClosure["cudex˚"] = { self.makeCube() }
     }
     
     func makeRenderPipeline() {
@@ -48,25 +50,31 @@ public class CubeNode: RenderNode, @unchecked Sendable {
         renderPipelineState = makeRenderState(cubeMesh.metalVD)
     }
 
-    func remakeAspect() {
+    func makeCube() {
+
         if let lastAspect, lastAspect == pipeline.pipeSize.aspect { return }
         self.lastAspect = pipeline.pipeSize.aspect
-        pipeline.customTexture(cudex˚, makeCube, remake: true)
+
+        if let tex = makeCubeTex(), let cudex˚ {
+            cudex˚.texture = tex
+            cudex˚.reactivate()
+        }
+
+        func makeCubeTex() -> MTLTexture? {
+            if viaIndex {
+                let label = cudex˚?.path(3) ?? "cudex"
+                return  makeIndexCube(pipeline.pipeSize, label)
+            } else {
+                let facenames = ["front", "front", "top", "bottom", "front", "front"]
+                return makeImageCube(facenames)
+            }
+        }
     }
     override open func makeResources() {
 
-        remakeAspect()
+        makeCube()
         cubeMesh.eyeBuf = EyeBuf("CubeEyes", far: false)
         super.makeResources()
-    }
-    func makeCube() -> MTLTexture? {
-        if viaIndex {
-            let label = cudex˚?.path(3) ?? "cudex"
-            return  makeIndexCube(pipeline.pipeSize, label)
-        } else {
-            let facenames = ["front", "front", "top", "bottom", "front", "front"]
-            return makeImageCube(facenames)
-        }
     }
 
     override open func renderShader(_ renderEnc: MTLRenderCommandEncoder,
@@ -76,18 +84,18 @@ public class CubeNode: RenderNode, @unchecked Sendable {
         cubeMesh.eyeBuf?.setUniformBuf(renderEnc)
         if let mixcube˚ {
             #if os(visionOS) //....
-            mixcube˚.setNameNums([("x", 1)], .sneak)
+            mixcube˚.setNameNums([("x", 1)], .fire) //....
             #endif
             mixcube˚.updateMtlBuffer()
         }
-
-        renderEnc.setFragmentTexture(inTex˚, index: 0)
-        renderEnc.setFragmentTexture(cudex˚, index: 1)
+        renderEnc.setFragmentTexture(displace˚,index: 3)
+        renderEnc.setFragmentTexture(inTex˚,   index: 0)
+        renderEnc.setFragmentTexture(cudex˚,   index: 1)
         renderEnc.setFragmentBuffer (mixcube˚, index: 0)
 
         renderEnc.setRenderPipelineState(renderPipelineState)
         cubeMesh.drawMesh(renderEnc, renderState)
-        cudex˚?.activate([], from: cudex˚)
+        cudex˚?.reactivate()
     }
 
     func makeImageCube(_ names: [String]) -> MTLTexture? {

@@ -246,7 +246,7 @@ extension CameraSession: AVCaptureVideoDataOutputSampleBufferDelegate {
             let width  = CVPixelBufferGetWidth(imageBuf)
             let height = CVPixelBufferGetHeight(imageBuf)
             var imageTex: CVMetalTexture?
-            CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault, textureCache, imageBuf, nil, MetalComputePixelFormat, width, height, 0, &imageTex)
+            CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault, textureCache, imageBuf, nil, MuComputePixelFormat, width, height, 0, &imageTex)
 
             guard let imageTex else { return err("imageTex") }
             guard let texture = CVMetalTextureGetTexture(imageTex) else { return err("get texture")}

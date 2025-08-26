@@ -42,11 +42,11 @@ public class CellNode: ComputeNode {
     public override func makeResources() {
 
         loops˚?.addClosure { flo, _ in self.loops = flo.int }
-        loops˚?.activate([])
+        loops˚?.reactivate()
 
-        pipeline.updateTexture(self, outTex˚)
+        computeTexture(outTex˚)
         super.makeResources()
-        outTex˚?.activate([], from: outTex˚)
+        outTex˚?.reactivate()
     }
 
     override public func updateUniforms() {
@@ -70,6 +70,6 @@ public class CellNode: ComputeNode {
                 super.computeShader(computeEnc)
             }
         }
-        outTex˚?.activate([], from: outTex˚)
+        outTex˚?.reactivate()
     }
 }

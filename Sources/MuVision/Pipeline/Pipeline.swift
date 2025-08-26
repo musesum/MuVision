@@ -42,7 +42,7 @@ open class Pipeline {
     public var pipeSize = CGSize._4K // size of draw surface
     public var rotateClosure = [String: CallVoid]()
 
-    private var rotatable = [String: (MTLTexture,PipeNode,Flo)]()
+    public var rotatable = [String: (MTLTexture,PipeNode,Flo)]()
     private var archive: ArchiveFlo
     public var nextFrame: NextFrame
     public var root˚: Flo
@@ -65,24 +65,24 @@ open class Pipeline {
         commandQueue = device.makeCommandQueue()
         library = device.makeDefaultLibrary()
         layer.device = device
-        layer.pixelFormat = MetalRenderPixelFormat
+        layer.pixelFormat = MuRenderPixelFormat
         layer.backgroundColor = nil
         layer.framebufferOnly = false
         layer.contentsGravity = .resizeAspectFill
         layer.bounds = layer.frame
         layer.contentsScale = scale
 
-        #if os(visionOS)
+#if os(visionOS)
         layer.frame = CGRect(x: 0, y: 0, width: pipeSize.width, height: pipeSize.height)
         pipeSize = CGSize._4K
-        #else
-        
+#else
+
         self.layer.frame = bounds
         switch layer.frame.size.aspect {
         case .landscape : pipeSize = CGSize(width: 1920, height: 1080)
         default         : pipeSize = CGSize(width: 1080, height: 1920)
         }
-        #endif
+#endif
 
         let pipe˚ = root˚.bind("pipe")
         pipeSource = PipeNode(self, pipe˚)
@@ -135,7 +135,7 @@ open class Pipeline {
 extension Pipeline {
 
     public func renderFrame()  {
-        
+
         if !pipeRunning { return }
 
         if renderState == .immersed { return }
@@ -254,7 +254,7 @@ extension Pipeline {
             if let newTex = rotateTexture(tex) {
                 rotatable[name] = (newTex,node,flo)
                 flo.texture = newTex
-                flo.activate([])
+                flo.reactivate()
             }
         }
         activateRotateClosures(done)
@@ -300,9 +300,9 @@ extension Pipeline {
 
         func makeRotateTex() -> MTLTexture? {
             let size = CGSize(width: inTex.height, height: inTex.width)
-            if let tex = device.makeComputeTex(size: size,
-                                               label: inTex.label,
-                                               format: inTex.pixelFormat) {
+            if let tex = makeComputeTex(size: size,
+                                        label: inTex.label,
+                                        format: inTex.pixelFormat) {
                 NoDebugLog { P("🧭 makeRotateTex for: \(tex.label ?? "??")") }
                 return tex
             }
@@ -312,12 +312,12 @@ extension Pipeline {
     func aspectFill(_ sourceTex: MTLTexture) -> MTLTexture? {
 
         if CGFloat(sourceTex.width)   == pipeSize.width,
-            CGFloat(sourceTex.height) == pipeSize.height {
+           CGFloat(sourceTex.height) == pipeSize.height {
             return sourceTex
         }
 
         // Create destination texture with pipeline size
-        guard let destTex = device.makeComputeTex(
+        guard let destTex = makeComputeTex(
             size: pipeSize,
             label: sourceTex.label ?? "resized",
             format: sourceTex.pixelFormat) else { return nil }
@@ -375,44 +375,39 @@ extension Pipeline {
 
         return destTex
     }
-
-    public func customTexture(_ flo: Flo?,
-                              _ makeTex: MakeTexture,
-                              remake: Bool = false) {
+  
+    /// make new texture, or remake an old one if size changes.
+    public func paletteTexture(_ node: PipeNode,
+                              _ flo: Flo?,
+                              rotate: Bool = true) {
 
         guard let flo else { return }
-
-        if flo.texture == nil || remake,
-           let tex = makeTex() {
-            flo.texture = tex
-            flo.activate([])
-            NoDebugLog { P("🧭 \(#function) via: \(tex.label ?? "??")") }
-        }
-    }
-
-    @discardableResult
-    public func updateTexture(_ node: PipeNode,
-                              _ flo: Flo?,
-                              _ size: CGSize? = nil,
-                              rotate: Bool = true) -> MTLTexture? {
-        guard let flo else { return nil }
-
-        let size = size ?? pipeSize
-        if flo.texture?.aspect == size.aspect { return flo.texture }
+        let size = CGSize(width: 256, height: 1)
 
         let path = flo.path(3)
-        if let tex = device.makeComputeTex(size: size, label: path) {
+        if let tex = makeComputeTex(size: size,
+                                    label: path,
+                                    format: MuComputePixelFormat) {
             flo.texture = tex
-            flo.activate([])
-
-            if rotate {
-                rotatable[path] = (tex, node, flo)
-            }
-            NoDebugLog { P("🧭 updateTexture\(size.digits(0)) \(path)") }
-            return tex
+            flo.reactivate()
+            rotatable[path] = (tex, node, flo)
+            DebugLog { P("🧭 paletteTexture\(size.digits(0)) \(path)") }
         }
-        return nil
     }
 
 
+    private func makeComputeTex(size: CGSize,
+                                label: String?,
+                                format: MTLPixelFormat? = nil) -> MTLTexture? {
+        let td = MTLTextureDescriptor()
+        td.pixelFormat = MuComputePixelFormat
+        td.width = Int(size.width)
+        td.height = Int(size.height)
+        td.usage = [.shaderRead, .shaderWrite]
+        let tex = device.makeTexture(descriptor: td)
+        if let label {
+            tex?.label = label
+        }
+        return tex
+    }
 }

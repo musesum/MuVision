@@ -20,10 +20,10 @@ public class RenderDepth {
     var compare : MTLCompareFunction
     var write   : Bool
 
-    public init(_ cull    : MTLCullMode,
-                _ winding : MTLWinding,
-                _ compare : MTLCompareFunction,
-                _ write   : Bool) {
+    public init(cull    : MTLCullMode,
+                winding : MTLWinding,
+                compare : MTLCompareFunction,
+                write   : Bool) {
 
         self.cull    = cull
         self.winding = winding

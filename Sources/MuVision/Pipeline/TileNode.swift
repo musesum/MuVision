@@ -27,7 +27,7 @@ open class TileNode: ComputeNode {
 
     public override func makeResources() {
 
-        pipeline.updateTexture(self, outTex˚)
+        computeTexture(outTex˚)
         super.makeResources()
     }
     
@@ -41,7 +41,7 @@ open class TileNode: ComputeNode {
         computeEnc.setBuffer (repeat˚, index: 0)
         computeEnc.setBuffer (mirror˚, index: 1)
         super.computeShader(computeEnc)
-        outTex˚?.activate([], from: outTex˚)
+        outTex˚?.reactivate()
     }
 
 

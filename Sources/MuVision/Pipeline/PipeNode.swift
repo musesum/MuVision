@@ -63,7 +63,7 @@ open class PipeNode: Equatable {
         pd.vertexFunction   = shader.vertexFunction
         pd.fragmentFunction = shader.fragmentFunction
         pd.vertexDescriptor = metalVD
-        pd.colorAttachments[0].pixelFormat = MetalRenderPixelFormat
+        pd.colorAttachments[0].pixelFormat = MuRenderPixelFormat
         pd.depthAttachmentPixelFormat = .depth32Float
         #if targetEnvironment(simulator)
         #elseif os(visionOS )
@@ -129,3 +129,79 @@ extension PipeNode {
     }}
 }
 
+extension PipeNode {
+
+    public func makeComputeTex(size: CGSize,
+                                label: String?,
+                                format: MTLPixelFormat? = nil) -> MTLTexture? {
+        let td = MTLTextureDescriptor()
+        td.pixelFormat = MuComputePixelFormat
+        td.width = Int(size.width)
+        td.height = Int(size.height)
+        td.usage = [.shaderRead, .shaderWrite]
+        let tex = pipeline.device.makeTexture(descriptor: td)
+        if let label {
+            tex?.label = label
+        }
+        return tex
+    }
+    public func paletteTexture(_ flo: Flo?,
+                               rotate: Bool = true) {
+
+        guard let flo else { return }
+        let size = CGSize(width: 256, height: 1)
+
+        let path = flo.path(3)
+        if let tex = makeComputeTex(size: size,
+                                    label: path,
+                                    format: MuComputePixelFormat) {
+            flo.texture = tex
+            flo.reactivate()
+            DebugLog { P("🧭 paletteTexture\(size.digits(0)) \(path)") }
+        }
+    }
+    /// make new texture, or remake an old one if size changes.
+    public func displaceTexture(_ flo: Flo?,
+                              rotate: Bool = true) {
+
+        guard let flo else { return }
+
+        let size = pipeline.pipeSize
+        if flo.texture?.width == Int(size.width),
+           flo.texture?.height == Int(size.height) { return }
+
+        let path = flo.path(3)
+        if let tex = makeComputeTex(size: size,
+                                    label: path,
+                                    format: MuHeightPixelFormat) {
+            flo.texture = tex
+            flo.reactivate()
+            pipeline.rotatable[path] = (tex, self, flo)
+            DebugLog { P("🧭 heightTexture\(size.digits(0)) \(path)") }
+        }
+    }
+
+    /// make new texture, or remake an old one if size changes.
+    public func computeTexture(_ flo: Flo?,
+                              rotate: Bool = true) {
+
+        guard let flo else { return }
+
+        let size = pipeline.pipeSize
+        if flo.texture != nil { return }
+
+        let path = flo.path(3)
+        if let tex = makeComputeTex(size: size,
+                                    label: path,
+                                    format: MuComputePixelFormat) {
+            flo.texture = tex
+            flo.reactivate()
+
+            if rotate {
+                pipeline.rotatable[path] = (tex, self, flo)
+            }
+            DebugLog { P("🧭 updateTexture\(size.digits(0)) \(path)") }
+        }
+    }
+
+}

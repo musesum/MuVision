@@ -41,13 +41,13 @@ public class DrawNode: ComputeNode {
                 self.drawTex = tex
             }
         }
-        shift˚  = pipeNode˚.superBindPath("shift")
-        shader  = Shader(pipeline, file: "pipe.draw", kernel: "drawDotKernel")
+        shift˚ = pipeNode˚.superBindPath("shift")
+        shader = Shader(pipeline, file: "pipe.draw", kernel: "drawDotKernel")
         makeResources()
     }
     
     override open func makeResources() {
-        pipeline.updateTexture(self, outTex˚)
+        computeTexture(outTex˚)
         super.makeResources()
     }
 
@@ -135,7 +135,7 @@ public class DrawNode: ComputeNode {
         computeEnc.setBuffer(pipeline.aspectBuf, offset: 0, index: 1)
 
         super.computeShader(computeEnc)
-        outTex˚?.activate([], from: outTex˚)
+        outTex˚?.reactivate()
     }
     
 

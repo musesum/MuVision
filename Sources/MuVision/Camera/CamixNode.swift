@@ -31,7 +31,7 @@ public class CamixNode: ComputeNode {
 
     public override func makeResources() {
 
-        pipeline.updateTexture(self, outTex˚)
+        computeTexture(outTex˚)
         super.makeResources()
     }
 #if !os(visionOS)
@@ -59,7 +59,7 @@ public class CamixNode: ComputeNode {
         computeEnc.setBuffer (mixcam˚, index: 0)
         computeEnc.setBuffer (frame˚,  index: 1)
         super.computeShader(computeEnc)
-        outTex˚?.activate([],from: outTex˚)
+        outTex˚?.reactivate()
     }
 #endif
 }
