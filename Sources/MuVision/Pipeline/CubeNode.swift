@@ -88,7 +88,7 @@ public class CubeNode: RenderNode, @unchecked Sendable {
             #endif
             mixcube˚.updateMtlBuffer()
         }
-        renderEnc.setFragmentTexture(displace˚,index: 3)
+        //..... renderEnc.setFragmentTexture(displace˚,index: 3)
         renderEnc.setFragmentTexture(inTex˚,   index: 0)
         renderEnc.setFragmentTexture(cudex˚,   index: 1)
         renderEnc.setFragmentBuffer (mixcube˚, index: 0)

@@ -27,21 +27,21 @@ public class DrawNode: ComputeNode {
     private var drawTex: MTLTexture?
 
     public init(_ pipeline : Pipeline,
-                _ pipeNode˚ : Flo,
+                _ flo˚ : Flo,
                 _ touchCanvas : TouchCanvas) {
 
         self.touchDraw = pipeline.touchDraw
         self.touchCanvas = touchCanvas
         self.dotCountBuf = pipeline.device.makeBuffer(length: MemoryLayout<UInt32>.stride, options: .storageModeShared)!
-        super.init(pipeline, pipeNode˚)
+        super.init(pipeline, flo˚)
 
-        inTex˚  = pipeNode˚.superBindPath("in")
-        outTex˚ = pipeNode˚.superBind("out") { flo, _ in
+        inTex˚  = flo˚.superBindPath("in")
+        outTex˚ = flo˚.superBind("out") { flo, _ in
             if let tex = flo.texture {
                 self.drawTex = tex
             }
         }
-        shift˚ = pipeNode˚.superBindPath("shift")
+        shift˚ = flo˚.bind("shift")
         shader = Shader(pipeline, file: "pipe.draw", kernel: "drawDotKernel")
         makeResources()
     }
