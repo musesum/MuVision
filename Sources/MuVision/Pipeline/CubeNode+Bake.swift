@@ -12,9 +12,9 @@ extension CubeNode { // bake
     internal func makeBakePipeline() {
         let library = pipeline.library!
         let descriptor = MTLRenderPipelineDescriptor()
-        descriptor.label = "CubeIndex-Bake-MRT"
+        descriptor.label = "CubeIndex-Bake"
         descriptor.vertexFunction   = library.makeFunction(name: "cubeBakeVertex")
-        descriptor.fragmentFunction = library.makeFunction(name: "cubeIndexFragment_mrt")
+        descriptor.fragmentFunction = library.makeFunction(name: "cubeIndexFragment")
         descriptor.vertexDescriptor = nil // use vertex_id; no attributes needed for fullscreen quad
         descriptor.colorAttachments[0].pixelFormat = .bgra8Unorm
         descriptor.colorAttachments[1].pixelFormat = .bgra8Unorm
@@ -52,14 +52,12 @@ extension CubeNode { // bake
         let commandBuffer = pipeline.commandQueue.makeCommandBuffer()!
         for face in 0..<6 {
             let renderPass = MTLRenderPassDescriptor()
-            renderPass.colorAttachments[0].texture     = scratch0
-            renderPass.colorAttachments[0].loadAction  = .dontCare
-            renderPass.colorAttachments[0].storeAction = .dontCare
 
-            renderPass.colorAttachments[1].texture     = drawables[face].texture
-            renderPass.colorAttachments[1].loadAction  = .dontCare
-            renderPass.colorAttachments[1].storeAction = .store
-            renderPass.colorAttachments[1].clearColor  = MTLClearColorMake(0, 0, 0, 0)
+
+            renderPass.colorAttachments[0].texture     = drawables[face].texture
+            renderPass.colorAttachments[0].loadAction  = .dontCare
+            renderPass.colorAttachments[0].storeAction = .store
+            renderPass.colorAttachments[0].clearColor  = MTLClearColorMake(0, 0, 0, 0)
 
             renderPass.depthAttachment.texture     = depthTexture
             renderPass.depthAttachment.loadAction  = .clear
