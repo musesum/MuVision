@@ -36,7 +36,7 @@ public class FlatNode: RenderNode {
         guard let device = MTLCreateSystemDefaultDevice() else { return }
         guard let shader else { return }
         let pd = MTLRenderPipelineDescriptor()
-        pd.label = pipeNode˚.name
+        pd.label = pipeFlo˚.name
         pd.vertexFunction = shader.vertexFunction
         pd.fragmentFunction = shader.fragmentFunction
         pd.colorAttachments[0].pixelFormat = MuRenderPixelFormat

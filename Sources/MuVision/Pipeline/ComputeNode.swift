@@ -28,10 +28,10 @@ open class ComputeNode: PipeNode {
                 do {
                     self.mtlCompute  = try device.makeComputePipelineState(function: kernelFunction)
                 } catch{
-                    PrintLog("⁉️ makeComputePipe: \(pipeNode˚.name) failed error \(error)")
+                    PrintLog("⁉️ makeComputePipe: \(pipeFlo˚.name) failed error \(error)")
                 }
             } else {
-                PrintLog("⁉️ makeComputePipe: \(pipeNode˚.name) failed")
+                PrintLog("⁉️ makeComputePipe: \(pipeFlo˚.name) failed")
             }
         }
 

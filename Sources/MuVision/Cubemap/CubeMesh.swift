@@ -7,14 +7,17 @@ public class CubeMesh: MeshMetal {
     var model: CubeModel!
     
     init(_ renderState: RenderState) {
+
         let immersed = RenderDepth(cull    : .none,
                                    winding : .clockwise,
                                    compare : .greater,
                                    write   : true)
+
         let windowed = RenderDepth(cull    : .none,
                                    winding : .clockwise,
                                    compare : .less,
                                    write   : false)
+
         let depthRendering = DepthRendering(immersed, windowed, renderState)
         super.init(depthRendering)
         

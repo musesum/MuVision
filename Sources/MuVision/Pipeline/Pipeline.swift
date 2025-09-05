@@ -12,7 +12,7 @@ import CompositorServices
 
 open class Pipeline {
 
-    private var commandQueue: MTLCommandQueue!
+    internal var commandQueue: MTLCommandQueue!
     private var depthTex: MTLTexture!
     private var pipeRunning = false
     private var rotateFunc: MTLFunction?
@@ -47,6 +47,7 @@ open class Pipeline {
     public var nextFrame: NextFrame
     public var root˚: Flo
     public var touchDraw: TouchDraw
+    public var node: [String: PipeNode] = [:]
 
     public init(_ root˚: Flo,
                 _ renderState: RenderState,

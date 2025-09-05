@@ -18,25 +18,30 @@ public struct VertexCube {
 public class CubeNode: RenderNode, @unchecked Sendable {
 
     private let viaIndex   : Bool
-    private var cubeMesh   : CubeMesh!
-    private var cubeIndex  : CubemapIndex?
-    private var inTex˚     : Flo?
-    private var cudex˚     : Flo?
+    internal var cubeMesh  : CubeMesh!
+    internal var cubeIndex : CubemapIndex?
+    internal var inTex˚    : Flo?
+    internal var cudex˚    : Flo?
     private var displace˚  : Flo?
-    private var mixcube˚   : Flo?
+    internal var mixcube˚  : Flo?
     private var lastAspect : Aspect?
 
+    internal var bakePipelineState: MTLRenderPipelineState!
+    internal var scratch0: MTLTexture?   // throwaway for MRT color0 when baking
+
+
+
     override public init(_ pipeline : Pipeline,
-                         _ pipeNode˚ : Flo) {
+                         _ pipeFlo˚ : Flo) {
 
         self.cubeMesh = CubeMesh(pipeline.renderState)
         self.viaIndex = true
-        super.init(pipeline, pipeNode˚)
+        super.init(pipeline, pipeFlo˚)
         
-        inTex˚    = pipeNode˚.superBindPath("in")
-        cudex˚    = pipeNode˚.superBindPath("cudex")
-        displace˚ = pipeNode˚.superBindPath("displace")
-        mixcube˚  = pipeNode˚.superBindPath("mixcube")
+        inTex˚    = pipeFlo˚.superBindPath("in")
+        cudex˚    = pipeFlo˚.superBindPath("cudex")
+        displace˚ = pipeFlo˚.superBindPath("displace")
+        mixcube˚  = pipeFlo˚.superBindPath("mixcube")
         makeRenderPipeline()
         makeResources()
         pipeline.rotateClosure["cudex˚"] = { self.makeCube() }
@@ -74,6 +79,9 @@ public class CubeNode: RenderNode, @unchecked Sendable {
 
         makeCube()
         cubeMesh.eyeBuf = EyeBuf("CubeEyes", far: false)
+#if os(visionOS) //....
+        makeBakePipeline() //..... ← add
+#endif
         super.makeResources()
     }
 
@@ -88,7 +96,7 @@ public class CubeNode: RenderNode, @unchecked Sendable {
             #endif
             mixcube˚.updateMtlBuffer()
         }
-        //..... renderEnc.setFragmentTexture(displace˚,index: 3)
+        //.... renderEnc.setFragmentTexture(displace˚,index: 3)
         renderEnc.setFragmentTexture(inTex˚,   index: 0)
         renderEnc.setFragmentTexture(cudex˚,   index: 1)
         renderEnc.setFragmentBuffer (mixcube˚, index: 0)
@@ -176,9 +184,9 @@ public class CubeNode: RenderNode, @unchecked Sendable {
             let orientation = await Motion.shared.updateDeviceOrientation()
 
             let projection = project4x4(drawableSize)
-            NoTimeLog(#function, interval: 4) {
-                print("\t👁️c orientation ", orientation.digits)
-                print("\t👁️c projection  ", projection.digits)
+            TimeLog(#function, interval: 4) {
+                P("👁️ cubeNode") //\(orientation.digits(1))")
+                //print("\t👁️c projection  ", projection.digits)
             }
             eyebuf.updateEyeUniforms(projection, orientation)
         }
