@@ -11,15 +11,14 @@ extension CubeNode { // bake
 
     internal func makeBakePipeline() {
         let library = pipeline.library!
-        let descriptor = MTLRenderPipelineDescriptor()
-        descriptor.label = "CubeIndex-Bake"
-        descriptor.vertexFunction   = library.makeFunction(name: "cubeBakeVertex")
-        descriptor.fragmentFunction = library.makeFunction(name: "cubeIndexFragment")
-        descriptor.vertexDescriptor = nil // use vertex_id; no attributes needed for fullscreen quad
-        descriptor.colorAttachments[0].pixelFormat = .bgra8Unorm
-        descriptor.colorAttachments[1].pixelFormat = .bgra8Unorm
-        descriptor.depthAttachmentPixelFormat = .depth32Float
-        bakePipelineState = try! pipeline.device.makeRenderPipelineState(descriptor: descriptor)
+        let pd = MTLRenderPipelineDescriptor()
+        pd.label = "CubeIndex-Bake"
+        pd.vertexFunction   = library.makeFunction(name: "cubeBakeVertex")
+        pd.fragmentFunction = library.makeFunction(name: "cubeIndexFragment")
+        pd.vertexDescriptor = nil // use vertex_id; no attributes needed for fullscreen quad
+        pd.colorAttachments[0].pixelFormat = .bgra8Unorm
+        pd.depthAttachmentPixelFormat = .depth32Float
+        bakePipelineState = try! pipeline.device.makeRenderPipelineState(descriptor: pd)
     }
 
     /// MRT-bake: write each cube face into a RealityKit DrawableQueue texture using the same fragment.
@@ -35,51 +34,40 @@ extension CubeNode { // bake
         let width  = drawables[0].texture.width
         let height = drawables[0].texture.height
 
-        if scratch0 == nil || scratch0!.width != width || scratch0!.height != height {
-            let textureDescriptor = MTLTextureDescriptor.texture2DDescriptor(
-                pixelFormat: .bgra8Unorm, width: width, height: height, mipmapped: false)
-            textureDescriptor.usage = .renderTarget
-            textureDescriptor.storageMode = .memoryless
-            scratch0 = pipeline.device.makeTexture(descriptor: textureDescriptor)
-        }
-
-        let depthDescriptor = MTLTextureDescriptor.texture2DDescriptor(
+        let dd = MTLTextureDescriptor.texture2DDescriptor(
             pixelFormat: .depth32Float, width: width, height: height, mipmapped: false)
-        depthDescriptor.usage = .renderTarget
-        depthDescriptor.storageMode = .memoryless
-        guard let depthTexture = pipeline.device.makeTexture(descriptor: depthDescriptor) else { return }
+        dd.usage = .renderTarget
+        dd.storageMode = .memoryless
+        guard let depthTex = pipeline.device.makeTexture(descriptor: dd) else { return }
 
-        let commandBuffer = pipeline.commandQueue.makeCommandBuffer()!
+        let commandBuf = pipeline.commandQueue.makeCommandBuffer()!
         for face in 0..<6 {
-            let renderPass = MTLRenderPassDescriptor()
+            let rp = MTLRenderPassDescriptor()
+            rp.colorAttachments[0].texture     = drawables[face].texture
+            rp.colorAttachments[0].loadAction  = .dontCare
+            rp.colorAttachments[0].storeAction = .store
+            rp.colorAttachments[0].clearColor  = MTLClearColorMake(0, 0, 0, 0)
 
+            rp.depthAttachment.texture     = depthTex
+            rp.depthAttachment.loadAction  = .clear
+            rp.depthAttachment.storeAction = .dontCare
+            rp.depthAttachment.clearDepth  = 1.0
 
-            renderPass.colorAttachments[0].texture     = drawables[face].texture
-            renderPass.colorAttachments[0].loadAction  = .dontCare
-            renderPass.colorAttachments[0].storeAction = .store
-            renderPass.colorAttachments[0].clearColor  = MTLClearColorMake(0, 0, 0, 0)
-
-            renderPass.depthAttachment.texture     = depthTexture
-            renderPass.depthAttachment.loadAction  = .clear
-            renderPass.depthAttachment.storeAction = .dontCare
-            renderPass.depthAttachment.clearDepth  = 1.0
-
-            let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPass)!
-            renderEncoder.setRenderPipelineState(bakePipelineState)
-
-            // resources match your main pass
-            renderEncoder.setFragmentTexture(inTex˚, index: 0)
-            renderEncoder.setFragmentTexture(cudex˚, index: 1)
-            renderEncoder.setFragmentBuffer (mixcube˚, index: 0)
+            let re = commandBuf.makeRenderCommandEncoder(descriptor: rp)!
+            re.setRenderPipelineState(bakePipelineState)
+            re.setFragmentTexture(inTex˚, index: 0)
+            re.setFragmentTexture(cudex˚, index: 1)
+            re.setFragmentBuffer (mixcube˚, index: 0)
 
             var faceIndex: UInt32 = UInt32(face)
-            renderEncoder.setVertexBytes(&faceIndex, length: MemoryLayout<UInt32>.size, index: 10)
+            let size = MemoryLayout<UInt32>.size
+            re.setVertexBytes(&faceIndex, length: size, index: 10)
 
-            renderEncoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 6) // full-screen quad
-            renderEncoder.endEncoding()
+            re.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 6) // full-screen quad
+            re.endEncoding()
         }
-        commandBuffer.commit()
-        commandBuffer.waitUntilCompleted()
+        commandBuf.commit()
+        commandBuf.waitUntilCompleted()
         drawables.forEach { $0.present() }
     }
 }

@@ -46,11 +46,12 @@ public struct VolumeView: View {
             // Create six in-memory textures and immediately back them with the queues (no asset load)
             var textures: [TextureResource] = []
             for i in 0..<6 {
-                let cgImg = make1x1CGImage()
+                let cgImg = make1x1CGImage(UInt8(i))
                 let tex = try await TextureResource(image: cgImg, options: .init(semantic: .color))
                 tex.replace(withDrawables: queues[i])
                 textures.append(tex)
             }
+
             vm.faceTex = textures
             PrintLog("✅ makeMaterials: faceTex.count=\(textures.count)")
 
@@ -75,7 +76,7 @@ public struct VolumeView: View {
     }
 
     // temp 1×1 CGImage
-    private func make1x1CGImage() -> CGImage {
+    private func make1x1CGImage(_ face: UInt8) -> CGImage {
         let colorSpace = CGColorSpaceCreateDeviceRGB()
         var pixel: [UInt8] = [0, 0, 0, 0] // transparent
         let bytesPerPixel = 4
@@ -110,10 +111,12 @@ public struct VolumeView: View {
     private func addCube(_ content: RealityViewContent) async {
         let side = 512
         let materials = await makeMaterials(side: side)
-        let mesh = MeshResource.generateBox(size: 0.25, cornerRadius: 0)
+        let mesh = MeshResource.generateBox(width: 0.25,
+                                            height: 0.25,
+                                            depth: 0.25,
+                                            splitFaces: true)
         let model = ModelEntity(mesh: mesh, materials: materials)
         content.add(model)
-        PrintLog("addCube done; z=\(model.position.z.digits(3))")
     }
 
     public var body: some View {
@@ -121,7 +124,6 @@ public struct VolumeView: View {
             await addCube(content)
         } update: { _ in
             let count = vm.drawQueue.count
-            PrintLog("📋 VolumeView::update drawQueue.count: \(count)")
             if count == 6 {
                 cubeNode?.bakeFacesMRT(to: vm.drawQueue)
             }

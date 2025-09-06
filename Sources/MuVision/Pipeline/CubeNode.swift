@@ -29,8 +29,6 @@ public class CubeNode: RenderNode, @unchecked Sendable {
     internal var bakePipelineState: MTLRenderPipelineState!
     internal var scratch0: MTLTexture?   // throwaway for MRT color0 when baking
 
-
-
     override public init(_ pipeline : Pipeline,
                          _ pipeFlo˚ : Flo) {
 
@@ -79,7 +77,7 @@ public class CubeNode: RenderNode, @unchecked Sendable {
 
         makeCube()
         cubeMesh.eyeBuf = EyeBuf("CubeEyes", far: false)
-#if os(visionOS) //....
+#if os(visionOS)
         makeBakePipeline() //..... ← add
 #endif
         super.makeResources()
