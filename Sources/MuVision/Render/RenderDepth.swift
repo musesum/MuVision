@@ -15,36 +15,36 @@ public enum RenderState: String {
 
 public class RenderDepth {
 
-    var cull    : MTLCullMode
-    var winding : MTLWinding
-    var compare : MTLCompareFunction
-    var write   : Bool
+    var mtlCull    : MTLCullMode
+    var mtlWinding : MTLWinding
+    var mtlCompare : MTLCompareFunction
+    var write      : Bool
 
     public init(cull    : MTLCullMode,
                 winding : MTLWinding,
                 compare : MTLCompareFunction,
                 write   : Bool) {
 
-        self.cull    = cull
-        self.winding = winding
-        self.compare = compare
-        self.write   = write
+        self.mtlCull    = cull
+        self.mtlWinding = winding
+        self.mtlCompare = compare
+        self.write      = write
     }
 }
 
 public class DepthRendering {
 
-    var immersed : RenderDepth
-    var windowed : RenderDepth
-    var renderState : RenderState
-    var stencil : MTLDepthStencilState!
+    var immerseDepth : RenderDepth
+    var windowDepth  : RenderDepth
+    var renderState  : RenderState
+    var mtlDepthStencil : MTLDepthStencilState!
 
-    public init(_ immersed : RenderDepth,
-                _ windowed : RenderDepth,
-                _ renderState : RenderState) {
+    public init(_ immerseDepth : RenderDepth,
+                _ windowDepth  : RenderDepth,
+                _ renderState  : RenderState) {
 
-        self.immersed = immersed
-        self.windowed = windowed
+        self.immerseDepth = immerseDepth
+        self.windowDepth = windowDepth
         self.renderState = renderState
         makeStencil(renderState)
     }
@@ -57,14 +57,14 @@ public class DepthRendering {
         switch renderState {
 
         case .immersed:
-            depth.depthCompareFunction = immersed.compare
-            depth.isDepthWriteEnabled = immersed.write
+            depth.depthCompareFunction = immerseDepth.mtlCompare
+            depth.isDepthWriteEnabled = immerseDepth.write
 
         case .windowed:
-            depth.depthCompareFunction = windowed.compare
-            depth.isDepthWriteEnabled = windowed.write
+            depth.depthCompareFunction = windowDepth.mtlCompare
+            depth.isDepthWriteEnabled = windowDepth.write
         }
-        stencil = device.makeDepthStencilState(descriptor: depth)!
+        mtlDepthStencil = device.makeDepthStencilState(descriptor: depth)!
     }
     public func setCullWindingStencil(_ renderEnc: MTLRenderCommandEncoder,
                                       _ renderState: RenderState) {
@@ -73,16 +73,16 @@ public class DepthRendering {
             self.renderState = renderState
             makeStencil(renderState)
         }
-        renderEnc.setDepthStencilState(stencil)
+        renderEnc.setDepthStencilState(mtlDepthStencil)
 
         switch renderState {
         case .immersed:
-            renderEnc.setCullMode(immersed.cull)
-            renderEnc.setFrontFacing(immersed.winding)
+            renderEnc.setCullMode(immerseDepth.mtlCull)
+            renderEnc.setFrontFacing(immerseDepth.mtlWinding)
 
         case .windowed:
-            renderEnc.setCullMode(windowed.cull)
-            renderEnc.setFrontFacing(windowed.winding)
+            renderEnc.setCullMode(windowDepth.mtlCull)
+            renderEnc.setFrontFacing(windowDepth.mtlWinding)
         }
     }
 }

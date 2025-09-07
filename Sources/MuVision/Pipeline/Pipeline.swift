@@ -156,9 +156,9 @@ extension Pipeline {
             computeEnc.endEncoding()
         }
         // render cycle
-        if let renderEnc = commandBuf.makeRenderCommandEncoder(descriptor: renderPassDescriptor(drawable)) {
-            pipeSource.runRender(renderEnc, &logging)
-            renderEnc.endEncoding()
+        if let re = commandBuf.makeRenderCommandEncoder(descriptor: renderPassDescriptor(drawable)) {
+            pipeSource.runRender(re, &logging)
+            re.endEncoding()
         }
         // finish command
         commandBuf.present(drawable)

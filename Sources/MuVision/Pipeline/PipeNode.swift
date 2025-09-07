@@ -69,8 +69,7 @@ open class PipeNode: Equatable {
         #elseif os(visionOS )
         pd.maxVertexAmplificationCount = 2
         #endif
-        //?? this is the only difference with CubeNode and FlatNode
-        // alpha blend
+        //?? alpha blend is the only difference with CubeNode and FlatNode
         pd.colorAttachments[0].isBlendingEnabled = true
         pd.colorAttachments[0].sourceRGBBlendFactor = .sourceAlpha
         pd.colorAttachments[0].sourceAlphaBlendFactor = .sourceAlpha

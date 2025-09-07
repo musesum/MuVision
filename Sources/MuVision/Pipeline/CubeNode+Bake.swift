@@ -7,22 +7,22 @@ import ModelIO
 import MetalKit
 import CompositorServices
 
-extension CubeNode { // bake
+extension CubeNode { // box
 
-    internal func makeBakePipeline() {
+    internal func makeBoxPipeline() {
         let library = pipeline.library!
         let pd = MTLRenderPipelineDescriptor()
-        pd.label = "CubeIndex-Bake"
-        pd.vertexFunction   = library.makeFunction(name: "cubeBakeVertex")
+        pd.label = "CubeBox"
+        pd.vertexFunction   = library.makeFunction(name: "cubeBoxVertex")
         pd.fragmentFunction = library.makeFunction(name: "cubeIndexFragment")
         pd.vertexDescriptor = nil // use vertex_id; no attributes needed for fullscreen quad
         pd.colorAttachments[0].pixelFormat = .bgra8Unorm
         pd.depthAttachmentPixelFormat = .depth32Float
-        bakePipelineState = try! pipeline.device.makeRenderPipelineState(descriptor: pd)
+        boxPipelineState = try! pipeline.device.makeRenderPipelineState(descriptor: pd)
     }
 
-    /// MRT-bake: write each cube face into a RealityKit DrawableQueue texture using the same fragment.
-    func bakeFacesMRT(to queues: [TextureResource.DrawableQueue]) {
+    /// write cube faces to RealityKit DrawableQueue
+    public func boxFaces(to queues: [TextureResource.DrawableQueue]) {
         guard queues.count == 6,
               let inTex˚, let cudex˚ else { return }
 
@@ -49,12 +49,12 @@ extension CubeNode { // bake
             rp.colorAttachments[0].clearColor  = MTLClearColorMake(0, 0, 0, 0)
 
             rp.depthAttachment.texture     = depthTex
-            rp.depthAttachment.loadAction  = .clear
+            rp.depthAttachment.loadAction  = .dontCare
             rp.depthAttachment.storeAction = .dontCare
             rp.depthAttachment.clearDepth  = 1.0
 
             let re = commandBuf.makeRenderCommandEncoder(descriptor: rp)!
-            re.setRenderPipelineState(bakePipelineState)
+            re.setRenderPipelineState(boxPipelineState)
             re.setFragmentTexture(inTex˚, index: 0)
             re.setFragmentTexture(cudex˚, index: 1)
             re.setFragmentBuffer (mixcube˚, index: 0)

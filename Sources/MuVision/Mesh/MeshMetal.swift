@@ -8,7 +8,7 @@ import MuFlo
 open class MeshMetal {
 
     private var depthRendering: DepthRendering
-    public var metalVD = MTLVertexDescriptor()
+    public var mtlVD = MTLVertexDescriptor()
     public var mtkMesh: MTKMesh?
     public var eyeBuf: EyeBuf?
     public var mtlBuffer : MTLBuffer!
@@ -23,9 +23,9 @@ open class MeshMetal {
         for (index,(_,format)) in nameFormats.enumerated() {
             addMetalVD(index, format, &offset)
         }
-        metalVD.layouts[0].stride = layoutStride
-        metalVD.layouts[0].stepRate = 1
-        metalVD.layouts[0].stepFunction = .perVertex
+        mtlVD.layouts[0].stride = layoutStride
+        mtlVD.layouts[0].stepRate = 1
+        mtlVD.layouts[0].stepFunction = .perVertex
     }
     public func addMetalVD(_ index: Int,
                            _ format: MTLVertexFormat,
@@ -38,9 +38,9 @@ open class MeshMetal {
         case .float4: stride = MemoryLayout<Float>.size * 4
         default: return err(" unknown format \(format)")
         }
-        metalVD.attributes[index].bufferIndex = 0
-        metalVD.attributes[index].format = format
-        metalVD.attributes[index].offset = offset
+        mtlVD.attributes[index].bufferIndex = 0
+        mtlVD.attributes[index].format = format
+        mtlVD.attributes[index].offset = offset
         offset += stride
 
         func err(_ msg: String) {
@@ -50,7 +50,7 @@ open class MeshMetal {
     public func makeModelFromMetalVD(_ nameFormats: [VertexNameFormat],
                                      _ layoutStride: Int) -> MDLVertexDescriptor {
 
-        let modelVD = MTKModelIOVertexDescriptorFromMetal(metalVD)
+        let modelVD = MTKModelIOVertexDescriptorFromMetal(mtlVD)
         if let attributes = modelVD.attributes as? [MDLVertexAttribute] {
 
             for (index,(name,_)) in nameFormats.enumerated() {
