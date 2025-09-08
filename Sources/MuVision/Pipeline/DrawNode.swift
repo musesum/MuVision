@@ -123,6 +123,7 @@ public class DrawNode: ComputeNode {
         }
     }
     override public func computeShader(_ computeEnc: MTLComputeCommandEncoder)  {
+
         if updateInputBuffer() {
             touchCanvas.touchDraw.drawPoints.removeAll()
         } else {

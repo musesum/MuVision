@@ -49,14 +49,9 @@ public class CellNode: ComputeNode {
         outTex˚?.reactivate()
     }
 
-    override public func updateUniforms() {
-        super.updateUniforms()
-    }
-
     override public func computeShader(_ computeEnc: MTLComputeCommandEncoder)  {
 
         version˚?.updateMtlBuffer()
-
         computeEnc.setBuffer (version˚, index: 0)
         computeEnc.setTexture(realTex˚, index: 0)
         computeEnc.setTexture(outTex˚,  index: 1)

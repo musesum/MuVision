@@ -36,7 +36,7 @@ public class CamixNode: ComputeNode {
     }
 #if !os(visionOS)
     public override func computeShader(_ computeEnc: MTLComputeCommandEncoder)  {
-
+        
         guard camera.hasNewTex else { return }
 
         if frame˚?.texture == nil,

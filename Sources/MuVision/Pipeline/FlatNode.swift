@@ -19,14 +19,10 @@ public class FlatNode: RenderNode {
                          _ pipeNode˚ : Flo) {
 
         super.init(pipeline, pipeNode˚)
-
         inTex˚ = pipeNode˚.superBindPath("in")
-        makeRenderPipeline()
-        makeResources()
-        pipeline.resizeNodes.append(makeResources)
     }
 
-    func makeRenderPipeline() {
+    override public func makePipeline() {
 
         shader = Shader(pipeline,
                         file     : "render.map.flat",
@@ -50,6 +46,7 @@ public class FlatNode: RenderNode {
         catch {
             PrintLog("⁉️ FlatmapNode::\(#function) \(error)")
         }
+        pipeline.resizeNodes.append(makeResources)
     }
 
     override public func makeResources() {
@@ -75,8 +72,6 @@ public class FlatNode: RenderNode {
                                        options: .storageModeShared)
         buffer?.label = "FlatVertices"
         vertBuf = buffer
-
-        super.makeResources()
     }
     
     override open func renderShader(_ renderEnc: MTLRenderCommandEncoder,

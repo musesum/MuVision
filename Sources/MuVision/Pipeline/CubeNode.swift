@@ -25,6 +25,10 @@ public class CubeNode: RenderNode, @unchecked Sendable {
     internal var mixcube˚   : Flo?
     internal var lastAspect : Aspect?
 
+    internal var cubeVertex : MTLFunction!
+    internal var cubeBoxV   : MTLFunction!
+    internal var cubeIndexF : MTLFunction!
+
     private var displace˚  : Flo?
     internal var boxPipelineState: MTLRenderPipelineState!
 
@@ -39,17 +43,15 @@ public class CubeNode: RenderNode, @unchecked Sendable {
         cudex˚    = pipeFlo˚.superBindPath("cudex")
         displace˚ = pipeFlo˚.superBindPath("displace")
         mixcube˚  = pipeFlo˚.superBindPath("mixcube")
-        makeRenderPipeline()
-        makeResources()
-        pipeline.rotateClosure["cudex˚"] = { self.makeCube() }
     }
     
-    func makeRenderPipeline() {
+    override public func makePipeline() {
         shader = Shader(pipeline,
                         file: "render.map.cube",
                         vertex: "cubeVertex",
                         fragment: "cubeIndexFragment")
         renderPipelineState = makeRenderState(cubeMesh.mtlVD)
+        pipeline.rotateClosure["cudex˚"] = { self.makeCube() }
     }
 
    
@@ -60,15 +62,16 @@ public class CubeNode: RenderNode, @unchecked Sendable {
 #if os(visionOS)
         makeBoxPipeline() //..... ← add
 #endif
-        super.makeResources()
     }
 
-    override open func renderShader(_ renderEnc: MTLRenderCommandEncoder,
-                                    _ renderState: RenderState) {
-        guard let renderPipelineState else { return }
+    override open func renderShader(
+        _ renderEnc: MTLRenderCommandEncoder,
+        _ renderState: RenderState) {
 
-        cubeMesh.eyeBuf?.setUniformBuf(renderEnc)
-        if let mixcube˚ {
+            guard let renderPipelineState else { return }
+
+            cubeMesh.eyeBuf?.setUniformBuf(renderEnc)
+            if let mixcube˚ {
             #if os(visionOS) //....
             mixcube˚.setNameNums([("x", 1)], .fire) //....
             #endif
@@ -105,17 +108,18 @@ public class CubeNode: RenderNode, @unchecked Sendable {
 #if os(visionOS)
 
     /// Update projection and rotation
-    override public func updateUniforms(_ drawable: LayerRenderer.Drawable,
-                                        _ deviceAnchor: DeviceAnchor?) {
-        
-        let cameraPos = vector_float4([0, 0,  -4, 1])
-        if #available(visionOS 2.0, *) {
+    override public func renderShader(
+        _ renderEnc     : MTLRenderCommandEncoder,
+        _ renderState   : RenderState,
+        _ drawable      : LayerRenderer.Drawable,
+        _ deviceAnchor  : DeviceAnchor?) {
+
+            let cameraPos = vector_float4([0, 0,  -4, 1])
             cubeMesh.eyeBuf?.updateEyeUniforms(drawable, deviceAnchor, cameraPos, "👁️C⃝ube")
-        } else {
-            // Fallback on earlier versions
+
+            renderShader(renderEnc, renderState)
         }
-    }
-    
+
 #endif
 
 }

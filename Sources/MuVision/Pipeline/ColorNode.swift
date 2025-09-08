@@ -27,9 +27,7 @@ public class ColorNode: ComputeNode {
         displace˚ = pipeNode˚.superBindPath("displace")
         plane˚    = pipeNode˚.superBindPath("plane")
         height˚   = pipeNode˚.superBindPath("height")
-        shader    = Shader(pipeline,
-                           file: "pipe.color",
-                           kernel: "colorKernel")
+        shader    = Shader(pipeline, file: "pipe.color", kernel: "colorKernel")
         makeResources()
     }
 
@@ -40,9 +38,7 @@ public class ColorNode: ComputeNode {
         super.makeResources()
     }
     
-
     override public func updateUniforms() {
-        super.updateUniforms()
         // draw into palette texture
         if let palTex = palTex˚?.texture {
 
@@ -61,7 +57,7 @@ public class ColorNode: ComputeNode {
     }
 
     override public func computeShader(_ computeEnc: MTLComputeCommandEncoder)  {
-
+        updateUniforms()
         computeEnc.setTexture(inTex˚,    index: 0)
         computeEnc.setTexture(palTex˚,   index: 1)
         computeEnc.setTexture(outTex˚,   index: 2)

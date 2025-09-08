@@ -15,6 +15,7 @@ open class ComputeNode: PipeNode {
         super.init(pipeline, pipeNode˚)
     }
 
+
     open override func makeResources() {
 
         makeComputePipe()
@@ -50,8 +51,6 @@ open class ComputeNode: PipeNode {
         }
     }
     public func computeShader(_ computeEnc: MTLComputeCommandEncoder)  {
-        // setup and execute compute textures
-
         if let mtlCompute {
             // execute the compute pipeline threads
             setupThreadGroup() 

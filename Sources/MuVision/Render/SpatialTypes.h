@@ -23,6 +23,13 @@ enum TextureIndex {
     colori = 0,
 };
 
+///// not used direct
+//struct VertexMesh {
+//    let position : SIMD3<Float>
+//    let texCoord : SIMD2<Float>
+//    let normal   : SIMD3<Float>
+//}
+
 struct VertexMesh {
     float3 position [[ attribute(position) ]];
     float2 texCoord [[ attribute(texCoord) ]];

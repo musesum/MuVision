@@ -27,6 +27,7 @@ open class MeshMetal {
         mtlVD.layouts[0].stepRate = 1
         mtlVD.layouts[0].stepFunction = .perVertex
     }
+
     public func addMetalVD(_ index: Int,
                            _ format: MTLVertexFormat,
                            _ offset: inout Int) {
