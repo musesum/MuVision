@@ -59,8 +59,7 @@ extension PipeNode { // make
         }
         return tex
     }
-    public func paletteTexture(_ flo: Flo?,
-                               rotate: Bool = true) {
+    public func paletteTexture(_ flo: Flo?) {
 
         guard let flo else { return }
         let size = CGSize(width: 256, height: 1)
@@ -75,8 +74,7 @@ extension PipeNode { // make
         }
     }
     /// make new texture, or remake an old one if size changes.
-    public func displaceTexture(_ flo: Flo?,
-                                rotate: Bool = true) {
+    public func displaceTexture(_ flo: Flo?) {
 
         guard let flo else { return }
 
@@ -90,14 +88,12 @@ extension PipeNode { // make
                                     format: MuHeightPixelFormat) {
             flo.texture = tex
             flo.reactivate()
-            pipeline.rotatable[path] = (tex, self, flo)
             DebugLog { P("🧭 heightTexture\(size.digits(0)) \(path)") }
         }
     }
 
     /// make new texture, or remake an old one if size changes.
-    public func computeTexture(_ flo: Flo?,
-                               rotate: Bool = true) {
+    public func computeTexture(_ flo: Flo?) {
 
         guard let flo else { return }
 
@@ -110,10 +106,6 @@ extension PipeNode { // make
                                     format: MuComputePixelFormat) {
             flo.texture = tex
             flo.reactivate()
-
-            if rotate {
-                pipeline.rotatable[path] = (tex, self, flo)
-            }
             DebugLog { P("🧭 updateTexture\(size.digits(0)) \(path)") }
         }
     }

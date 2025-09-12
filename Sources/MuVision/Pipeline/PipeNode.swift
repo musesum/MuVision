@@ -68,6 +68,7 @@ open class PipeNode: Equatable {
         _ logging   : inout String) {
 
         if let renderNode = self as? RenderNode {
+            updateFirstTime()
             logging += renderNode.pipeName + " -> "
             renderNode.updateUniforms(drawable, anchor)
             renderNode.renderShader(renderEnc, pipeline.renderState)
@@ -81,13 +82,11 @@ open class PipeNode: Equatable {
 
     
     public static func == (lhs: PipeNode, rhs: PipeNode) -> Bool { return lhs.id == rhs.id }
-   
+
     open func updateUniforms() {}
     open func makeResources() {}
     open func makePipeline() {}
-    open func renderShader(
-        _ renderEnc: MTLRenderCommandEncoder,
-        _ renderState: RenderState) {}
+    open func renderShader(_: MTLRenderCommandEncoder, _: RenderState) {}
 
     func updateFirstTime() {
         if firstTime {

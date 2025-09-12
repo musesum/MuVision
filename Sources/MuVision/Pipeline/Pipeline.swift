@@ -13,18 +13,16 @@ import CompositorServices
 open class Pipeline {
 
     internal var commandQueue: MTLCommandQueue!
+    internal var drawBuf: MTLBuffer?
+    internal var clipBuf: MTLBuffer?
+
     private var depthTex: MTLTexture!
     private var pipeRunning = false
-    private var rotateFunc: MTLFunction?
-
-    public  var renderState: RenderState
-
+    public var renderState: RenderState
     public var device = MTLCreateSystemDefaultDevice()!
     public var library: MTLLibrary!
     public var pipeSource: PipeNode?
     public var layer = CAMetalLayer()
-    public var drawBuf: MTLBuffer?
-    public var clipBuf: MTLBuffer?
 
     private var aspect = Aspect.square
     private var _aspectBuf: MTLBuffer?
@@ -39,11 +37,9 @@ open class Pipeline {
     public var viewports = [MTLViewport]()
 
     public var resizeNodes = [CallVoid]()
-    public var pipeSize = CGSize(width: 1024, height: 1024) //??? CGSize._4K // size of draw surface
-    public var rotateClosure = [String: CallVoid]()
+    public var pipeSize = CGSize(width: 2048, height: 1024)
 
-    public var rotatable = [String: (MTLTexture,PipeNode,Flo)]()
-    private var archive: ArchiveFlo
+    internal var archive: ArchiveFlo
     public var nextFrame: NextFrame
     public var root˚: Flo
     public var touchDraw: TouchDraw
@@ -72,20 +68,13 @@ open class Pipeline {
         layer.contentsGravity = .resizeAspectFill
         layer.bounds = layer.frame
         layer.contentsScale = scale
-
-#if os(visionOS)
         pipeSize = CGSize(width: 2048, height: 2048)
+
+        #if os(visionOS)
         layer.frame = CGRect(x: 0, y: 0, width: pipeSize.width, height: pipeSize.height)
-
-#else
-
-        self.layer.frame = bounds
-        pipeSize = CGSize(width: 2048, height: 2048) //??? CGSize(width: 2048, height: 2048)
-//        switch layer.frame.size.aspect {
-//        case .landscape : pipeSize = CGSize(width: 1920, height: 1080)
-//        default         : pipeSize = CGSize(width: 1080, height: 1920)
-//        }
-#endif
+        #else
+        layer.frame = bounds
+        #endif
 
         let pipe˚ = root˚.bind("pipe")
         pipeSource = PipeNode(self, pipe˚)
@@ -120,9 +109,6 @@ open class Pipeline {
 
         // drawBuf
         self.drawBuf = device.makeBuffer(layer.drawableSize, "drawBuf")
-
-        rotateTextures()
-
         let clipFill = fillClip(in: pipeSize, out: layer.drawableSize)
         let clipNorm = clipFill.normalize()
         self.clipBuf = device.makeBuffer(clipNorm, "clipBuf")
@@ -178,14 +164,14 @@ extension Pipeline {
 
         let rp = MTLRenderPassDescriptor()
         rp.colorAttachments[0].texture = drawable.texture
-        rp.colorAttachments[0].loadAction = .dontCare
+        rp.colorAttachments[0].loadAction = .clear
         rp.colorAttachments[0].storeAction = .store
         rp.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0)
 
         rp.depthAttachment.texture = depthTex
-        rp.depthAttachment.loadAction = .dontCare
-        rp.depthAttachment.storeAction = .dontCare
-        rp.depthAttachment.clearDepth = 1
+        rp.depthAttachment.loadAction = .clear
+        rp.depthAttachment.storeAction = .store
+        rp.depthAttachment.clearDepth = 0.0 //.... was 1
         return rp
     }
 
@@ -210,209 +196,4 @@ extension Pipeline {
     }
 }
 
-extension Pipeline {
 
-    /// rotate textures to fit landscape/portrait aspect
-    /// when user loads archive from other orientation
-    public func alignNameTex(_ done: CallVoid? = nil) {
-        nextFrame.addBetweenFrame {
-            Reset.reset()
-        }
-        for (name,tex) in archive.nameTex {
-            guard let tex else { continue }
-
-            if let newTex = rotateTexture(tex) {
-
-                archive.nameTex[name] = newTex
-                if let (_,node,flo) = rotatable[name] {
-                    rotatable[name] = (newTex,node,flo)
-                    flo.texture = aspectFill(newTex) ?? newTex
-                    flo.activate()
-                }
-            } else if let (_,node,flo) = rotatable[name] {
-                rotatable[name] = (tex,node,flo)
-                flo.texture = aspectFill(tex) ?? tex
-                flo.activate()
-            } else {
-                DebugLog { P("\(name) not found in rotatable") }
-            }
-        }
-        activateRotateClosures(done)
-    }
-
-    public func activateRotateClosures(_ done: CallVoid?) {
-        for closure in rotateClosure.values {
-            closure()
-        }
-        DebugLog{ P("🚰 Pipeline:: \(#function)") }
-        done?()
-    }
-
-    /// adjust textures between landscape/portrait
-    /// usually when user rotates iphone
-    public func rotateTextures(_ done: CallVoid? = nil) {
-
-        guard layer.aspect != pipeSize.aspect else { return }
-        pipeSize = pipeSize.withAspect(layer.aspect)
-
-        for (name,(tex,node,flo)) in rotatable {
-            if let newTex = rotateTexture(tex) {
-                rotatable[name] = (newTex,node,flo)
-                flo.texture = newTex
-                flo.reactivate()
-            }
-        }
-        activateRotateClosures(done)
-    }
-
-    @inline(__always)
-    func rotateTexture(_ inTex: MTLTexture) -> MTLTexture? {
-
-        guard inTex.aspect != layer.aspect else { return nil }
-        guard let outTex = makeRotateTex() else { return nil }
-
-        if rotateFunc == nil {
-            rotateFunc = library?.makeFunction(name: "rotateTexture")
-        }
-        guard let rotateFunc,
-              let pipeState = try? device.makeComputePipelineState(function: rotateFunc)
-        else {  PrintLog("Pipeline::\(#function) failed rotateFunc") ; return nil }
-
-        // Set up a command buffer and encoder
-        let commandBuf = commandQueue.makeCommandBuffer()!
-        let computeEnc = commandBuf.makeComputeCommandEncoder()!
-        computeEnc.setComputePipelineState(pipeState)
-
-        // Bind in/out textures, with aspect buffer
-        computeEnc.setTexture(inTex, index: 0)
-        computeEnc.setTexture(outTex, index: 1)
-        if let aspectBuf {
-            computeEnc.setBuffer(aspectBuf, offset: 0, index: 0)
-        }
-
-        // Dispatch thread groups
-        let threadGroupSize = MTLSize(width: 16, height: 16, depth: 1)
-        let threadGroups = MTLSize(width  : (inTex.width  + 15) / 16,
-                                   height : (inTex.height + 15) / 16,
-                                   depth  : 1)
-        computeEnc.dispatchThreadgroups(threadGroups, threadsPerThreadgroup: threadGroupSize)
-
-        // End encoding and commit the command buffer
-        computeEnc.endEncoding()
-        commandBuf.commit()
-        commandBuf.waitUntilCompleted()
-        return outTex
-
-        func makeRotateTex() -> MTLTexture? {
-            let size = CGSize(width: inTex.height, height: inTex.width)
-            if let tex = makeComputeTex(size: size,
-                                        label: inTex.label,
-                                        format: inTex.pixelFormat) {
-                NoDebugLog { P("🧭 makeRotateTex for: \(tex.label ?? "??")") }
-                return tex
-            }
-            return nil
-        }
-    }
-    func aspectFill(_ sourceTex: MTLTexture) -> MTLTexture? {
-
-        if CGFloat(sourceTex.width)   == pipeSize.width,
-           CGFloat(sourceTex.height) == pipeSize.height {
-            return sourceTex
-        }
-
-        // Create destination texture with pipeline size
-        guard let destTex = makeComputeTex(
-            size: pipeSize,
-            label: sourceTex.label ?? "resized",
-            format: sourceTex.pixelFormat) else { return nil }
-
-        // Get source data
-        guard let sourceData = sourceTex.rawData() else { return nil }
-
-        let srcWidth = sourceTex.width
-        let srcHeight = sourceTex.height
-        let dstWidth = Int(pipeSize.width)
-        let dstHeight = Int(pipeSize.height)
-
-        // Calculate aspect fill scale
-        let scaleX = CGFloat(dstWidth) / CGFloat(srcWidth)
-        let scaleY = CGFloat(dstHeight) / CGFloat(srcHeight)
-        let scale = max(scaleX, scaleY)
-
-        // Calculate sample region
-        let sampleWidth = CGFloat(dstWidth) / scale
-        let sampleHeight = CGFloat(dstHeight) / scale
-        let offsetX = (CGFloat(srcWidth) - sampleWidth) / 2.0
-        let offsetY = (CGFloat(srcHeight) - sampleHeight) / 2.0
-
-        // Create destination buffer
-        let dstBytesPerRow = dstWidth * 4
-        var dstData = [UInt8](repeating: 0, count: dstWidth * dstHeight * 4)
-
-        sourceData.withUnsafeBytes { srcPtr in
-            let src32Ptr = srcPtr.bindMemory(to: UInt32.self)
-            dstData.withUnsafeMutableBytes { dstPtr in
-                let dst32Ptr = dstPtr.bindMemory(to: UInt32.self)
-
-                for dy in 0 ..< dstHeight {
-                    for dx in 0 ..< dstWidth {
-                        let srcX = CGFloat(dx) * sampleWidth / CGFloat(dstWidth) + offsetX
-                        let srcY = CGFloat(dy) * sampleHeight / CGFloat(dstHeight) + offsetY
-
-                        let sx = Int(srcX)
-                        let sy = Int(srcY)
-
-                        if sx >= 0 && sx < srcWidth && sy >= 0 && sy < srcHeight {
-                            let srcIndex = sy * srcWidth + sx
-                            let dstIndex = dy * dstWidth + dx
-                            dst32Ptr[dstIndex] = src32Ptr[srcIndex]
-                        }
-                    }
-                }
-            }
-        }
-
-        // Copy to texture
-        let region = MTLRegion(origin: MTLOrigin(x: 0, y: 0, z: 0),
-                               size: MTLSize(width: dstWidth, height: dstHeight, depth: 1))
-        destTex.replace(region: region, mipmapLevel: 0, withBytes: dstData, bytesPerRow: dstBytesPerRow)
-
-        return destTex
-    }
-  
-    /// make new texture, or remake an old one if size changes.
-    public func paletteTexture(_ node: PipeNode,
-                              _ flo: Flo?,
-                              rotate: Bool = true) {
-
-        guard let flo else { return }
-        let size = CGSize(width: 256, height: 1)
-
-        let path = flo.path(3)
-        if let tex = makeComputeTex(size: size,
-                                    label: path,
-                                    format: MuComputePixelFormat) {
-            flo.texture = tex
-            flo.reactivate()
-            rotatable[path] = (tex, node, flo)
-            DebugLog { P("🧭 paletteTexture\(size.digits(0)) \(path)") }
-        }
-    }
-
-
-    private func makeComputeTex(size: CGSize,
-                                label: String?,
-                                format: MTLPixelFormat? = nil) -> MTLTexture? {
-        let td = MTLTextureDescriptor()
-        td.pixelFormat = MuComputePixelFormat
-        td.width = Int(size.width)
-        td.height = Int(size.height)
-        td.usage = [.shaderRead, .shaderWrite]
-        let tex = device.makeTexture(descriptor: td)
-        if let label {
-            tex?.label = label
-        }
-        return tex
-    }
-}

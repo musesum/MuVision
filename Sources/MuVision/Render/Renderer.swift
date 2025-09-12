@@ -173,20 +173,20 @@ extension Renderer {
 
         func makeRenderPass(drawable: LayerRenderer.Drawable) -> MTLRenderPassDescriptor { //???? duplicate?
 
-            let renderPass = MTLRenderPassDescriptor()
-            renderPass.colorAttachments[0].texture = drawable.colorTextures[0]
-            renderPass.colorAttachments[0].loadAction = .clear
-            renderPass.colorAttachments[0].storeAction = .store
-            renderPass.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0)
+            let rp = MTLRenderPassDescriptor()
+            rp.colorAttachments[0].texture = drawable.colorTextures[0]
+            rp.colorAttachments[0].loadAction = .clear
+            rp.colorAttachments[0].storeAction = .store
+            rp.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0)
 
-            renderPass.depthAttachment.texture = drawable.depthTextures[0]
-            renderPass.depthAttachment.loadAction = .clear
-            renderPass.depthAttachment.storeAction = .store
-            renderPass.depthAttachment.clearDepth = 0.0
+            rp.depthAttachment.texture = drawable.depthTextures[0]
+            rp.depthAttachment.loadAction = .clear
+            rp.depthAttachment.storeAction = .store
+            rp.depthAttachment.clearDepth = 0.0
 
-            renderPass.rasterizationRateMap = drawable.rasterizationRateMaps.first
-            renderPass.renderTargetArrayLength = drawable.views.count
-            return renderPass
+            rp.rasterizationRateMap = drawable.rasterizationRateMaps.first
+            rp.renderTargetArrayLength = drawable.views.count
+            return rp
         }
 
         func setViewMappings(_ renderEnc : MTLRenderCommandEncoder) {

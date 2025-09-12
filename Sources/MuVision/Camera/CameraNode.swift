@@ -48,7 +48,7 @@ public class CameraNode: ComputeNode {
 
         guard camera.hasNewTex else { return }
         guard let camTex = camera.cameraTex else { return }
-        computeTexture(outTex˚, rotate: false)
+        computeTexture(outTex˚)
         computeEnc.setTexture(camTex, index: 0)
         computeEnc.setTexture(outTex˚, index: 1)
         super.computeShader(computeEnc)

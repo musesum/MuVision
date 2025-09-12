@@ -32,7 +32,7 @@ public class CubeNode: RenderNode, @unchecked Sendable {
 
         self.cubeMesh = CubeMesh(pipeline.renderState)
         self.viaIndex = true
-        self.cubeSize = ._4K
+        self.cubeSize = CGSize(width: 2048, height: 2048)
         super.init(pipeline, pipeFlo˚)
         
         inTex˚    = pipeFlo˚.superBindPath("in")
@@ -47,7 +47,6 @@ public class CubeNode: RenderNode, @unchecked Sendable {
                         vertex: "cubeVertex",
                         fragment: "cubeIndexFragment")
         renderPipelineState = makeRenderState(cubeMesh.mtlVD)
-        pipeline.rotateClosure["cudex˚"] = { self.makeCube() }
     }
 
     override open func makeResources() {
@@ -79,7 +78,6 @@ public class CubeNode: RenderNode, @unchecked Sendable {
         cudex˚?.reactivate()
     }
 
- 
     // for both metal and visionOS reflection
     override public func updateUniforms() {
         guard let eyebuf = cubeMesh.eyeBuf else { return }

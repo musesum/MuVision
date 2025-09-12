@@ -32,7 +32,7 @@ public class BoxNode: CubeNode, @unchecked Sendable { // box
     override public func updateUniforms() {
         super.updateUniforms()
         boxFaces(to: queues)
-        TimeLog("BoxNode::"+#function, interval: 4) { P("👁️⬜︎ boxNode") }
+        TimeLog("BoxNode::"+#function, interval: 4) { P("⬜︎ boxNode") }
     }
 
 

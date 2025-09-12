@@ -10,12 +10,12 @@ public class CubeModel: MeshModel<Float> {
 
         let r = Float(10)
         vertices = [ // each 4 elements is 1 VertexCube element
-            -r,+r,+r, 1,   +r,+r,+r, 1,  +r,+r,-r, 1,  -r,+r,-r, 1, // +Y
-             -r,-r,-r, 1,   +r,-r,-r, 1,  +r,-r,+r, 1,  -r,-r,+r, 1, // -Y
-             -r,-r,+r, 1,   +r,-r,+r, 1,  +r,+r,+r, 1,  -r,+r,+r, 1, // +Z
-             +r,-r,-r, 1,   -r,-r,-r, 1,  -r,+r,-r, 1,  +r,+r,-r, 1, // -Z
-             -r,-r,-r, 1,   -r,-r,+r, 1,  -r,+r,+r, 1,  -r,+r,-r, 1, // -X
-             +r,-r,+r, 1,   +r,-r,-r, 1,  +r,+r,-r, 1,  +r,+r,+r, 1, // +X
+        /* +Y */  -r,+r,+r,1, +r,+r,+r,1, +r,+r,-r,1, -r,+r,-r,1,
+        /* -Y */  -r,-r,-r,1, +r,-r,-r,1, +r,-r,+r,1, -r,-r,+r,1,
+        /* +Z */  -r,-r,+r,1, +r,-r,+r,1, +r,+r,+r,1, -r,+r,+r,1,
+        /* -Z */  +r,-r,-r,1, -r,-r,-r,1, -r,+r,-r,1, +r,+r,-r,1,
+        /* -X */  -r,-r,-r,1, -r,-r,+r,1, -r,+r,+r,1, -r,+r,-r,1,
+        /* +X */  +r,-r,+r,1, +r,-r,-r,1, +r,+r,-r,1, +r,+r,+r,1,
         ]
         indices =  [
             0,   2,  3,   2,  0,  1,
