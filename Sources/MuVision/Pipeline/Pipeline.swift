@@ -39,7 +39,7 @@ open class Pipeline {
     public var viewports = [MTLViewport]()
 
     public var resizeNodes = [CallVoid]()
-    public var pipeSize = CGSize._4K // size of draw surface
+    public var pipeSize = CGSize(width: 1024, height: 1024) //??? CGSize._4K // size of draw surface
     public var rotateClosure = [String: CallVoid]()
 
     public var rotatable = [String: (MTLTexture,PipeNode,Flo)]()
@@ -49,13 +49,13 @@ open class Pipeline {
     public var touchDraw: TouchDraw
     public var node: [String: PipeNode] = [:]
 
-    public init(_ root˚: Flo,
-                _ renderState: RenderState,
-                _ archive: ArchiveFlo,
-                _ touchDraw: TouchDraw,
-                _ scale: CGFloat,
-                _ bounds: CGRect,
-                _ nextFrame: NextFrame) {
+    public init(_ root˚       : Flo,
+                _ renderState : RenderState,
+                _ archive     : ArchiveFlo,
+                _ touchDraw   : TouchDraw,
+                _ scale       : CGFloat,
+                _ bounds      : CGRect,
+                _ nextFrame   : NextFrame) {
 
         self.root˚ = root˚
         self.renderState = renderState
@@ -74,15 +74,17 @@ open class Pipeline {
         layer.contentsScale = scale
 
 #if os(visionOS)
+        pipeSize = CGSize(width: 2048, height: 2048)
         layer.frame = CGRect(x: 0, y: 0, width: pipeSize.width, height: pipeSize.height)
-        pipeSize = CGSize._4K
+
 #else
 
         self.layer.frame = bounds
-        switch layer.frame.size.aspect {
-        case .landscape : pipeSize = CGSize(width: 1920, height: 1080)
-        default         : pipeSize = CGSize(width: 1080, height: 1920)
-        }
+        pipeSize = CGSize(width: 2048, height: 2048) //??? CGSize(width: 2048, height: 2048)
+//        switch layer.frame.size.aspect {
+//        case .landscape : pipeSize = CGSize(width: 1920, height: 1080)
+//        default         : pipeSize = CGSize(width: 1080, height: 1920)
+//        }
 #endif
 
         let pipe˚ = root˚.bind("pipe")
@@ -92,13 +94,13 @@ open class Pipeline {
 
     open func makePipeNode(_ childFlo: Flo,
                            _ pipeParent: PipeNode?) {
-        let pipeNode: PipeNode
+        let node: PipeNode
         switch childFlo.name {
-        case "flat" : pipeNode = FlatNode(self, childFlo)
-        case "cube" : pipeNode = CubeNode(self, childFlo)
-        default     : pipeNode = PipeNode(self, childFlo)
+        case "flat" : node = FlatNode(self, childFlo)
+        case "cube" : node = CubeNode(self, childFlo)
+        default     : node = PipeNode(self, childFlo)
         }
-        pipeParent?.pipeChildren.append(pipeNode)
+        pipeParent?.pipeChildren.append(node)
     }
 
     public func resizeFrame(_ frame    : CGRect,
@@ -131,10 +133,6 @@ open class Pipeline {
             resizeNode()
         }
     }
-}
-
-extension Pipeline {
-
     public func renderFrame()  {
 
         if !pipeRunning { return }
@@ -156,21 +154,27 @@ extension Pipeline {
             computeEnc.endEncoding()
         }
         // render cycle
-        if let re = commandBuf.makeRenderCommandEncoder(descriptor: renderPassDescriptor(drawable)) {
+        let rp = renderPassDescriptor(drawable)
+        if let re = commandBuf.makeRenderCommandEncoder(descriptor: rp) {
             pipeSource.runRender(re, &logging)
             re.endEncoding()
         }
-        // finish command
+        // finish
         commandBuf.present(drawable)
         commandBuf.commit()
-        commandBuf.waitUntilCompleted()
 
         logging += "nil"
         ///MuLog.TimeLog(#function, interval: 4) { P("🚰 "+logging) }
     }
+}
+
+extension Pipeline {
+
     public func renderPassDescriptor(_ drawable: CAMetalDrawable) -> MTLRenderPassDescriptor {
 
-        updateDepthTex()
+        depthTex = updateDepthTex(
+            Int(layer.drawableSize.width),
+            Int(layer.drawableSize.height))
 
         let rp = MTLRenderPassDescriptor()
         rp.colorAttachments[0].texture = drawable.texture
@@ -178,30 +182,30 @@ extension Pipeline {
         rp.colorAttachments[0].storeAction = .store
         rp.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0)
 
-        rp.depthAttachment.texture = self.depthTex
+        rp.depthAttachment.texture = depthTex
         rp.depthAttachment.loadAction = .dontCare
         rp.depthAttachment.storeAction = .dontCare
         rp.depthAttachment.clearDepth = 1
         return rp
+    }
 
-        func updateDepthTex()  {
+    public func updateDepthTex(_ width: Int,
+                               _ height: Int) -> MTLTexture? {
 
-            let width  = Int(layer.drawableSize.width)
-            let height = Int(layer.drawableSize.height)
+        if (depthTex == nil ||
+            depthTex.width != width ||
+            depthTex.height != height) {
 
-            if (depthTex == nil ||
-                depthTex.width != width ||
-                depthTex.height != height) {
-
-                let td = MTLTextureDescriptor.texture2DDescriptor(
-                    pixelFormat: .depth32Float,
-                    width:  width,
-                    height: height,
-                    mipmapped: true)
-                td.usage = .renderTarget
-                td.storageMode = .memoryless
-                depthTex = device.makeTexture(descriptor: td)
-            }
+            let td = MTLTextureDescriptor.texture2DDescriptor(
+                pixelFormat: .depth32Float,
+                width:  width,
+                height: height,
+                mipmapped: true)
+            td.usage = .renderTarget
+            td.storageMode = .memoryless
+            return device.makeTexture(descriptor: td)
+        } else {
+            return depthTex
         }
     }
 }

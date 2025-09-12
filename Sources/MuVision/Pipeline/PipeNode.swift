@@ -58,28 +58,23 @@ open class PipeNode: Equatable {
             .forEach { $0.runRender(renderEnc, &logging) }
     }
 #if os(visionOS)
-    open func renderShader(
-        _ renderEnc     : MTLRenderCommandEncoder,
-        _ renderState   : RenderState,
-        _ drawable      : LayerRenderer.Drawable,
-        _ deviceAnchor  : DeviceAnchor?) {}
+    open func updateUniforms(_ drawable : LayerRenderer.Drawable,
+                             _ anchor   : DeviceAnchor?) {}
 
     public func runRender(
-        _ renderEnc     : MTLRenderCommandEncoder,
-        _ drawable      :  LayerRenderer.Drawable,
-        _ deviceAnchor  : DeviceAnchor?,
-        _ logging       : inout String) {
+        _ renderEnc : MTLRenderCommandEncoder,
+        _ drawable  : LayerRenderer.Drawable,
+        _ anchor    : DeviceAnchor?,
+        _ logging   : inout String) {
 
         if let renderNode = self as? RenderNode {
             logging += renderNode.pipeName + " -> "
-            renderNode.renderShader(renderEnc,
-                                    pipeline.renderState,
-                                    drawable,
-                                    deviceAnchor)
+            renderNode.updateUniforms(drawable, anchor)
+            renderNode.renderShader(renderEnc, pipeline.renderState)
         }
         pipeChildren
             .filter { $0.pipeFlo˚.val("on") ?? 0 > 0 }
-            .forEach { $0.runRender(renderEnc, drawable, deviceAnchor, &logging) }
+            .forEach { $0.runRender(renderEnc, drawable, anchor, &logging) }
     }
 #endif
 

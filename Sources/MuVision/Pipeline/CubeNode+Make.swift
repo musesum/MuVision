@@ -7,7 +7,6 @@ import Metal
 import UIKit
 #endif
 
-
 extension CubeNode { // Make
 
     func makeCube() {
@@ -31,7 +30,6 @@ extension CubeNode { // Make
         }
     }
 
-    @inline(__always)
     func makeIndexCube(_ size: CGSize,
                        _ label: String) -> MTLTexture? {
 
