@@ -61,7 +61,7 @@ public class CubeNode: RenderNode, @unchecked Sendable {
 
             cubeMesh.eyeBuf?.setUniformBuf(renderEnc)
             if let mixcube˚ {
-            #if os(visionOS) //....
+            #if os(visionOS)
             mixcube˚.setNameNums([("x", 1)], .fire) //....
             #endif
             mixcube˚.updateMtlBuffer()
@@ -85,7 +85,7 @@ public class CubeNode: RenderNode, @unchecked Sendable {
             let orientation = await Motion.shared.updateDeviceOrientation()
 
             let projection = project4x4(drawableSize)
-            TimeLog("CubeNode::"+#function, interval: 4) {
+            NoTimeLog("CubeNode::"+#function, interval: 4) {
                 P("👁️ cubeNode") //\(orientation.digits(1))")
                 //print("\t👁️c projection  ", projection.digits)
             }
