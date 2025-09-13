@@ -28,7 +28,6 @@ public class ColorNode: ComputeNode {
         plane˚    = pipeNode˚.superBindPath("plane")
         height˚   = pipeNode˚.superBindPath("height")
         shader    = Shader(pipeline, file: "pipe.color", kernel: "colorKernel")
-        makeResources()
     }
 
     public override func makeResources() {

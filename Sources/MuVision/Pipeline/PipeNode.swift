@@ -24,7 +24,7 @@ open class PipeNode: Equatable {
         self.pipeName = pipeFlo˚.name
         self.pipeline = pipeline
         self.pipeFlo˚ = pipeFlo˚
-        pipeline.node[pipeName] = self
+
         pipeFlo˚.children
             .filter { $0.val("on") != nil }
             .forEach { pipeline.makePipeNode($0, self) }
@@ -34,9 +34,9 @@ open class PipeNode: Equatable {
                            _ logging: inout String) {
         
         if let node = self as? ComputeNode {
-
             logging += node.pipeName + " -> "
-            updateFirstTime()
+            node.updateFirstTime()
+            node.updateUniforms()
             node.computeShader(computeEnc)
         }
         pipeChildren
@@ -44,34 +44,33 @@ open class PipeNode: Equatable {
             .forEach { $0.runCompute(computeEnc, &logging) }
     }
 
-    public func runRender(
-        _ renderEnc: MTLRenderCommandEncoder,
-        _ logging: inout String) {
+    public func runRender(_ renderEnc: MTLRenderCommandEncoder,
+                          _ logging: inout String) {
 
             if let node = self as? RenderNode {
-            logging += node.pipeName + " -> "
-            updateFirstTime()
-            node.renderShader(renderEnc, pipeline.renderState)
-        }
+                logging += node.pipeName + " -> "
+                updateFirstTime()
+                node.updateUniforms()
+                node.renderShader(renderEnc, pipeline.renderState)
+            }
         pipeChildren
             .filter { $0.pipeFlo˚.val("on") ?? 0 > 0 }
             .forEach { $0.runRender(renderEnc, &logging) }
     }
 #if os(visionOS)
-    open func updateUniforms(_ drawable : LayerRenderer.Drawable,
-                             _ anchor   : DeviceAnchor?) {}
+    open func updateUniforms(_ : LayerRenderer.Drawable,
+                             _ : DeviceAnchor?) {}
 
-    public func runRender(
-        _ renderEnc : MTLRenderCommandEncoder,
-        _ drawable  : LayerRenderer.Drawable,
-        _ anchor    : DeviceAnchor?,
-        _ logging   : inout String) {
+    public func runRender(_ renderEnc : MTLRenderCommandEncoder,
+                          _ drawable  : LayerRenderer.Drawable,
+                          _ anchor    : DeviceAnchor?,
+                          _ logging   : inout String) {
 
-        if let renderNode = self as? RenderNode {
+        if let node = self as? RenderNode {
+            logging += node.pipeName + " -> "
             updateFirstTime()
-            logging += renderNode.pipeName + " -> "
-            renderNode.updateUniforms(drawable, anchor)
-            renderNode.renderShader(renderEnc, pipeline.renderState)
+            node.updateUniforms(drawable, anchor)
+            node.renderShader(renderEnc, pipeline.renderState)
         }
         pipeChildren
             .filter { $0.pipeFlo˚.val("on") ?? 0 > 0 }
@@ -88,13 +87,12 @@ open class PipeNode: Equatable {
     open func makePipeline() {}
     open func renderShader(_: MTLRenderCommandEncoder, _: RenderState) {}
 
-    func updateFirstTime() {
+    private func updateFirstTime() {
         if firstTime {
             firstTime = false
             makePipeline()
             makeResources()
         }
-        updateUniforms()
     }
 
 }

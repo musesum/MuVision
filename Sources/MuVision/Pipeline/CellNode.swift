@@ -17,16 +17,16 @@ public class CellNode: ComputeNode {
     private var frame = 0
 
     override public init(_ pipeline : Pipeline,
-                         _ pipeNode˚ : Flo) {
+                         _ pipeFlo˚ : Flo) {
 
-        super.init(pipeline, pipeNode˚)
-        fakeTex˚ = pipeNode˚.superBindPath("fake")
-        realTex˚ = pipeNode˚.superBindPath("real")
-        outTex˚  = pipeNode˚.superBindPath("out")
-        version˚ = pipeNode˚.superBindPath("version")
-        loops˚   = pipeNode˚.superBindPath("loops")
+        super.init(pipeline, pipeFlo˚)
+        fakeTex˚ = pipeFlo˚.superBindPath("fake")
+        realTex˚ = pipeFlo˚.superBindPath("real")
+        outTex˚  = pipeFlo˚.superBindPath("out")
+        version˚ = pipeFlo˚.superBindPath("version")
+        loops˚   = pipeFlo˚.superBindPath("loops")
 
-        switch pipeNode˚.name {
+        switch pipeFlo˚.name {
         case "slide": shader = Shader(pipeline, file: "cell.rule.slide", kernel: "slideKernel")
         case "zha"  : shader = Shader(pipeline, file: "cell.rule.zha",   kernel: "zhaKernel" )
         case "ave"  : shader = Shader(pipeline, file: "cell.rule.ave",   kernel: "aveKernel" )
@@ -34,15 +34,15 @@ public class CellNode: ComputeNode {
         case "melt" : shader = Shader(pipeline, file: "cell.rule.melt",  kernel: "meltKernel")
         case "tunl" : shader = Shader(pipeline, file: "cell.rule.tunl",  kernel: "tunlKernel")
         case "fred" : shader = Shader(pipeline, file: "cell.rule.fred",  kernel: "fredKernel")
-        default:  PrintLog("⁉️ CellNode:: unknown shader named: \(pipeNode˚.name)")
+        default:  PrintLog("⁉️ CellNode:: unknown shader named: \(pipeFlo˚.name)")
         }
-        makeResources()
+        loops˚?.addClosure { flo, _ in
+            self.loops = flo.int
+        }
+        loops˚?.reactivate()
     }
 
     public override func makeResources() {
-
-        loops˚?.addClosure { flo, _ in self.loops = flo.int }
-        loops˚?.reactivate()
 
         computeTexture(outTex˚)
         super.makeResources()

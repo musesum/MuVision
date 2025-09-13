@@ -22,7 +22,6 @@ open class TileNode: ComputeNode {
         repeat˚ = pipeNode˚.superBindPath("repeat")
         mirror˚ = pipeNode˚.superBindPath("mirror")
         shader  = Shader(pipeline, file: "kernel.tile", kernel: "tileKernel")
-        makeResources()
     }
 
     public override func makeResources() {

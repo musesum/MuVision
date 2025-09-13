@@ -20,7 +20,6 @@ public class CubeNode: RenderNode, @unchecked Sendable {
     internal let viaIndex   : Bool
     internal var cubeMesh   : CubeMesh!
     internal var cubeIndex  : CubemapIndex?
-    internal var cubeSize   : CGSize
     internal var inTex˚     : Flo?
     internal var cudex˚     : Flo?
     internal var mixcube˚   : Flo?
@@ -32,7 +31,6 @@ public class CubeNode: RenderNode, @unchecked Sendable {
 
         self.cubeMesh = CubeMesh(pipeline.renderState)
         self.viaIndex = true
-        self.cubeSize = CGSize(width: 2048, height: 2048)
         super.init(pipeline, pipeFlo˚)
         
         inTex˚    = pipeFlo˚.superBindPath("in")

@@ -31,7 +31,6 @@ public class CameraNode: ComputeNode {
         front˚?.addClosure { flo,_ in
             camera.facing(flo.bool)
         }
-        makeResources()
     }
 
     override open func makeResources() {

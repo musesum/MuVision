@@ -43,7 +43,6 @@ open class Pipeline {
     public var nextFrame: NextFrame
     public var root˚: Flo
     public var touchDraw: TouchDraw
-    public var node: [String: PipeNode] = [:]
 
     public init(_ root˚       : Flo,
                 _ renderState : RenderState,
@@ -69,7 +68,6 @@ open class Pipeline {
         layer.bounds = layer.frame
         layer.contentsScale = scale
         pipeSize = CGSize(width: 2048, height: 2048)
-
         #if os(visionOS)
         layer.frame = CGRect(x: 0, y: 0, width: pipeSize.width, height: pipeSize.height)
         #else
@@ -135,9 +133,9 @@ open class Pipeline {
         guard let drawable = layer.nextDrawable() else { return }
 
         // compute cycle
-        if let computeEnc = commandBuf.makeComputeCommandEncoder() {
-            pipeSource.runCompute(computeEnc, &logging)
-            computeEnc.endEncoding()
+        if let ce = commandBuf.makeComputeCommandEncoder() {
+            pipeSource.runCompute(ce, &logging)
+            ce.endEncoding()
         }
         // render cycle
         let rp = renderPassDescriptor(drawable)
@@ -148,6 +146,7 @@ open class Pipeline {
         // finish
         commandBuf.present(drawable)
         commandBuf.commit()
+        //commandBuf.waitUntilCompleted()
 
         logging += "nil"
         ///MuLog.TimeLog(#function, interval: 4) { P("🚰 "+logging) }
@@ -161,17 +160,23 @@ extension Pipeline {
         depthTex = updateDepthTex(
             Int(layer.drawableSize.width),
             Int(layer.drawableSize.height))
-
         let rp = MTLRenderPassDescriptor()
         rp.colorAttachments[0].texture = drawable.texture
+        rp.depthAttachment.texture = depthTex
+        rp.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0)
+        #if false //..... immersive?
         rp.colorAttachments[0].loadAction = .clear
         rp.colorAttachments[0].storeAction = .store
-        rp.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0)
-
-        rp.depthAttachment.texture = depthTex
         rp.depthAttachment.loadAction = .clear
         rp.depthAttachment.storeAction = .store
-        rp.depthAttachment.clearDepth = 0.0 //.... was 1
+        rp.depthAttachment.clearDepth = 1.0 //.... was 1
+        #else
+        rp.colorAttachments[0].loadAction = .dontCare
+        rp.colorAttachments[0].storeAction = .store
+        rp.depthAttachment.loadAction = .dontCare
+        rp.depthAttachment.storeAction = .dontCare
+        rp.depthAttachment.clearDepth = 1
+        #endif
         return rp
     }
 

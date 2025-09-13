@@ -20,6 +20,7 @@ public class FlatNode: RenderNode {
 
         super.init(pipeline, pipeNode˚)
         inTex˚ = pipeNode˚.superBindPath("in")
+        pipeline.resizeNodes.append(makeResources)
     }
 
     override public func makePipeline() {
@@ -46,7 +47,6 @@ public class FlatNode: RenderNode {
         catch {
             PrintLog("⁉️ FlatmapNode::\(#function) \(error)")
         }
-        pipeline.resizeNodes.append(makeResources)
     }
 
     override public func makeResources() {

@@ -5,7 +5,7 @@ import MuFlo
 
 open class ComputeNode: PipeNode {
 
-    var mtlCompute: MTLComputePipelineState? // _cellRulePipeline;
+    var mtlCompute: MTLComputePipelineState?
     var threadSize = MTLSize()
     var threadCount = MTLSize()
 
