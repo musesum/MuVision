@@ -1,4 +1,3 @@
-//  MetPipeline.swift
 //  created by musesum on 3/13/23.
 
 import Collections
@@ -23,6 +22,10 @@ open class Pipeline {
     public var library: MTLLibrary!
     public var pipeSource: PipeNode?
     public var layer = CAMetalLayer()
+
+
+//    internal var rotateClosure = [String: CallVoid]()
+    internal var rotatable = [String: (MTLTexture,PipeNode,Flo)]()
 
     private var aspect = Aspect.square
     private var _aspectBuf: MTLBuffer?

@@ -1,30 +1,27 @@
-
 import SwiftUI
 import MuFlo
 
 #if os(visionOS)
 
-/// Maintains app-wide immersion state.
+/// Maintains app-wide immersion state with three modes.
 @Observable
 open class ImmersionModel {
-    public var goImmersive = false
-    public var isImmersive = false
+
+    public enum State: String, CaseIterable, Identifiable {
+        case windowed, mixed, full
+        public var id: String { rawValue }
+    }
+
+    public var state: State = .windowed
+    public var style: ImmersionStyle = .mixed
+    public var isImmersed = false
+
     public init() {}
 
-    func toggleImmersion() {
-        goImmersive.toggle()
-    }
     public func changed(_ result: OpenImmersiveSpaceAction.Result) {
         switch result {
-
-        case .opened:        isImmersive = true
-
-        case .userCancelled: fallthrough
-
-        case .error:         fallthrough
-
-        @unknown default:    isImmersive = false
-                             goImmersive = false
+        case .opened:   isImmersed = true
+        default:        isImmersed = false; state = .windowed
         }
     }
 }

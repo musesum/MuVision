@@ -45,9 +45,9 @@ public struct ColorRender {
         render(size: 256)
     }
 
-    public static func fade(from: ColorRender, to: ColorRender, _ factor: Float) -> [Rgb] {
+    public static func fade(from: ColorRender, to: ColorRender, _ factor: Float) -> Rgbs {
 
-        var ret = [Rgb]()
+        var rgbs = Rgbs()
         let count = min(from.rendered.count, to.rendered.count)
         let factor01 = factor < 0 ? 0 : factor > 1 ? 1 : factor
          let invFact = 1-factor01
@@ -58,9 +58,9 @@ public struct ColorRender {
                           g: fromi.g * invFact + toi.g * factor01,
                           b: fromi.b * invFact + toi.b * factor01,
                           a: fromi.a * invFact + toi.a * factor01)
-            ret.append(rgb)
+            rgbs.append(rgb)
         }
-        return ret
+        return rgbs
     }
 
    

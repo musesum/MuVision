@@ -65,7 +65,7 @@ public class ColorFlo {
             }
             // convert [Rgb] to [Uint32]
             for i in 0 ..< rgbs.count {
-                let rgb = rgbs[i]
+                let rgb = rgbs[i] //..... crash i==139
                 let b8 = UInt32(rgb.b * 255.0)
                 let g8 = UInt32(rgb.g * 255.0) << 8
                 let r8 = UInt32(rgb.r * 255.0) << 16

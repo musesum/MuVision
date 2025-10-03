@@ -88,6 +88,7 @@ extension PipeNode { // make
                                     format: MuHeightPixelFormat) {
             flo.texture = tex
             flo.reactivate()
+            pipeline.rotatable[path] = (tex, self, flo)
             DebugLog { P("🧭 heightTexture\(size.digits(0)) \(path)") }
         }
     }
@@ -106,6 +107,7 @@ extension PipeNode { // make
                                     format: MuComputePixelFormat) {
             flo.texture = tex
             flo.reactivate()
+            pipeline.rotatable[path] = (tex, self, flo)
             DebugLog { P("🧭 updateTexture\(size.digits(0)) \(path)") }
         }
     }

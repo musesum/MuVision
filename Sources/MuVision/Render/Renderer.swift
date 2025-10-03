@@ -72,7 +72,7 @@ open class Renderer {
         worldTracking = WorldTrackingProvider()
     }
 
-    public func renderLoop(_ id: Int) async throws {
+    public func renderLoop() async throws {
 
         // Setup ARKit Session
         let authorizations: [ARKitSession.AuthorizationType] = WorldTrackingProvider.requiredAuthorizations
@@ -87,7 +87,7 @@ open class Renderer {
             case .invalidated:
                 arSession.stop()
                 renderState = .invalidated
-                PrintLog("🔄 RenderLoop .invalidated return id: \(id)")
+                PrintLog("🔄 RenderLoop .invalidated")
                 return
             case .paused:
                 layerRenderer.waitUntilRunning()
@@ -103,7 +103,7 @@ open class Renderer {
                 case .running     : msg = ".running"
                 default: break
                 }
-                PrintLog("🔄 RenderLoop \(msg) id: \(id)")
+                PrintLog("🔄 RenderLoop \(msg)")
             }
         }
     }
@@ -161,6 +161,10 @@ extension Renderer {
 
             setViewMappings(renderEnc)
 
+            renderEnc.setDepthStencilState(depthState)
+            renderEnc.setCullMode(.none)
+            renderEnc.setFrontFacing(.clockwise)
+
             pipeSource.runRender(renderEnc, drawable, deviceAnchor, &logging)
             renderEnc.endEncoding()
 
@@ -177,6 +181,7 @@ extension Renderer {
             rp.colorAttachments[0].texture = drawable.colorTextures[0]
             rp.colorAttachments[0].loadAction = .clear
             rp.colorAttachments[0].storeAction = .store
+            // Passthrough: clear to transparent for passthrough
             rp.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0)
 
             rp.depthAttachment.texture = drawable.depthTextures[0]

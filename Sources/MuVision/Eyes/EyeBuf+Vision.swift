@@ -5,16 +5,16 @@ import Spatial
 import CompositorServices
 
 extension EyeBuf {
-    /// Update projection and rotation
-    @available(visionOS 2.0, *)
-    public func updateEyeUniforms(_ drawable: LayerRenderer.Drawable,
-                                  _ deviceAnchor: DeviceAnchor?,
-                                  _ cameraPos: vector_float4,
-                                  _ label: String) {
+    /// Update projection and rotation for visionOS immersive space
+    public func updateVisionEyeUniforms(
+        _ drawable: LayerRenderer.Drawable,
+        _ anchor: DeviceAnchor?,
+        _ zoom: Float,
+        _ label: String) {
 
         nextTripleUniformBuffer()
 
-        let anchorOrigin = deviceAnchor?.originFromAnchorTransform ?? matrix_identity_float4x4
+        let anchorOrigin = anchor?.originFromAnchorTransform ?? matrix_identity_float4x4
 
         eyes[0].eye.0 = uniformForEyeIndex(0, label)
         if drawable.views.count > 1 {
@@ -61,22 +61,40 @@ extension EyeBuf {
             var viewModel = orientation
 
             if infinitelyFar {
+                // Skybox/stars: remove translation so both eyes see same background
                 viewModel = orientation
                 viewModel.columns.3 = simd_make_float4(0, 0, 0, 1)
             } else {
-                viewModel *= updateRotation() //??
+                // Place and size the model relative to the camera
+                viewModel *= modelTransform()
             }
             let uniformEye = UniformEye(projection, viewModel)
 
             return uniformEye
         }
-        /// rotate model
-        func updateRotation() -> matrix_float4x4 {
-            //?? rotation += 0.01
-            return cameraPos.translate * SIMD3<Float>(1, 1, 0).rotate(radians: rotation)
+
+        /// Renamed from updateRotation
+        func modelTransform() -> matrix_float4x4 {
+            let distance: Float = 4.0 - zoom * 3       // how far in front of the user (−Z)
+            let scale: Float = 0.05 + zoom  // size
+            let yOffset: Float = 1.0        // move the content slightly up (+Y)
+
+            let translate = SIMD4<Float>(0, yOffset, -distance, 1).translate
+            let rotateY = SIMD3<Float>(0, 1, 0).rotate(radians: rotation)
+            let scaleM = scale4x4(scale)
+
+            // translate (place it), then rotate, then scale about local origin.
+            return translate * rotateY * scaleM
+        }
+
+        /// Standard uniform scaling matrix (avoid using Float.scale in Simd+ext)
+        func scale4x4(_ s: Float) -> matrix_float4x4 {
+            let X = vector_float4(s, 0, 0, 0)
+            let Y = vector_float4(0, s, 0, 0)
+            let Z = vector_float4(0, 0, s, 0)
+            let W = vector_float4(0, 0, 0, 1)
+            return matrix_float4x4(columns: (X, Y, Z, W))
         }
     }
 }
 #endif
-
-

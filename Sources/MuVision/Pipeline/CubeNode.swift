@@ -25,6 +25,8 @@ public class CubeNode: RenderNode, @unchecked Sendable {
     internal var mixcube˚   : Flo?
     internal var displace˚  : Flo? // unused
     internal var lastAspect : Aspect?
+    internal var zoom˚      : Flo?
+    internal var zoom       : Float = 0
 
     override public init(_ pipeline : Pipeline,
                          _ pipeFlo˚ : Flo) {
@@ -32,11 +34,14 @@ public class CubeNode: RenderNode, @unchecked Sendable {
         self.cubeMesh = CubeMesh(pipeline.renderState)
         self.viaIndex = true
         super.init(pipeline, pipeFlo˚)
-        
+
         inTex˚    = pipeFlo˚.superBindPath("in")
         cudex˚    = pipeFlo˚.superBindPath("cudex")
         displace˚ = pipeFlo˚.superBindPath("displace")
         mixcube˚  = pipeFlo˚.superBindPath("mixcube")
+        zoom˚     = pipeFlo˚.getRoot().bind("plato.zoom") { f,_ in
+            self.zoom = f.float
+        }
     }
     
     override public func makePipeline() {
@@ -50,7 +55,7 @@ public class CubeNode: RenderNode, @unchecked Sendable {
     override open func makeResources() {
 
         makeCube()
-        cubeMesh.eyeBuf = EyeBuf("CubeEyes", far: false)
+        cubeMesh.eyeBuf = EyeBuf("CubeEyes", pipeline, far: false)
     }
 
     override open func renderShader(
@@ -79,17 +84,10 @@ public class CubeNode: RenderNode, @unchecked Sendable {
     // for both metal and visionOS reflection
     override public func updateUniforms() {
         guard let eyebuf = cubeMesh.eyeBuf else { return }
-        let drawableSize = pipeline.layer.drawableSize
 
         Task {
             let orientation = await Motion.shared.updateDeviceOrientation()
-
-            let projection = project4x4(drawableSize)
-            NoTimeLog("CubeNode::"+#function, interval: 4) {
-                P("👁️ cubeNode") //\(orientation.digits(1))")
-                //print("\t👁️c projection  ", projection.digits)
-            }
-            eyebuf.updateEyeUniforms(projection, orientation)
+            eyebuf.updateMetalEyeUniforms(orientation)
         }
     }
 
@@ -98,9 +96,7 @@ public class CubeNode: RenderNode, @unchecked Sendable {
     /// Update projection and rotation
     override public func updateUniforms(_ drawable : LayerRenderer.Drawable,
                                         _ anchor   : DeviceAnchor?) {
-
-        let cameraPos = vector_float4([0, 0,  -4, 1])
-        cubeMesh.eyeBuf?.updateEyeUniforms(drawable, anchor, cameraPos, "👁️C⃝ube")
+        cubeMesh.eyeBuf?.updateVisionEyeUniforms(drawable, anchor, zoom, "👁️C⃝ube")
     }
 
 #endif

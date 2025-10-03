@@ -20,7 +20,7 @@ public class DrawDot {
 
     private var bufSize = CGSize.zero
     private var drawBuf: UnsafeMutablePointer<UInt32>?
-    private var running: Bool = false
+    private var running: Bool = true //.. 
     private var logging: Bool = false
     private var touchCanvas: TouchCanvas
 
