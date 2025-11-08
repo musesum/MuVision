@@ -174,7 +174,7 @@ public final class CameraSession: NSObject, @unchecked Sendable {
     //// initializes capture input device with media type and device position.
     fileprivate func initCaptureInput() {
 
-        captureSession.sessionPreset = .hd1920x1080
+        captureSession.sessionPreset = .hd4K3840x2160
 
         guard let captureDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: AVMediaType.video, position: cameraPos) else { return err ("AVCaptureDevice") }
         self.captureDevice = captureDevice

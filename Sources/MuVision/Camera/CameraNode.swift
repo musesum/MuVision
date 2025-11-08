@@ -5,21 +5,21 @@ import simd
 
 public class CameraNode: ComputeNode {
 
-    private var camera˚   : Flo?
-    private var outTex˚   : Flo?
-    private var front˚    : Flo?
-    private let camera: CameraSession
+    private var camera˚ : Flo?
+    private var outTex˚ : Flo?
+    private var front˚  : Flo?
+    private let camera  : CameraSession
     #if os(visionOS)
-    public init(_ pipeline : Pipeline,
+    public init(_ pipeline  : Pipeline,
                 _ pipeNode˚ : Flo,
-                _ camera: CameraSession) {
+                _ camera    : CameraSession) {
         self.camera = camera
         super.init(pipeline, pipeNode˚)
     }
     #else
-    public init(_ pipeline : Pipeline,
+    public init(_ pipeline  : Pipeline,
                 _ pipeNode˚ : Flo,
-                _ camera: CameraSession) {
+                _ camera    : CameraSession) {
 
         self.camera = camera
         super.init(pipeline, pipeNode˚)
@@ -48,6 +48,7 @@ public class CameraNode: ComputeNode {
         guard camera.hasNewTex else { return }
         guard let camTex = camera.cameraTex else { return }
         computeTexture(outTex˚)
+        outTex˚?.activate() //.....
         computeEnc.setTexture(camTex, index: 0)
         computeEnc.setTexture(outTex˚, index: 1)
         super.computeShader(computeEnc)
