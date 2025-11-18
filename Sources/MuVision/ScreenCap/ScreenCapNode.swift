@@ -2,7 +2,7 @@
 import AVKit
 import MuFlo
 
-public class RecordNode: ComputeNode, @unchecked Sendable {
+public class ScreenCapNode: ComputeNode, @unchecked Sendable {
     
     var isRecording = false
     var recordStart = TimeInterval(0)

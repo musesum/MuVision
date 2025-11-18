@@ -3,8 +3,8 @@
 import AVFoundation
 import Photos
 import MuFlo
-
-extension RecordNode {
+ 
+extension ScreenCapNode {
     
     func removeURL(_ url: URL?) {
         guard let url = url else { return }
