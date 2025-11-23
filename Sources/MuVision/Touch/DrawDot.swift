@@ -143,6 +143,6 @@ public class DrawDot {
 
         let key = "midi\(item.channel)".hash
         let item = TouchCanvasItem(key, point, radius, .zero, .zero, item.phase, Visitor(0, .midi))
-        touchCanvas.remoteItem(item)
+        touchCanvas.receiveItem(item, from: .local)
     }
 }
