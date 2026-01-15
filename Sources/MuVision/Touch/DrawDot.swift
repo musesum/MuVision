@@ -48,11 +48,12 @@ public class DrawDot {
             if logging {
                 TimeLog("note\(chan)", interval: 0) { P("noteOn:  \(chan), \(num), \(velo)") }
             }
+            let time = flo.DoubleVal() ?? Date().timeIntervalSince1970
             if let item = midiMpeItems[chan] {
                 item.update(velo: velo, phase: .began)
                 drawMpeItem(item)
             } else {
-                let item = MidiMpeItem(chan,num,velo,logging)
+                let item = MidiMpeItem(chan,num,velo,time,logging)
                 midiMpeItems[chan] = item
                 drawMpeItem(item)
             }
@@ -142,7 +143,9 @@ public class DrawDot {
         let point = CGPoint(x: xxx, y: yyy)
 
         let key = "midi\(item.channel)".hash
-        let item = TouchCanvasItem(key, point, radius, .zero, .zero, item.phase, Visitor(0, .midi))
+        let time = item.time
+        let item = TouchCanvasItem(key, point, radius, .zero, .zero, item.phase,
+                                   time, Visitor(0, .midi))
         touchCanvas.receiveItem(item, from: .local)
     }
 }
