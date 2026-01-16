@@ -1,4 +1,3 @@
-
 import Foundation
 import Metal
 import MetalKit
@@ -92,13 +91,12 @@ public class DrawNode: ComputeNode {
         guard let inTex = inTex˚?.texture else { return }
         let texSize = CGSize(width: inTex.width, height: inTex.height)
 
-        let drawPoints = touchCanvas.touchDraw.drawPoints
+        let drawPoints = touchCanvas.touchDraw.takeDrawPoints()
         var normPoints = [DrawPoint]()
         for drawPoint in drawPoints {
             let normPoint = drawPoint.normalize(touchCanvas.drawableSize, texSize)
             normPoints.append(normPoint)
         }
-        touchCanvas.touchDraw.drawPoints.removeAll()
 
         // dotCount buffer (index 3)
         let count = UInt32(normPoints.count)
@@ -124,7 +122,7 @@ public class DrawNode: ComputeNode {
     override public func computeShader(_ computeEnc: MTLComputeCommandEncoder)  {
 
         if updateInputBuffer() {
-            touchCanvas.touchDraw.drawPoints.removeAll()
+            _ = touchCanvas.touchDraw.takeDrawPoints()
         } else {
             updateDotsBuffer(computeEnc)
         }
