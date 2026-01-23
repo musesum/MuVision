@@ -13,19 +13,16 @@ public final class CameraSession: NSObject, @unchecked Sendable {
     private var captureDevice: AVCaptureDevice?
     private var captureSession = AVCaptureSession()
     private var cameraPos: AVCaptureDevice.Position = .front
-    private var cameraState: CameraState  = .waiting
+    private var cameraState: CameraState = .waiting
     private var cameraQueue = DispatchQueue(label: "Camera", attributes: [])
     private var textureCache: CVMetalTextureCache?
     private var device = MTLCreateSystemDefaultDevice()
     private var videoOut: AVCaptureVideoDataOutputSampleBufferDelegate!
-    private var nextFrame: NextFrame
 
     public var cameraTex: MTLTexture?
 
     public init(_ videoOut: AVCaptureVideoDataOutputSampleBufferDelegate?,
-                position: AVCaptureDevice.Position,
-                _ nextFrame: NextFrame) {
-        self.nextFrame = nextFrame
+                position: AVCaptureDevice.Position) {
         super.init()
         self.cameraPos = position
         self.videoOut = videoOut ?? self
@@ -75,7 +72,7 @@ public final class CameraSession: NSObject, @unchecked Sendable {
         case .streaming: break
         }
         isStartingNow = false
-        nextFrame.addBetweenFrame {
+        NextFrame.shared.addBetweenFrame {
             Reset.reset()
         }
     }
@@ -105,7 +102,7 @@ public final class CameraSession: NSObject, @unchecked Sendable {
             }
         }
         DebugLog { P("📷 setCameraOn(\(on))") }
-        nextFrame.addBetweenFrame {
+        NextFrame.shared.addBetweenFrame {
             Reset.reset()
         }
     }

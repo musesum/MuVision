@@ -43,7 +43,7 @@ open class FacePose: NSObject {
         super.init()
         guard let device = MTLCreateSystemDefaultDevice() else { return }
         ciContext = CIContext(mtlDevice: device)
-        camSession = CameraSession(self, position: .front, pipeline.nextFrame)
+        camSession = CameraSession(self, position: .front)
         camSession.setCameraOn(true)
         setupFacePose()
     }

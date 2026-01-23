@@ -43,7 +43,6 @@ open class Pipeline {
     public var pipeSize = CGSize(width: 2048, height: 1024)
 
     internal var archive: ArchiveFlo
-    public var nextFrame: NextFrame
     public var root˚: Flo
     public var touchDraw: TouchDraw
 
@@ -52,14 +51,12 @@ open class Pipeline {
                 _ archive     : ArchiveFlo,
                 _ touchDraw   : TouchDraw,
                 _ scale       : CGFloat,
-                _ bounds      : CGRect,
-                _ nextFrame   : NextFrame) {
+                _ bounds      : CGRect) {
 
         self.root˚ = root˚
         self.renderState = renderState
         self.touchDraw = touchDraw
         self.archive = archive
-        self.nextFrame = nextFrame
 
         commandQueue = device.makeCommandQueue()
         library = device.makeDefaultLibrary()

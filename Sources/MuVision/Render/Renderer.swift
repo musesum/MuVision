@@ -44,19 +44,16 @@ open class Renderer {
 
     public let layerRenderer: LayerRenderer
     private var renderState: LayerRenderer.State = .invalidated
-    public let nextFrame: NextFrame
 
     // ARKit
     private let arSession: ARKitSession
     private let worldTracking: WorldTrackingProvider
 
     public init(_ layerRenderer: LayerRenderer,
-                _ pipeline: Pipeline,
-                _ nextFrame: NextFrame)  {
+                _ pipeline: Pipeline)  {
 
         self.layerRenderer = layerRenderer
         self.pipeline = pipeline
-        self.nextFrame = nextFrame
 
         self.device = layerRenderer.device
         supportsMSAA = layerRenderer.device.supportsMSAA
@@ -144,7 +141,7 @@ extension Renderer {
         func performCpuWork() {
             // this should execute pending Flo animations
             // while ignoring the metal based renderFrame()
-            _ = nextFrame.nextFrame(force: true) //..... crash here
+            _ = NextFrame.shared.nextFrame(force: true) //..... crash here
         }
     }
     public func runLayer(_ drawable: LayerRenderer.Drawable,
