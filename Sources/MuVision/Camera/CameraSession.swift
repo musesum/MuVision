@@ -21,8 +21,8 @@ public final class CameraSession: NSObject, @unchecked Sendable {
 
     public var cameraTex: MTLTexture?
 
-    public init(_ videoOut: AVCaptureVideoDataOutputSampleBufferDelegate?,
-                position: AVCaptureDevice.Position) {
+    public init(_ videoOut: AVCaptureVideoDataOutputSampleBufferDelegate? = nil,
+                position: AVCaptureDevice.Position = .front) {
         super.init()
         self.cameraPos = position
         self.videoOut = videoOut ?? self

@@ -54,14 +54,17 @@ public class CubeNode: RenderNode, @unchecked Sendable {
 
     override open func makeResources() {
 
-        makeCube()
-        cubeMesh.eyeBuf = EyeBuf("CubeEyes", pipeline, far: false)
+        Task.detached {
+            self.makeCube()
+            self.cubeMesh.eyeBuf = EyeBuf("CubeEyes", self.pipeline, far: false)
+        }
     }
 
     override open func renderShader(
         _ renderEnc: MTLRenderCommandEncoder,
         _ renderState: RenderState) {
 
+            guard cudex˚?.texture ?? nil != nil else { return }
             guard let renderPipelineState else { return }
 
             cubeMesh.eyeBuf?.setUniformBuf(renderEnc)
