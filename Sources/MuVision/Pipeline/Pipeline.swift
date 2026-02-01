@@ -107,11 +107,11 @@ open class Pipeline {
 
         // drawBuf
         self.drawBuf = device.makeBuffer(layer.drawableSize, "drawBuf")
-        let clipFill = fillClip(in: pipeSize, out: layer.drawableSize)
-        let clipNorm = clipFill.normalize()
-        self.clipBuf = device.makeBuffer(clipNorm, "clipBuf")
+        let trackFill = fillTrack(in: pipeSize, out: layer.drawableSize)
+        let trackNorm = trackFill.normalize()
+        self.clipBuf = device.makeBuffer(trackNorm, "clipBuf")
 
-        NoDebugLog { P("🧭 resizeFrame\(self.layer.drawableSize.digits()) clipNorm\(clipNorm.digits(2))") }
+        NoDebugLog { P("🧭 resizeFrame\(self.layer.drawableSize.digits()) clipNorm\(trackNorm.digits(2))") }
 
         for resizeNode in resizeNodes {
             resizeNode()

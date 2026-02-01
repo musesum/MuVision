@@ -8,7 +8,7 @@ import UIKit
  - from: sourc size to rescale and clip
  - to: destination size in which to fill
  */
-public func fillClip(in i: CGSize,
+public func fillTrack(in i: CGSize,
                      out o: CGSize) -> CGRect {
 
     let ow = o.width    // out width
