@@ -84,7 +84,7 @@ open class Renderer {
             case .invalidated:
                 arSession.stop()
                 renderState = .invalidated
-                PrintLog("🔄 RenderLoop .invalidated")
+                PrintLog("🎞️ RenderLoop .invalidated")
                 return
             case .paused:
                 layerRenderer.waitUntilRunning()
@@ -100,7 +100,7 @@ open class Renderer {
                 case .running     : msg = ".running"
                 default: break
                 }
-                PrintLog("🔄 RenderLoop \(msg)")
+                PrintLog("🎞️ RenderLoop \(msg)")
             }
         }
     }
