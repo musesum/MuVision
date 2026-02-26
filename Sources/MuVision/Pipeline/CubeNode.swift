@@ -53,11 +53,9 @@ public class CubeNode: RenderNode, @unchecked Sendable {
     }
 
     override open func makeResources() {
-
-        Task.detached {
-            self.makeCube()
-            self.cubeMesh.eyeBuf = EyeBuf("CubeEyes", self.pipeline, far: false)
-        }
+        
+        self.makeCube()
+        self.cubeMesh.eyeBuf = EyeBuf("CubeEyes", self.pipeline, far: false)
     }
 
     override open func renderShader(

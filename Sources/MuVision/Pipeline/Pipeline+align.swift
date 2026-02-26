@@ -20,11 +20,14 @@ extension Pipeline {
     
         for (name,tex) in archive.nameTex {
             guard let tex else { continue }
-
+            DebugLog { P("🏛️ B") }
             if let (_,node,flo) = rotatable[name] {
                 rotatable[name] = (tex,node,flo)
+                DebugLog { P("🏛️ C") }
                 flo.texture = aspectCopy(tex, type: .fit)
+                DebugLog { P("🏛️ D") }
                 flo.activate()
+                DebugLog { P("🏛️ E") }
             } else {
                 DebugLog { P("\(name) not found in rotatable") }
             }
