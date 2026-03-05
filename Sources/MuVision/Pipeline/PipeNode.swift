@@ -81,13 +81,13 @@ open class PipeNode: Equatable {
 
     open func updateUniforms() {}
     open func makeResources() {}
-    open func makePipeline() {}
+    open func makeShader() {}
     open func renderShader(_: MTLRenderCommandEncoder, _: RenderState) {}
 
     private func updateFirstTime() {
         if firstTime {
             firstTime = false
-            makePipeline()
+            makeShader()
             makeResources()
         }
     }

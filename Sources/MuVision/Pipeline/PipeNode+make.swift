@@ -70,26 +70,7 @@ extension PipeNode { // make
                                     format: MuComputePixelFormat) {
             flo.texture = tex
             flo.reactivate()
-            DebugLog { P("🧭 paletteTexture\(size.digits(0)) \(path)") }
-        }
-    }
-    /// make new texture, or remake an old one if size changes.
-    public func displaceTexture(_ flo: Flo?) {
-        
-        guard let flo else { return }
-        
-        let size = pipeline.pipeSize
-        if flo.texture?.width == Int(size.width),
-           flo.texture?.height == Int(size.height) { return }
-        
-        let path = flo.path(3)
-        if let tex = makeComputeTex(size: size,
-                                    label: path,
-                                    format: MuHeightPixelFormat) {
-            flo.texture = tex
-            flo.reactivate()
-            pipeline.rotatable[path] = (tex, self, flo)
-            DebugLog { P("🧭 heightTexture\(size.digits(0)) \(path)") }
+            DebugLog { P("🚰 paletteTexture\(size.digits(0)) \(path)") }
         }
     }
     
@@ -108,7 +89,7 @@ extension PipeNode { // make
             flo.texture = tex
             flo.reactivate()
             pipeline.rotatable[path] = (tex, self, flo)
-            DebugLog { P("🧭 updateTexture\(size.digits(0)) \(path)") }
+            DebugLog { P("🚰 updateTexture\(size.digits(0)) \(path)") }
         }
     }
     

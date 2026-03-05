@@ -38,7 +38,7 @@ open class Pipeline {
     public var viewports = [MTLViewport]()
 
     public var resizeNodes = [CallVoid]()
-    public var pipeSize = CGSize(width: 2048, height: 1024)
+    public var pipeSize = CGSize(width: 1024, height: 1024) //..... 2048
 
     internal var archive: ArchiveFlo
     public var root˚: Flo
@@ -65,7 +65,7 @@ open class Pipeline {
         layer.contentsGravity = .resizeAspectFill
         layer.bounds = layer.frame
         layer.contentsScale = scale
-        pipeSize = CGSize(width: 2048, height: 2048) //.... 2048
+        pipeSize = CGSize(width: 1024, height: 1024) //.... 2048
         #if os(visionOS)
         layer.frame = CGRect(x: 0, y: 0, width: pipeSize.width, height: pipeSize.height)
         #else
@@ -127,6 +127,8 @@ open class Pipeline {
         //performCpuWork()
 
         // start command
+        let desc = MTLCommandBufferDescriptor() //.....
+        desc.errorOptions = .encoderExecutionStatus
         guard let commandBuf = commandQueue.makeCommandBuffer() else { fatalError("Pipeline.renderFrame") }
         guard let drawable = layer.nextDrawable() else { return }
         // compute cycle
@@ -146,9 +148,20 @@ open class Pipeline {
         commandBuf.waitUntilCompleted()
 
         logging += "nil"
-        if let error = commandBuf.error {
+        if let error = commandBuf.error as NSError? {
             TimeLog("\(#function)", interval: 4) {
                 P("🚰 commandBuf error: \(error)")
+                if let encoderInfos =
+                    error.userInfo[MTLCommandBufferEncoderInfoErrorKey]
+                    as? [MTLCommandBufferEncoderInfo] {
+
+                    for info in encoderInfos {
+                        print(info.label + info.debugSignposts.joined())
+                        if info.errorState == .faulted {
+                            print(info.label + " faulted!")
+                        }
+                    }
+                }
             }
         }
         TimeLog(#function, interval: 4) {

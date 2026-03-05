@@ -23,7 +23,6 @@ public class CubeNode: RenderNode, @unchecked Sendable {
     internal var inTex˚     : Flo?
     internal var cudex˚     : Flo?
     internal var mixcube˚   : Flo?
-    internal var displace˚  : Flo? // unused
     internal var lastAspect : Aspect?
     internal var zoom˚      : Flo?
     internal var zoom       : Float = 0
@@ -37,14 +36,13 @@ public class CubeNode: RenderNode, @unchecked Sendable {
 
         inTex˚    = pipeFlo˚.superBindPath("in")
         cudex˚    = pipeFlo˚.superBindPath("cudex")
-        displace˚ = pipeFlo˚.superBindPath("displace")
         mixcube˚  = pipeFlo˚.superBindPath("mixcube")
         zoom˚     = pipeFlo˚.getRoot().bind("plato.zoom") { f,_ in
             self.zoom = f.float
         }
     }
     
-    override public func makePipeline() {
+    override public func makeShader() {
         shader = Shader(pipeline,
                         file: "render.map.cube",
                         vertex: "cubeVertex",
@@ -72,7 +70,6 @@ public class CubeNode: RenderNode, @unchecked Sendable {
             #endif
             mixcube˚.updateMtlBuffer()
         }
-        //.. renderEnc.setFragmentTexture(displace˚,index: 3)
         renderEnc.setFragmentTexture(inTex˚,   index: 0)
         renderEnc.setFragmentTexture(cudex˚,   index: 1)
         renderEnc.setFragmentBuffer (mixcube˚, index: 0)

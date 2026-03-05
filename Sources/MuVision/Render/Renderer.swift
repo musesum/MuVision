@@ -131,6 +131,8 @@ extension Renderer {
         guard let drawable = frame.queryDrawable() else { return }
 
         // start commmand
+        let desc = MTLCommandBufferDescriptor() //.....
+        desc.errorOptions = .encoderExecutionStatus
         guard let commandBuf = commandQueue.makeCommandBuffer() else { fatalError("Renderer::renderFrame commandBuf") }
 
         frame.startSubmission()

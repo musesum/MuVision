@@ -16,49 +16,43 @@ extension Pipeline {
 
     /// rotate textures to fit landscape/portrait aspect
     /// when user loads archive from other orientation
-    public func alignNameTex(_ done: CallVoid? = nil) {
-        NextFrame.shared.addBetweenFrame {
-            align()
-        }
-        func align() {
-            for (name,tex) in archive.nameTex {
-                guard let tex else { continue }
-                
-                if let (_,node,flo) = rotatable[name] {
-                    rotatable[name] = (tex,node,flo)
-                    flo.texture = aspectCopy(tex, type: .fit)
-                    flo.activate()
-                } else {
-                    DebugLog { P("\(name) not found in rotatable") }
-                }
+    public func alignNameTex() {
+
+        for (archName,archTex) in archive.nameTex {
+
+            if let (_,node,flo) = rotatable[archName] {
+                rotatable[archName] = (archTex,node,flo)
+                flo.texture = copyFit(archTex)
+                flo.activate()
+            } else {
+                DebugLog { P("\(archName) not found in rotatable") }
             }
         }
     }
-
-    enum FillType { case fill, fit }
     
-    func aspectCopy(_ sourceTex: MTLTexture, type: FillType) -> MTLTexture {
-        let sourceSize = CGSize(width: CGFloat(sourceTex.width),
-                                height: CGFloat(sourceTex.height))
+    private func copyFit(_ srcTex: MTLTexture) -> MTLTexture {
 
-        if sourceSize == pipeSize {
-            DebugLog() { P("🚰 \(sourceSize.digits(0)) ==") }
-            //...... return sourceTex
+        let srcSize = CGSize(width: CGFloat(srcTex.width),
+                             height: CGFloat(srcTex.height))
+
+        if srcSize == pipeSize {
+            DebugLog() { P("🚰 \(srcSize.digits(0)) ==") }
+            //..... return srcTex
         } else {
-            DebugLog() { P("🚰 \(sourceSize.digits(0)) !=  \(self.pipeSize.digits(0))") }
+            DebugLog() { P("🚰 \(srcSize.digits(0)) !=  \(self.pipeSize.digits(0))") }
         }
 
         // Create destination texture with pipeline size
-        guard let destTex = makeComputeTex(
+        guard let dstTex = makeComputeTex(
             size: pipeSize,
-            label: sourceTex.label ?? "resized",
-            format: sourceTex.pixelFormat) else { return sourceTex }
+            label: srcTex.label ?? "resized",
+            format: srcTex.pixelFormat) else { return srcTex }
 
         // Get source data
-        guard let sourceData = sourceTex.rawData() else { return sourceTex }
+        guard let srcData = srcTex.rawData() else { return srcTex }
 
-        let srcWidth = sourceTex.width
-        let srcHeight = sourceTex.height
+        let srcWidth = srcTex.width
+        let srcHeight = srcTex.height
         let dstWidth = Int(pipeSize.width)
         let dstHeight = Int(pipeSize.height)
 
@@ -77,7 +71,7 @@ extension Pipeline {
         let dstBytesPerRow = dstWidth * 4
         var dstData = [UInt8](repeating: 0, count: dstWidth * dstHeight * 4)
 
-        sourceData.withUnsafeBytes { srcPtr in
+        srcData.withUnsafeBytes { srcPtr in
             let src32Ptr = srcPtr.bindMemory(to: UInt32.self)
             dstData.withUnsafeMutableBytes { dstPtr in
                 let dst32Ptr = dstPtr.bindMemory(to: UInt32.self)
@@ -101,9 +95,9 @@ extension Pipeline {
         // Copy to texture
         let region = MTLRegion(origin: MTLOrigin(x: 0, y: 0, z: 0),
                                size: MTLSize(width: dstWidth, height: dstHeight, depth: 1))
-        destTex.replace(region: region, mipmapLevel: 0, withBytes: dstData, bytesPerRow: dstBytesPerRow)
+        dstTex.replace(region: region, mipmapLevel: 0, withBytes: dstData, bytesPerRow: dstBytesPerRow)
 
-        return destTex
+        return dstTex
     }
 
     /// make new texture, or remake an old one if size changes.
@@ -121,7 +115,7 @@ extension Pipeline {
             flo.texture = tex
             flo.reactivate()
             rotatable[path] = (tex, node, flo)
-            DebugLog { P("🧭 paletteTexture\(size.digits(0)) \(path)") }
+            DebugLog { P("🚰 paletteTexture\(size.digits(0)) \(path)") }
         }
     }
 

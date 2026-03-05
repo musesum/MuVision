@@ -23,7 +23,7 @@ public class FlatNode: RenderNode {
         pipeline.resizeNodes.append(makeResources)
     }
 
-    override public func makePipeline() {
+    override public func makeShader() {
 
         shader = Shader(pipeline,
                         file     : "render.map.flat",
