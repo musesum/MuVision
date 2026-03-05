@@ -32,7 +32,6 @@ open class PipeNode: Equatable {
 
     public func runCompute(_ computeEnc: MTLComputeCommandEncoder,
                            _ logging: inout String) {
-        
         if let node = self as? ComputeNode {
             logging += node.pipeName + " -> "
             node.updateFirstTime()
@@ -49,7 +48,7 @@ open class PipeNode: Equatable {
 
             if let node = self as? RenderNode {
                 logging += node.pipeName + " -> "
-                updateFirstTime()
+                node.updateFirstTime()
                 node.updateUniforms()
                 node.renderShader(renderEnc, pipeline.renderState)
             }
@@ -78,8 +77,6 @@ open class PipeNode: Equatable {
     }
 #endif
 
-
-    
     public static func == (lhs: PipeNode, rhs: PipeNode) -> Bool { return lhs.id == rhs.id }
 
     open func updateUniforms() {}

@@ -23,8 +23,6 @@ open class Pipeline {
     public var pipeSource: PipeNode?
     public var layer = CAMetalLayer()
 
-
-//    internal var rotateClosure = [String: CallVoid]()
     internal var rotatable = [String: (MTLTexture,PipeNode,Flo)]()
 
     private var aspect = Aspect.square
@@ -67,7 +65,7 @@ open class Pipeline {
         layer.contentsGravity = .resizeAspectFill
         layer.bounds = layer.frame
         layer.contentsScale = scale
-        pipeSize = CGSize(width: 2048, height: 2048) //....
+        pipeSize = CGSize(width: 2048, height: 2048) //.... 2048
         #if os(visionOS)
         layer.frame = CGRect(x: 0, y: 0, width: pipeSize.width, height: pipeSize.height)
         #else
@@ -111,7 +109,7 @@ open class Pipeline {
         let trackNorm = trackFill.normalize()
         self.clipBuf = device.makeBuffer(trackNorm, "clipBuf")
 
-        NoDebugLog { P("🧭 resizeFrame\(self.layer.drawableSize.digits()) clipNorm\(trackNorm.digits(2))") }
+        DebugLog { P("🚰 resizeFrame\(self.layer.drawableSize.digits()) clipNorm\(trackNorm.digits(2))") }
 
         for resizeNode in resizeNodes {
             resizeNode()
@@ -131,7 +129,6 @@ open class Pipeline {
         // start command
         guard let commandBuf = commandQueue.makeCommandBuffer() else { fatalError("Pipeline.renderFrame") }
         guard let drawable = layer.nextDrawable() else { return }
-
         // compute cycle
         if let ce = commandBuf.makeComputeCommandEncoder() {
             pipeSource.runCompute(ce, &logging)
@@ -146,10 +143,17 @@ open class Pipeline {
         // finish
         commandBuf.present(drawable)
         commandBuf.commit()
-        //commandBuf.waitUntilCompleted()
+        commandBuf.waitUntilCompleted()
 
         logging += "nil"
-        ///MuLog.TimeLog(#function, interval: 4) { P("🚰 "+logging) }
+        if let error = commandBuf.error {
+            TimeLog("\(#function)", interval: 4) {
+                P("🚰 commandBuf error: \(error)")
+            }
+        }
+        TimeLog(#function, interval: 4) {
+            P("🚰 "+logging)
+        }
     }
 }
 

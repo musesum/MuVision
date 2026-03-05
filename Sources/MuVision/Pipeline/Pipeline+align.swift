@@ -17,28 +17,35 @@ extension Pipeline {
     /// rotate textures to fit landscape/portrait aspect
     /// when user loads archive from other orientation
     public func alignNameTex(_ done: CallVoid? = nil) {
-    
-        for (name,tex) in archive.nameTex {
-            guard let tex else { continue }
-            DebugLog { P("🏛️ B") }
-            if let (_,node,flo) = rotatable[name] {
-                rotatable[name] = (tex,node,flo)
-                DebugLog { P("🏛️ C") }
-                flo.texture = aspectCopy(tex, type: .fit)
-                DebugLog { P("🏛️ D") }
-                flo.activate()
-                DebugLog { P("🏛️ E") }
-            } else {
-                DebugLog { P("\(name) not found in rotatable") }
+        NextFrame.shared.addBetweenFrame {
+            align()
+        }
+        func align() {
+            for (name,tex) in archive.nameTex {
+                guard let tex else { continue }
+                
+                if let (_,node,flo) = rotatable[name] {
+                    rotatable[name] = (tex,node,flo)
+                    flo.texture = aspectCopy(tex, type: .fit)
+                    flo.activate()
+                } else {
+                    DebugLog { P("\(name) not found in rotatable") }
+                }
             }
         }
     }
 
     enum FillType { case fill, fit }
+    
     func aspectCopy(_ sourceTex: MTLTexture, type: FillType) -> MTLTexture {
-        if CGFloat(sourceTex.width)  == pipeSize.width,
-           CGFloat(sourceTex.height) == pipeSize.height {
-            return sourceTex
+        let sourceSize = CGSize(width: CGFloat(sourceTex.width),
+                                height: CGFloat(sourceTex.height))
+
+        if sourceSize == pipeSize {
+            DebugLog() { P("🚰 \(sourceSize.digits(0)) ==") }
+            //...... return sourceTex
+        } else {
+            DebugLog() { P("🚰 \(sourceSize.digits(0)) !=  \(self.pipeSize.digits(0))") }
         }
 
         // Create destination texture with pipeline size
