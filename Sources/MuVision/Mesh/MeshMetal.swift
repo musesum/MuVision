@@ -62,23 +62,23 @@ open class MeshMetal {
         return modelVD
     }
 
-    open func drawMesh(_ renderEnc: MTLRenderCommandEncoder,
-                       _ renderState: RenderState) {
+    open func drawMesh(_ encoder: MTLRenderCommandEncoder,
+                       _ state: RenderState) {
 
         guard let mtkMesh else { return err("mesh") }
 
-        depthRendering.setCullWindingStencil(renderEnc, renderState)
+        depthRendering.setCullWindingStencil(encoder, state)
 
         for (index, layout) in mtkMesh.vertexDescriptor.layouts.enumerated() {
             if let layout = layout as? MDLVertexBufferLayout,
                layout.stride != 0 {
                 let vb = mtkMesh.vertexBuffers[index]
-                renderEnc.setVertexBuffer(vb.buffer, offset: vb.offset, index: index)
+                encoder.setVertexBuffer(vb.buffer, offset: vb.offset, index: index)
             }
         }
 
         for submesh in mtkMesh.submeshes {
-            renderEnc.drawIndexedPrimitives(
+            encoder.drawIndexedPrimitives(
                 type              : submesh.primitiveType,
                 indexCount        : submesh.indexCount,
                 indexType         : submesh.indexType,

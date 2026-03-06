@@ -83,13 +83,18 @@ public class DrawNode: ComputeNode {
         self.drawTex = nil
         return true
     }
-    func updateDotsBuffer(_ computeEnc: MTLComputeCommandEncoder) {
+
+    func updateDotsBuffer(_ encoder: MTLComputeCommandEncoder) -> Bool {
         touchCanvas.flushTouchCanvas()
 
-        // Build dots from touch input
-
-        guard let inTex = inTex˚?.texture else { return }
-        let texSize = CGSize(width: inTex.width, height: inTex.height)
+        let texSize: CGSize
+        if let inTex = inTex˚?.texture {
+            texSize = CGSize(width: inTex.width, height: inTex.height)
+        } else if let outTex = outTex˚?.texture {
+            texSize = CGSize(width: outTex.width, height: outTex.height)
+        } else {
+            texSize = pipeline.pipeSize
+        }
 
         let drawPoints = touchCanvas.touchDraw.takeDrawPoints()
         var normPoints = [DrawPoint]()
@@ -97,44 +102,49 @@ public class DrawNode: ComputeNode {
             let normPoint = drawPoint.normalize(touchCanvas.drawableSize, texSize)
             normPoints.append(normPoint)
         }
-
+        if normPoints.isEmpty { return false }
         // dotCount buffer (index 3)
         let count = UInt32(normPoints.count)
         dotCountBuf.contents().assumingMemoryBound(to: UInt32.self).pointee = count
-        computeEnc.setBuffer(dotCountBuf, offset: 0, index: 3)
+        encoder.setBuffer(dotCountBuf, offset: 0, index: 3)
 
-        // dots buffer (index 2)
-        if normPoints.isEmpty {
-            computeEnc.setBuffer(nil, offset: 0, index: 2)
-        } else {
-            let byteCount = normPoints.count * MemoryLayout<MetalDot>.stride
-            if dotsBuf == nil || dotsBuf!.length < byteCount {
-                dotsBuf = pipeline.device.makeBuffer(length: byteCount, options: .storageModeShared)
-            }
-            if let dotsBuf {
-                normPoints.withUnsafeBytes { src in
-                    if let base = src.baseAddress { memcpy(dotsBuf.contents(), base, min(src.count, dotsBuf.length)) }
+        let byteCount = normPoints.count * MemoryLayout<MetalDot>.stride
+        if dotsBuf == nil || dotsBuf!.length < byteCount {
+            dotsBuf = pipeline.device.makeBuffer(length: byteCount, options: .storageModeShared)
+        }
+        if let dotsBuf {
+            normPoints.withUnsafeBytes { src in
+                if let base = src.baseAddress {
+                    memcpy(dotsBuf.contents(), base, byteCount)
                 }
-                computeEnc.setBuffer(dotsBuf, offset: 0, index: 2)
             }
         }
+        encoder.setBuffer(dotsBuf, offset: 0, index: 2)
+        return true
     }
-    override public func computeShader(_ computeEnc: MTLComputeCommandEncoder)  {
-
+    override public func computeShader(_ encoder: MTLComputeCommandEncoder) {
         if updateInputBuffer() {
             _ = touchCanvas.touchDraw.takeDrawPoints()
-        } else {
-            updateDotsBuffer(computeEnc)
+        } else if !updateDotsBuffer(encoder) {
+            //...... will fail validation
         }
-        shift˚?.updateMtlBuffer()
-        computeEnc.setTexture(inTex˚,  index: 0)
-        computeEnc.setTexture(outTex˚, index: 1)
-        computeEnc.setBuffer (shift˚,  index: 0)
-        computeEnc.setBuffer(pipeline.aspectBuf, offset: 0, index: 1)
 
-        super.computeShader(computeEnc)
+        shift˚?.updateMtlBuffer()
+        encoder.setTexture(inTex˚,  index: 0)
+        encoder.setTexture(outTex˚, index: 1)
+        encoder.setBuffer (shift˚,  index: 0)
+        encoder.setBuffer(pipeline.aspectBuf, offset: 0, index: 1)
+        
+        super.computeShader(encoder)
         outTex˚?.reactivate()
     }
     
-
+    public override func logShader(_ logging: inout String,
+                                   _ inOut: String) {
+        
+        let inAdr = inTex˚?.texPtr ?? ""
+        let outAdr = outTex˚?.texPtr ?? ""
+        let inOut = "(\(inAdr)⟶\(outAdr))"
+        super.logShader(&logging, inOut)
+    }
 }

@@ -1,6 +1,3 @@
-// created by musesum on 9/24/25
-
-//  MetPipeline.swift
 //  created by musesum on 3/13/23.
 
 import Collections
@@ -14,42 +11,30 @@ import CompositorServices
 
 extension Pipeline {
 
-    /// rotate textures to fit landscape/portrait aspect
-    /// when user loads archive from other orientation
     public func alignNameTex() {
 
-        for (archName,archTex) in archive.nameTex {
+        for (name,tex) in archive.nameTex {
 
-            if let (_,node,flo) = rotatable[archName] {
-                rotatable[archName] = (archTex,node,flo)
-                flo.texture = copyFit(archTex)
+            if let flo = rotatable[name] {
+
+                flo.texture = aspectCopy(tex)
                 flo.activate()
             } else {
-                DebugLog { P("\(archName) not found in rotatable") }
+                DebugLog { P("\(name) not found in rotatable") }
             }
         }
     }
-    
-    private func copyFit(_ srcTex: MTLTexture) -> MTLTexture {
+
+    func aspectCopy(_ srcTex: MTLTexture) -> MTLTexture {
 
         let srcSize = CGSize(width: CGFloat(srcTex.width),
                              height: CGFloat(srcTex.height))
 
-        if srcSize == pipeSize {
-            DebugLog() { P("🚰 \(srcSize.digits(0)) ==") }
-            //..... return srcTex
-        } else {
-            DebugLog() { P("🚰 \(srcSize.digits(0)) !=  \(self.pipeSize.digits(0))") }
-        }
+        DebugLog() { P("🚰 \(srcSize.digits(0)) \(srcSize == self.pipeSize ? "==" : "!=") \(self.pipeSize.digits(0))") }
 
-        // Create destination texture with pipeline size
-        guard let dstTex = makeComputeTex(
-            size: pipeSize,
-            label: srcTex.label ?? "resized",
-            format: srcTex.pixelFormat) else { return srcTex }
 
         // Get source data
-        guard let srcData = srcTex.rawData() else { return srcTex }
+        guard let sourceData = srcTex.rawData() else { return srcTex }
 
         let srcWidth = srcTex.width
         let srcHeight = srcTex.height
@@ -71,7 +56,7 @@ extension Pipeline {
         let dstBytesPerRow = dstWidth * 4
         var dstData = [UInt8](repeating: 0, count: dstWidth * dstHeight * 4)
 
-        srcData.withUnsafeBytes { srcPtr in
+        sourceData.withUnsafeBytes { srcPtr in
             let src32Ptr = srcPtr.bindMemory(to: UInt32.self)
             dstData.withUnsafeMutableBytes { dstPtr in
                 let dst32Ptr = dstPtr.bindMemory(to: UInt32.self)
@@ -95,6 +80,12 @@ extension Pipeline {
         // Copy to texture
         let region = MTLRegion(origin: MTLOrigin(x: 0, y: 0, z: 0),
                                size: MTLSize(width: dstWidth, height: dstHeight, depth: 1))
+        // Create destination texture with pipeline size
+        guard let dstTex = makeComputeTex(
+            size: pipeSize,
+            label: srcTex.label ?? "resized",
+            format: srcTex.pixelFormat) else { return srcTex }
+
         dstTex.replace(region: region, mipmapLevel: 0, withBytes: dstData, bytesPerRow: dstBytesPerRow)
 
         return dstTex
@@ -114,8 +105,8 @@ extension Pipeline {
                                     format: MuComputePixelFormat) {
             flo.texture = tex
             flo.reactivate()
-            rotatable[path] = (tex, node, flo)
-            DebugLog { P("🚰 paletteTexture\(size.digits(0)) \(path)") }
+            rotatable[path] = flo
+            DebugLog { P("🚰 paletteTexture \(path) \(size.digits(0)) ") }
         }
     }
 

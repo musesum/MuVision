@@ -50,12 +50,13 @@ open class ComputeNode: PipeNode {
             print("\(pipeName) (\(width),\(height))")// thread size(\(threadSize.width),\(threadSize.height))  count(\(threadCount.width),\(threadCount.height)) remainder(\(drawW-threadSize.width*threadCount.width), \(drawH-threadSize.height*threadCount.height))")
         }
     }
-    public func computeShader(_ computeEnc: MTLComputeCommandEncoder)  {
+    public func computeShader(_ encoder: MTLComputeCommandEncoder) {
         if let mtlCompute {
             // execute the compute pipeline threads
-            setupThreadGroup() 
-            computeEnc.setComputePipelineState(mtlCompute)
-            computeEnc.dispatchThreadgroups(threadCount, threadsPerThreadgroup: threadSize)
+            setupThreadGroup()
+            encoder.setComputePipelineState(mtlCompute)
+            encoder.dispatchThreadgroups(threadCount, threadsPerThreadgroup: threadSize)
         }
     }
+
 }

@@ -74,28 +74,36 @@ public class FlatNode: RenderNode {
         vertBuf = buffer
     }
     
-    override open func renderShader(_ renderEnc: MTLRenderCommandEncoder,
-                                    _ renderState: RenderState) {
-
-        guard let renderPipelineState else { return }
+    override open func renderShader(
+        _ encoder: MTLRenderCommandEncoder,
+        _ state: RenderState) {
+            
+            guard let renderPipelineState else { return }
         let layer = pipeline.layer
 
         let portSize = SIMD2<Float>(layer.drawableSize)
-        renderEnc.setViewport(MTLViewport(portSize))
-        renderEnc.setRenderPipelineState(renderPipelineState)
+        encoder.setViewport(MTLViewport(portSize))
+        encoder.setRenderPipelineState(renderPipelineState)
 
-        renderEnc.setVertexBuffer (vertBuf,          offset: 0, index: 0)
-        renderEnc.setVertexBuffer (pipeline.drawBuf, offset: 0, index: 1)
-        renderEnc.setVertexBuffer (pipeline.clipBuf, offset: 0, index: 2)
-        renderEnc.setFragmentTexture(inTex˚, index: 0)
+        encoder.setVertexBuffer (vertBuf,          offset: 0, index: 0)
+        encoder.setVertexBuffer (pipeline.drawBuf, offset: 0, index: 1)
+        encoder.setVertexBuffer (pipeline.clipBuf, offset: 0, index: 2)
+        encoder.setFragmentTexture(inTex˚, index: 0)
 
         // cull stencil
-        renderEnc.setCullMode(.none)
-        renderEnc.setFrontFacing(.clockwise)
-        renderEnc.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 6)
+        encoder.setCullMode(.none)
+        encoder.setFrontFacing(.clockwise)
+        encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 6)
 
         func err(_ err: String) {
             PrintLog("⁉️ FlatmapNode::renderNode err \(err)")
         }
+    }
+    public override func logShader(_ logging: inout String,
+                                   _ inOut: String) {
+
+        let inAdr = inTex˚?.texPtr ?? ""
+        let inOut = "(\(inAdr))"
+        super.logShader(&logging, inOut)
     }
 }

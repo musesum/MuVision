@@ -43,15 +43,29 @@ public class CameraNode: ComputeNode {
         super.makeResources()
     }
     
-    public override func computeShader(_ computeEnc: MTLComputeCommandEncoder)  {
-
+    public override func computeShader(_ encoder: MTLComputeCommandEncoder)
+    {
         guard camera.hasNewTex else { return }
         guard let camTex = camera.cameraTex else { return }
         computeTexture(outTex˚)
         outTex˚?.activate() //.....
-        computeEnc.setTexture(camTex, index: 0)
-        computeEnc.setTexture(outTex˚, index: 1)
-        super.computeShader(computeEnc)
+        encoder.setTexture(camTex, index: 0)
+        encoder.setTexture(outTex˚, index: 1)
+        super.computeShader(encoder)
     }
+    public override func logShader(_ logging: inout String,
+                                   _ inOut: String) {
+        guard let camTex = camera.cameraTex else { return }
+        let inAdr = camTex.texPtr
+        let outAdr = outTex˚?.texPtr ?? ""
+        let inOut = "(\(inAdr)⟶\(outAdr))"
+        super.logShader(&logging, inOut)
+    }
+
 #endif
+}
+extension MTLTexture {
+    var texPtr: String {
+        String("\(Unmanaged.passUnretained(self).toOpaque())".suffix(5))
+    }
 }

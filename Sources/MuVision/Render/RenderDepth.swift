@@ -66,23 +66,24 @@ public class DepthRendering {
         }
         mtlDepthStencil = device.makeDepthStencilState(descriptor: depth)!
     }
-    public func setCullWindingStencil(_ renderEnc: MTLRenderCommandEncoder,
-                                      _ renderState: RenderState) {
+    public func setCullWindingStencil(
+        _ encoder: MTLRenderCommandEncoder,
+        _ state: RenderState) {
 
-        if self.renderState != renderState {
-            self.renderState = renderState
-            makeStencil(renderState)
+        if self.renderState != state {
+            self.renderState = state
+            makeStencil(state)
         }
-        renderEnc.setDepthStencilState(mtlDepthStencil)
+        encoder.setDepthStencilState(mtlDepthStencil)
 
-        switch renderState {
+        switch state {
         case .immersed:
-            renderEnc.setCullMode(immerseDepth.mtlCull)
-            renderEnc.setFrontFacing(immerseDepth.mtlWinding)
+            encoder.setCullMode(immerseDepth.mtlCull)
+            encoder.setFrontFacing(immerseDepth.mtlWinding)
 
         case .windowed:
-            renderEnc.setCullMode(windowDepth.mtlCull)
-            renderEnc.setFrontFacing(windowDepth.mtlWinding)
+            encoder.setCullMode(windowDepth.mtlCull)
+            encoder.setFrontFacing(windowDepth.mtlWinding)
         }
     }
 }

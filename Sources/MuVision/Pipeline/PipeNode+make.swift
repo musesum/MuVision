@@ -70,26 +70,25 @@ extension PipeNode { // make
                                     format: MuComputePixelFormat) {
             flo.texture = tex
             flo.reactivate()
-            DebugLog { P("🚰 paletteTexture\(size.digits(0)) \(path)") }
+            DebugLog { P("🚰 paletteTexture \(path) \(size.digits(0)) ") }
         }
     }
     
     /// make new texture, or remake an old one if size changes.
     public func computeTexture(_ flo: Flo?) {
         
-        guard let flo else { return }
-        
+        guard let flo, flo.texture == nil else { return }
+
         let size = pipeline.pipeSize
-        if flo.texture != nil { return }
-        
         let path = flo.path(3)
         if let tex = makeComputeTex(size: size,
                                     label: path,
                                     format: MuComputePixelFormat) {
+            pipeline.rotatable[path] = flo
             flo.texture = tex
             flo.reactivate()
-            pipeline.rotatable[path] = (tex, self, flo)
-            DebugLog { P("🚰 updateTexture\(size.digits(0)) \(path)") }
+
+            DebugLog { P("🚰 updateTexture \(path) (\(tex.width),\(tex.height))  address: \(tex.texPtr)") }
         }
     }
     

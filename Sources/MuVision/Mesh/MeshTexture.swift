@@ -8,10 +8,11 @@ open class MeshTexture: MeshMetal {
     private var texName: String!
     public var texture: MTLTexture!
 
-    override open func drawMesh(_ renderEnc: MTLRenderCommandEncoder,
-                                _ renderState: RenderState) {
+    override open func drawMesh(
+        _ encoder: MTLRenderCommandEncoder,
+        _ state: RenderState) {
 
-        renderEnc.setFragmentTexture(texture, index: TextureIndex.colori)
-        super.drawMesh(renderEnc, renderState)
+        encoder.setFragmentTexture(texture, index: TextureIndex.colori)
+        super.drawMesh(encoder, state)
     }
 }

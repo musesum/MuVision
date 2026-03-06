@@ -52,16 +52,23 @@ public class ColorNode: ComputeNode {
         height˚?.updateMtlBuffer()
     }
 
-    override public func computeShader(_ computeEnc: MTLComputeCommandEncoder)  {
+    override public func computeShader(_ encoder: MTLComputeCommandEncoder) {
         updateUniforms()
-        computeEnc.setTexture(inTex˚,    index: 0)
-        computeEnc.setTexture(palTex˚,   index: 1)
-        computeEnc.setTexture(outTex˚,   index: 2)
-        computeEnc.setBuffer (plane˚,    index: 0)
-        computeEnc.setBuffer (height˚,   index: 1)
-        super.computeShader(computeEnc)
+        encoder.setTexture(inTex˚,    index: 0)
+        encoder.setTexture(palTex˚,   index: 1)
+        encoder.setTexture(outTex˚,   index: 2)
+        encoder.setBuffer (plane˚,    index: 0)
+        encoder.setBuffer (height˚,   index: 1)
+        super.computeShader(encoder)
         outTex˚?.reactivate()
         palTex˚?.reactivate()
+    }
+    public override func logShader( _ logging: inout String,
+                                    _ inOut: String) {
+        let inAdr = inTex˚?.texPtr ?? ""
+        let outAdr = outTex˚?.texPtr ?? ""
+        let inOut = "(\(inAdr)⟶\(outAdr))"
+        super.logShader(&logging, inOut)
     }
 }
 

@@ -57,28 +57,34 @@ public class CubeNode: RenderNode, @unchecked Sendable {
     }
 
     override open func renderShader(
-        _ renderEnc: MTLRenderCommandEncoder,
-        _ renderState: RenderState) {
+        _ encoder: MTLRenderCommandEncoder,
+        _ state: RenderState) {
 
             guard cudex˚?.texture ?? nil != nil else { return }
             guard let renderPipelineState else { return }
 
-            cubeMesh.eyeBuf?.setUniformBuf(renderEnc)
+            cubeMesh.eyeBuf?.setUniformBuf(encoder)
             if let mixcube˚ {
             #if os(visionOS)
             mixcube˚.setNameNums([("x", 1)], .fire) //....
             #endif
             mixcube˚.updateMtlBuffer()
         }
-        renderEnc.setFragmentTexture(inTex˚,   index: 0)
-        renderEnc.setFragmentTexture(cudex˚,   index: 1)
-        renderEnc.setFragmentBuffer (mixcube˚, index: 0)
+        encoder.setFragmentTexture(inTex˚,   index: 0)
+        encoder.setFragmentTexture(cudex˚,   index: 1)
+        encoder.setFragmentBuffer (mixcube˚, index: 0)
 
-        renderEnc.setRenderPipelineState(renderPipelineState)
-        cubeMesh.drawMesh(renderEnc, renderState)
+        encoder.setRenderPipelineState(renderPipelineState)
+        cubeMesh.drawMesh(encoder, state)
         cudex˚?.reactivate()
     }
+    public override func logShader(_ logging: inout String,
+                                   _ inOut: String) {
 
+        let inAdr = inTex˚?.texPtr ?? ""
+        let inOut = "(\(inAdr))"
+        super.logShader(&logging, inOut)
+    }
     // for both metal and visionOS reflection
     override public func updateUniforms() {
         guard let eyebuf = cubeMesh.eyeBuf else { return }

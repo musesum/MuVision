@@ -48,8 +48,8 @@ open class EyeBuf {
             .bindMemory(to: UniEyes.self, capacity: 1)
     }
 
-    public func setUniformBuf(_ renderEnc: MTLRenderCommandEncoder)  {
-        renderEnc.setVertexBuffer(eyeBuf, offset: tripleOffset, index: 15)
+    public func setUniformBuf(_ encoder: MTLRenderCommandEncoder)  {
+        encoder.setVertexBuffer(eyeBuf, offset: tripleOffset, index: 15)
     }
 
 }

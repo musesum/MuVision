@@ -23,7 +23,7 @@ open class Pipeline {
     public var pipeSource: PipeNode?
     public var layer = CAMetalLayer()
 
-    internal var rotatable = [String: (MTLTexture,PipeNode,Flo)]()
+    internal var rotatable = [String:Flo]()
 
     private var aspect = Aspect.square
     private var _aspectBuf: MTLBuffer?
@@ -38,7 +38,7 @@ open class Pipeline {
     public var viewports = [MTLViewport]()
 
     public var resizeNodes = [CallVoid]()
-    public var pipeSize = CGSize(width: 1024, height: 1024) //..... 2048
+    public var pipeSize = CGSize(width: 2048, height: 2048) //..... 2048
 
     internal var archive: ArchiveFlo
     public var root˚: Flo
@@ -65,7 +65,7 @@ open class Pipeline {
         layer.contentsGravity = .resizeAspectFill
         layer.bounds = layer.frame
         layer.contentsScale = scale
-        pipeSize = CGSize(width: 1024, height: 1024) //.... 2048
+        pipeSize = CGSize(width: 2048, height: 2048) //.... 2048
         #if os(visionOS)
         layer.frame = CGRect(x: 0, y: 0, width: pipeSize.width, height: pipeSize.height)
         #else
@@ -122,34 +122,33 @@ open class Pipeline {
         if renderState == .immersed { return }
 
         guard let pipeSource else { return }
-        var logging = ""
 
         //performCpuWork()
 
         // start command
         let desc = MTLCommandBufferDescriptor() //.....
         desc.errorOptions = .encoderExecutionStatus
-        guard let commandBuf = commandQueue.makeCommandBuffer() else { fatalError("Pipeline.renderFrame") }
+        guard let commandBuf = commandQueue.makeCommandBuffer(descriptor: desc) else { fatalError("Pipeline.renderFrame") }
         guard let drawable = layer.nextDrawable() else { return }
         // compute cycle
-        if let ce = commandBuf.makeComputeCommandEncoder() {
-            pipeSource.runCompute(ce, &logging)
-            ce.endEncoding()
+        if let commandEncoder = commandBuf.makeComputeCommandEncoder() {
+            pipeSource.runCompute(commandEncoder)
+            commandEncoder.endEncoding()
         }
         // render cycle
         let rp = renderPassDescriptor(drawable)
-        if let re = commandBuf.makeRenderCommandEncoder(descriptor: rp) {
-            pipeSource.runRender(re, &logging)
-            re.endEncoding()
+        if let renderEncoder = commandBuf.makeRenderCommandEncoder(descriptor: rp) {
+            pipeSource.runRender(renderEncoder)
+            renderEncoder.endEncoding()
         }
         // finish
         commandBuf.present(drawable)
         commandBuf.commit()
         commandBuf.waitUntilCompleted()
 
-        logging += "nil"
         if let error = commandBuf.error as NSError? {
             TimeLog("\(#function)", interval: 4) {
+
                 P("🚰 commandBuf error: \(error)")
                 if let encoderInfos =
                     error.userInfo[MTLCommandBufferEncoderInfoErrorKey]
@@ -165,8 +164,13 @@ open class Pipeline {
             }
         }
         TimeLog(#function, interval: 4) {
-            P("🚰 "+logging)
-        }
+            NextFrame.shared.addBetweenFrame {
+                var logging = ""
+                pipeSource.logNode(&logging, "")
+                logging += "nil"
+                P("🚰 "+logging)
+            }
+       }
     }
 }
 

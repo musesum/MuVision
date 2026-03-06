@@ -133,7 +133,7 @@ extension Renderer {
         // start commmand
         let desc = MTLCommandBufferDescriptor() //.....
         desc.errorOptions = .encoderExecutionStatus
-        guard let commandBuf = commandQueue.makeCommandBuffer() else { fatalError("Renderer::renderFrame commandBuf") }
+        guard let commandBuf = commandQueue.makeCommandBuffer(descriptor: desc) else { fatalError("Renderer::renderFrame commandBuf") }
 
         frame.startSubmission()
         updateAnchor(drawable)
@@ -151,21 +151,21 @@ extension Renderer {
 
         guard let pipeSource = pipeline.pipeSource else { return }
         var logging = "💧 "
-        if let computeEnc = commandBuf.makeComputeCommandEncoder() {
-            pipeSource.runCompute(computeEnc, &logging)
-            computeEnc.endEncoding()
+        if let computeEncoder = commandBuf.makeComputeCommandEncoder() {
+            pipeSource.runCompute(computeEncoder, &logging)
+            computeEncoder.endEncoding()
         }
         let renderPass = makeRenderPass(drawable: drawable)
-        if let renderEnc = commandBuf.makeRenderCommandEncoder(descriptor: renderPass) {
+        if let encoder = commandBuf.makeRenderCommandEncoder(descriptor: renderPass) {
 
-            setViewMappings(renderEnc)
+            setViewMappings(encoder)
 
-            renderEnc.setDepthStencilState(depthState)
-            renderEnc.setCullMode(.none)
-            renderEnc.setFrontFacing(.clockwise)
+            encoder.setDepthStencilState(depthState)
+            encoder.setCullMode(.none)
+            encoder.setFrontFacing(.clockwise)
 
-            pipeSource.runRender(renderEnc, drawable, deviceAnchor, &logging)
-            renderEnc.endEncoding()
+            pipeSource.runRender(encoder, drawable, deviceAnchor, &logging)
+            encoder.endEncoding()
 
             drawable.encodePresent(commandBuffer: commandBuf)
             commandBuf.commit()
@@ -193,17 +193,17 @@ extension Renderer {
             return rp
         }
 
-        func setViewMappings(_ renderEnc : MTLRenderCommandEncoder) {
+        func setViewMappings(_ encoder : MTLRenderCommandEncoder) {
 
             pipeline.viewports = drawable.views.map { $0.textureMap.viewport }
-            renderEnc.setViewports(pipeline.viewports)
+            encoder.setViewports(pipeline.viewports)
             if drawable.views.count > 1 {
                 var viewMappings = (0 ..< drawable.views.count).map {
                     MTLVertexAmplificationViewMapping(
                         viewportArrayIndexOffset: UInt32($0),
                         renderTargetArrayIndexOffset: UInt32($0))
                 }
-                renderEnc.setVertexAmplificationCount(
+                encoder.setVertexAmplificationCount(
                     pipeline.viewports.count,
                     viewMappings: &viewMappings)
             }

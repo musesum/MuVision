@@ -11,6 +11,5 @@ public class ScreenCapNode: ComputeNode, @unchecked Sendable {
     var assetBuffer: AVAssetWriterInputPixelBufferAdaptor?
     var documentURL: URL?
 
-    override public func computeShader(_ : MTLComputeCommandEncoder) {
-    }
+    override public func computeShader(_ : MTLComputeCommandEncoder) {}
 }

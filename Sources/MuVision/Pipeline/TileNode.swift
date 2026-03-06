@@ -30,18 +30,26 @@ open class TileNode: ComputeNode {
         super.makeResources()
     }
     
-    override public func computeShader(_ computeEnc: MTLComputeCommandEncoder)  {
+    override public func computeShader(_ encoder: MTLComputeCommandEncoder) {
 
         repeat˚?.updateMtlBuffer()
         mirror˚?.updateMtlBuffer()
 
-        computeEnc.setTexture(inTex˚,  index: 0)
-        computeEnc.setTexture(outTex˚, index: 1)
-        computeEnc.setBuffer (repeat˚, index: 0)
-        computeEnc.setBuffer (mirror˚, index: 1)
-        super.computeShader(computeEnc)
+        encoder.setTexture(inTex˚,  index: 0)
+        encoder.setTexture(outTex˚, index: 1)
+        encoder.setBuffer (repeat˚, index: 0)
+        encoder.setBuffer (mirror˚, index: 1)
+        super.computeShader(encoder)
         outTex˚?.reactivate()
     }
+    
+    public override func logShader(_ logging: inout String,
+                                   _ inOut: String) {
 
-
+        let inAdr = inTex˚?.texPtr ?? ""
+        let outAdr = outTex˚?.texPtr ?? ""
+        let inOut = "(\(inAdr)⟶\(outAdr))"
+        super.logShader(&logging, inOut)
+    }
 }
+

@@ -49,22 +49,29 @@ public class CellNode: ComputeNode {
         outTex˚?.reactivate()
     }
 
-    override public func computeShader(_ computeEnc: MTLComputeCommandEncoder)  {
-
+    override public func computeShader(_ encoder: MTLComputeCommandEncoder) {
         version˚?.updateMtlBuffer()
-        computeEnc.setBuffer (version˚, index: 0)
-        computeEnc.setTexture(realTex˚, index: 0)
-        computeEnc.setTexture(outTex˚,  index: 1)
-        super.computeShader(computeEnc)
+        encoder.setBuffer (version˚, index: 0)
+        encoder.setTexture(realTex˚, index: 0)
+        encoder.setTexture(outTex˚,  index: 1)
+        super.computeShader(encoder)
 
         let loopi = Int(loops)
         if loopi > 0 {
             for counter in 1 ... Int(loops) {
-                computeEnc.setTexture(fakeTex˚, index: (counter + 0) % 2)
-                computeEnc.setTexture(outTex˚,  index: (counter + 1) % 2)
-                super.computeShader(computeEnc)
+                encoder.setTexture(fakeTex˚, index: (counter + 0) % 2)
+                encoder.setTexture(outTex˚,  index: (counter + 1) % 2)
+                super.computeShader(encoder)
             }
         }
         outTex˚?.reactivate()
     }
+    public override func logShader( _ logging: inout String,
+                                    _ inOut: String) {
+        let inAdr = fakeTex˚?.texPtr ?? ""
+        let outAdr = outTex˚?.texPtr ?? ""
+        let inOut = "(\(inAdr)⟶\(outAdr))"
+        super.logShader(&logging, inOut)
+    }
+
 }

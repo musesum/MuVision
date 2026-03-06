@@ -32,16 +32,24 @@ public class CamixNode: ComputeNode {
         super.makeResources()
     }
 #if !os(visionOS)
-    public override func computeShader(_ computeEnc: MTLComputeCommandEncoder)  {
-        
+    public override func computeShader(_ encoder: MTLComputeCommandEncoder)
+    {
         guard camera.hasNewTex else { return }
         mixcam˚?.updateMtlBuffer()
-        computeEnc.setTexture(inTex˚,  index: 0)
-        computeEnc.setTexture(outTex˚, index: 1)
-        computeEnc.setTexture(camTex˚, index: 3)
-        computeEnc.setBuffer (mixcam˚, index: 0)
-        super.computeShader(computeEnc)
+        encoder.setTexture(inTex˚,  index: 0)
+        encoder.setTexture(outTex˚, index: 1)
+        encoder.setTexture(camTex˚, index: 3)
+        encoder.setBuffer (mixcam˚, index: 0)
+        super.computeShader(encoder)
         outTex˚?.reactivate()
+    }
+    public override func logShader(_ logging: inout String,
+                                   _ inOut: String) {
+
+        let inAdr = inTex˚?.texPtr ?? ""
+        let outAdr = outTex˚?.texPtr ?? ""
+        let inOut = "(\(inAdr)⟶\(outAdr))"
+        super.logShader(&logging, inOut)
     }
 #endif
 }
