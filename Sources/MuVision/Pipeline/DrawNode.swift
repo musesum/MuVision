@@ -32,6 +32,8 @@ public class DrawNode: ComputeNode {
         self.touchDraw = pipeline.touchDraw
         self.touchCanvas = touchCanvas
         self.dotCountBuf = pipeline.device.makeBuffer(length: MemoryLayout<UInt32>.stride, options: .storageModeShared)!
+        self.dotCountBuf.contents().assumingMemoryBound(to: UInt32.self).pointee = 0
+        self.dotsBuf = pipeline.device.makeBuffer(length: MemoryLayout<MetalDot>.stride, options: .storageModeShared)
         super.init(pipeline, flo˚)
 
         inTex˚  = flo˚.superBindPath("in")
@@ -106,7 +108,6 @@ public class DrawNode: ComputeNode {
         // dotCount buffer (index 3)
         let count = UInt32(normPoints.count)
         dotCountBuf.contents().assumingMemoryBound(to: UInt32.self).pointee = count
-        encoder.setBuffer(dotCountBuf, offset: 0, index: 3)
 
         let byteCount = normPoints.count * MemoryLayout<MetalDot>.stride
         if dotsBuf == nil || dotsBuf!.length < byteCount {
@@ -119,14 +120,13 @@ public class DrawNode: ComputeNode {
                 }
             }
         }
-        encoder.setBuffer(dotsBuf, offset: 0, index: 2)
         return true
     }
     override public func computeShader(_ encoder: MTLComputeCommandEncoder) {
         if updateInputBuffer() {
             _ = touchCanvas.touchDraw.takeDrawPoints()
-        } else if !updateDotsBuffer(encoder) {
-            //...... will fail validation
+        } else {
+            _ = updateDotsBuffer(encoder)
         }
 
         shift˚?.updateMtlBuffer()
@@ -134,6 +134,8 @@ public class DrawNode: ComputeNode {
         encoder.setTexture(outTex˚, index: 1)
         encoder.setBuffer (shift˚,  index: 0)
         encoder.setBuffer(pipeline.aspectBuf, offset: 0, index: 1)
+        encoder.setBuffer(dotsBuf,     offset: 0, index: 2)
+        encoder.setBuffer(dotCountBuf, offset: 0, index: 3)
         
         super.computeShader(encoder)
         outTex˚?.reactivate()
