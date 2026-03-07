@@ -131,7 +131,7 @@ extension Renderer {
         guard let drawable = frame.queryDrawable() else { return }
 
         // start commmand
-        let desc = MTLCommandBufferDescriptor() //.....
+        let desc = MTLCommandBufferDescriptor() //..
         desc.errorOptions = .encoderExecutionStatus
         guard let commandBuf = commandQueue.makeCommandBuffer(descriptor: desc) else { fatalError("Renderer::renderFrame commandBuf") }
 
@@ -143,16 +143,16 @@ extension Renderer {
         func performCpuWork() {
             // this should execute pending Flo animations
             // while ignoring the metal based renderFrame()
-            _ = NextFrame.shared.nextFrame(force: true) //..... crash here
+            _ = NextFrame.shared.nextFrame(force: true) //..... crash here?
         }
     }
     public func runLayer(_ drawable: LayerRenderer.Drawable,
                          _ commandBuf: MTLCommandBuffer) {
 
         guard let pipeSource = pipeline.pipeSource else { return }
-        var logging = "💧 "
+
         if let computeEncoder = commandBuf.makeComputeCommandEncoder() {
-            pipeSource.runCompute(computeEncoder, &logging)
+            pipeSource.runCompute(computeEncoder)
             computeEncoder.endEncoding()
         }
         let renderPass = makeRenderPass(drawable: drawable)
@@ -164,15 +164,21 @@ extension Renderer {
             encoder.setCullMode(.none)
             encoder.setFrontFacing(.clockwise)
 
-            pipeSource.runRender(encoder, drawable, deviceAnchor, &logging)
+            pipeSource.runRender(encoder, drawable, deviceAnchor)
             encoder.endEncoding()
 
             drawable.encodePresent(commandBuffer: commandBuf)
             commandBuf.commit()
             commandBuf.waitUntilCompleted()
         }
-        logging += "nil"
-        NoTimeLog(#function, interval: 4) { P(logging) }
+        NoTimeLog(#function, interval: 4) {
+            NextFrame.shared.addBetweenFrame {
+                var logging = ""
+                pipeSource.logNode(&logging, "")
+                logging += "nil"
+                P("🚰 "+logging)
+            }
+        }
 
         func makeRenderPass(drawable: LayerRenderer.Drawable) -> MTLRenderPassDescriptor { //???? duplicate?
 

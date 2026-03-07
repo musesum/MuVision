@@ -48,7 +48,7 @@ public class CameraNode: ComputeNode {
         guard camera.hasNewTex else { return }
         guard let camTex = camera.cameraTex else { return }
         computeTexture(outTex˚)
-        outTex˚?.activate() //.....
+        outTex˚?.activate() // camera will override real texture
         encoder.setTexture(camTex, index: 0)
         encoder.setTexture(outTex˚, index: 1)
         super.computeShader(encoder)

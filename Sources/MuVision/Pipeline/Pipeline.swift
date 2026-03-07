@@ -185,19 +185,11 @@ extension Pipeline {
         rp.colorAttachments[0].texture = drawable.texture
         rp.depthAttachment.texture = depthTex
         rp.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0)
-        #if false //..... immersive?
-        rp.colorAttachments[0].loadAction = .clear
-        rp.colorAttachments[0].storeAction = .store
-        rp.depthAttachment.loadAction = .clear
-        rp.depthAttachment.storeAction = .store
-        rp.depthAttachment.clearDepth = 1.0 //.... was 1
-        #else
         rp.colorAttachments[0].loadAction = .dontCare
         rp.colorAttachments[0].storeAction = .store
         rp.depthAttachment.loadAction = .dontCare
         rp.depthAttachment.storeAction = .dontCare
         rp.depthAttachment.clearDepth = 1
-        #endif
         return rp
     }
 

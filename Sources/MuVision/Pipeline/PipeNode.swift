@@ -69,13 +69,6 @@ open class PipeNode: Equatable {
                           _ anchor   : DeviceAnchor?) {
 
         if let node = self as? RenderNode {
-            let suffix: String
-            if let tex = node.pipeFlo˚.texture {
-                let address = \(Unmanaged.passUnretained(tex).toOpaque())
-                suffix = "…\(address)".suffix(5)
-            } else {
-                suffix = ""
-            }
             updateFirstTime()
             node.updateUniforms(drawable, anchor)
             node.renderShader(encoder, pipeline.renderState)
