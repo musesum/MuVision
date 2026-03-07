@@ -38,7 +38,7 @@ open class Pipeline {
     public var viewports = [MTLViewport]()
 
     public var resizeNodes = [CallVoid]()
-    public var pipeSize = CGSize(width: 2048, height: 2048) //..... 2048
+    public var pipeSize = CGSize(width: 2048, height: 2048)
 
     internal var archive: ArchiveFlo
     public var root˚: Flo
@@ -65,7 +65,7 @@ open class Pipeline {
         layer.contentsGravity = .resizeAspectFill
         layer.bounds = layer.frame
         layer.contentsScale = scale
-        pipeSize = CGSize(width: 2048, height: 2048) //.... 2048
+        pipeSize = CGSize(width: 2048, height: 2048)
         #if os(visionOS)
         layer.frame = CGRect(x: 0, y: 0, width: pipeSize.width, height: pipeSize.height)
         #else
