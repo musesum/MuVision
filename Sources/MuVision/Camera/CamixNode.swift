@@ -48,7 +48,8 @@ public class CamixNode: ComputeNode {
 
         let inAdr = inTex˚?.texPtr ?? ""
         let outAdr = outTex˚?.texPtr ?? ""
-        let inOut = "(\(inAdr)⟶\(outAdr))"
+        let camAdr = camTex˚?.texPtr ?? ""
+        let inOut = "((i:\(inAdr),c:\(camAdr))⟶\(outAdr))"
         super.logShader(&logging, inOut)
     }
 #endif

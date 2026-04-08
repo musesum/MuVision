@@ -44,11 +44,6 @@ open class ComputeNode: PipeNode {
         threadCount.width  = (width  + 16 - 1) / 16
         threadCount.height = (height + 16 - 1) / 16
         threadCount.depth  = 1
-
-        //TimeLog(#function, "threadgroup", interval: 4, log)
-        func log() {
-            print("\(pipeName) (\(width),\(height))")// thread size(\(threadSize.width),\(threadSize.height))  count(\(threadCount.width),\(threadCount.height)) remainder(\(drawW-threadSize.width*threadCount.width), \(drawH-threadSize.height*threadCount.height))")
-        }
     }
     public func computeShader(_ encoder: MTLComputeCommandEncoder) {
         if let mtlCompute {

@@ -78,13 +78,7 @@ public class CubeNode: RenderNode, @unchecked Sendable {
         cubeMesh.drawMesh(encoder, state)
         cudex˚?.reactivate()
     }
-    public override func logShader(_ logging: inout String,
-                                   _ inOut: String) {
 
-        let inAdr = inTex˚?.texPtr ?? ""
-        let inOut = "(\(inAdr))"
-        super.logShader(&logging, inOut)
-    }
     // for both metal and visionOS reflection
     override public func updateUniforms() {
         guard let eyebuf = cubeMesh.eyeBuf else { return }
@@ -94,7 +88,13 @@ public class CubeNode: RenderNode, @unchecked Sendable {
             eyebuf.updateMetalEyeUniforms(orientation)
         }
     }
+    public override func logShader(_ logging: inout String,
+                                   _ inOut: String) {
 
+        let inAdr = inTex˚?.texPtr ?? ""
+        let inOut = "(\(inAdr))"
+        super.logShader(&logging, inOut)
+    }
 #if os(visionOS)
 
     /// Update projection and rotation

@@ -117,12 +117,10 @@ open class Pipeline {
     }
     public func renderFrame()  {
 
-        if !pipeRunning { return }
-
-        if renderState == .immersed { return }
-
-        guard let pipeSource else { return }
-
+        guard pipeRunning,
+              renderState != .immersed ,
+              let pipeSource
+        else { return }
         //performCpuWork()
 
         // start command

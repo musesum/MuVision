@@ -84,9 +84,10 @@ extension PipeNode { // make
         if let tex = makeComputeTex(size: size,
                                     label: path,
                                     format: MuComputePixelFormat) {
-            pipeline.rotatable[path] = flo
+
             flo.texture = tex
             flo.reactivate()
+            pipeline.rotatable[path] = flo
 
             DebugLog { P("🚰 updateTexture \(path) (\(tex.width),\(tex.height))  address: \(tex.texPtr)") }
         }

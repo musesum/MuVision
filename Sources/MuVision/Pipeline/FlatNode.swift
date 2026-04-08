@@ -99,6 +99,7 @@ public class FlatNode: RenderNode {
             PrintLog("⁉️ FlatmapNode::renderNode err \(err)")
         }
     }
+    
     public override func logShader(_ logging: inout String,
                                    _ inOut: String) {
 
