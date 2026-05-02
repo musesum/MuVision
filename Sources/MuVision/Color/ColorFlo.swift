@@ -10,7 +10,7 @@ public class ColorFlo {
     var colors = [ColorRender]() // dual color palette
     var changed = true
 
-    var mix: UnsafeMutablePointer<UInt32>! = nil
+    var mix: UnsafeMutablePointer<UInt32>?
     var mixSize = 0
 
     var ripples: Ripples
@@ -46,9 +46,10 @@ public class ColorFlo {
     }
     deinit {
         mix?.deallocate()
+        mix = nil
     }
 
-    public func getPal(_ palSize: Int) -> UnsafeMutablePointer<UInt32> {
+    public func getPal(_ palSize: Int) -> UnsafeMutablePointer<UInt32>? {
 
         if true || changed || palSize != mixSize { //...
             changed = false
@@ -62,6 +63,7 @@ public class ColorFlo {
                 mix = UnsafeMutablePointer<UInt32>.allocate(capacity: mixSize)
             }
             // convert [Rgb] to [Uint32]
+            guard let mixPointer = mix else { return nil }
             let count = min(rgbs.count, mixSize)
             for i in 0 ..< count {
                 let rgb = rgbs[i]
@@ -70,7 +72,7 @@ public class ColorFlo {
                 let r8 = UInt32(rgb.r * 255.0) << 16
                 let a8 = UInt32(rgb.a * 255.0) << 24
                 let bgra = b8 | g8 | r8 | a8
-                mix[i] = bgra
+                mixPointer[i] = bgra
             }
         }
         return mix

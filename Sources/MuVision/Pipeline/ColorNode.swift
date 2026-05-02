@@ -36,13 +36,13 @@ public class ColorNode: ComputeNode {
     
     override public func updateUniforms() {
         // draw into palette texture
-        if let palTex = palTex˚?.texture {
+        if let palTex = palTex˚?.texture,
+           let palBytes = color˚.getPal(256) {
 
             let palSize = 256
             let pixSize = MemoryLayout<UInt32>.size
             let palRegion = MTLRegionMake3D(0, 0, 0, palSize, 1, 1)
             let bytesPerRow = palSize * pixSize
-            let palBytes = color˚.getPal(palSize)
             palTex.replace(region: palRegion,
                            mipmapLevel: 0,
                            withBytes: palBytes,
