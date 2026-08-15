@@ -37,6 +37,10 @@ open class ComputeNode: PipeNode {
         }
 
     }
+    /// swap in a prebuilt pipeline state; call on main so the render loop never sees a torn write
+    public func swapComputePipe(_ pipeState: MTLComputePipelineState) {
+        mtlCompute = pipeState
+    }
     func setupThreadGroup() {
         threadSize = MTLSizeMake(16, 16, 1)
         let width  = Int(pipeline.pipeSize.width)

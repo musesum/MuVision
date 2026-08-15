@@ -8,8 +8,8 @@ public struct MuVision {
     public static func read(_ filename: String,
                             _ ext: String) -> String? {
 
-        guard let path = Bundle.module.path(forResource: filename,
-                                            ofType: ext)  else {
+        guard let path = (Bundle.module.path(forResource: filename, ofType: ext) ??
+                          Bundle.main.path(forResource: filename, ofType: ext)) else {
             PrintLog("⁉️ MuVision:: couldn't find file: \(filename).\(ext)")
             return nil
         }

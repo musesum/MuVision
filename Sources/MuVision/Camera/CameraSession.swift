@@ -118,7 +118,23 @@ public final class CameraSession: NSObject, @unchecked Sendable {
             updateOrientation()
         }
         captureSession.commitConfiguration()
-        isChangingFace = false 
+        isChangingFace = false
+        if !front {
+            setZoomFactor(1) // back camera starts at widest lens
+        }
+    }
+
+    /// Clamp and apply zoom on the camera queue; a virtual back-camera device
+    /// switches physical lenses automatically at its switch-over factors.
+    public func setZoomFactor(_ factor: CGFloat) {
+        cameraQueue.async { [weak self] in
+            guard let self, let device = self.captureDevice else { return }
+            guard (try? device.lockForConfiguration()) != nil else { return }
+            let lo = device.minAvailableVideoZoomFactor
+            let hi = min(device.maxAvailableVideoZoomFactor, 8.0)
+            device.videoZoomFactor = max(lo, min(factor, hi))
+            device.unlockForConfiguration()
+        }
     }
 
     /// Current capture input device.
@@ -173,7 +189,19 @@ public final class CameraSession: NSObject, @unchecked Sendable {
 
         captureSession.sessionPreset = .hd1920x1080
 
-        guard let captureDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: AVMediaType.video, position: cameraPos) else { return err ("AVCaptureDevice") }
+        // back camera: prefer a virtual multi-lens device so videoZoomFactor
+        // switches to the best physical lens (ultra-wide / wide / tele),
+        // minimizing digital zoom; front stays single-lens
+        let device: AVCaptureDevice?
+        if cameraPos == .back {
+            device = AVCaptureDevice.default(.builtInTripleCamera,    for: .video, position: .back)
+            ??       AVCaptureDevice.default(.builtInDualWideCamera,  for: .video, position: .back)
+            ??       AVCaptureDevice.default(.builtInDualCamera,      for: .video, position: .back)
+            ??       AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back)
+        } else {
+            device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: cameraPos)
+        }
+        guard let captureDevice = device else { return err ("AVCaptureDevice") }
         self.captureDevice = captureDevice
         guard let captureInput = try? AVCaptureDeviceInput(device: captureDevice) else { return err ("AVCaptureDeviceInput") }
         guard captureSession.canAddInput(captureInput) else { return err ("canAddInput") }

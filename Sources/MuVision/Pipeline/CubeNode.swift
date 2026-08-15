@@ -43,8 +43,7 @@ public class CubeNode: RenderNode, @unchecked Sendable {
     }
     
     override public func makeShader() {
-        shader = Shader(pipeline,
-                        file: "render.map.cube",
+        shader = Shader(pipeline, "render.map.cube",
                         vertex: "cubeVertex",
                         fragment: "cubeIndexFragment")
         renderPipelineState = makeRenderState(cubeMesh.mtlVD)

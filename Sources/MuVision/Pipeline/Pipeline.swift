@@ -66,11 +66,11 @@ open class Pipeline {
         layer.bounds = layer.frame
         layer.contentsScale = scale
         pipeSize = CGSize(width: 2048, height: 2048)
-        #if os(visionOS)
+#if os(visionOS)
         layer.frame = CGRect(x: 0, y: 0, width: pipeSize.width, height: pipeSize.height)
-        #else
+#else
         layer.frame = bounds
-        #endif
+#endif
         PrintLog("layer.frame: \(layer.frame)")
         let pipe˚ = root˚.bind("pipe")
         pipeSource = PipeNode(self, pipe˚)
@@ -168,7 +168,7 @@ open class Pipeline {
                 logging += "nil"
                 P("🚰 "+logging)
             }
-       }
+        }
     }
 }
 

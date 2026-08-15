@@ -44,7 +44,7 @@ public class DrawNode: ComputeNode {
             }
         }
         shift˚ = flo˚.bind("shift")
-        shader = Shader(pipeline, file: "pipe.draw", kernel: "drawDotKernel")
+        shader = Shader(pipeline, "pipe.draw", kernel: "drawDotKernel")
     }
 
     override open func makeResources() {

@@ -25,8 +25,7 @@ public class FlatNode: RenderNode {
 
     override public func makeShader() {
 
-        shader = Shader(pipeline,
-                        file     : "render.map.flat",
+        shader = Shader(pipeline, "render.map.flat",
                         vertex   : "flatVertex",
                         fragment : "flatFragment")
 

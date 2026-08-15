@@ -7,10 +7,11 @@ import MuFlo
 public class Shader {
 
     var pipeline: Pipeline
-    var fileName: String?
-    var kernelName: String?
+    public internal(set) var fileName: String?
+    public internal(set) var kernelName: String?
     var vertexName: String?
     var fragmentName: String?
+    var counter: Bool
 
     public var vertexFunction: MTLFunction?
     public var kernelFunction: MTLFunction?
@@ -18,18 +19,21 @@ public class Shader {
 
     public var runtimeLibrary: MTLLibrary?
     public var function: MTLFunction?
+    public var compiledBody: String? /// embed body of last successful runtime compile
 
     public init(_ pipeline: Pipeline,
-                file: String? = nil,
+                _ file: String? = nil,
                 kernel: String? = nil,
                 vertex: String? = nil,
-                fragment: String? = nil) {
+                fragment: String? = nil,
+                counter: Bool = false) {
 
         self.pipeline = pipeline
+        self.fileName = file
         self.kernelName = kernel
         self.vertexName = vertex
         self.fragmentName = fragment
-
+        self.counter = counter
         makeLibrary()
         makeFunctions()
     }

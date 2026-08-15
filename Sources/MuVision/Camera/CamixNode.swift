@@ -23,7 +23,7 @@ public class CamixNode: ComputeNode {
         camTex˚ = pipeNode˚.superBindPath("cam")
         outTex˚ = pipeNode˚.superBindPath("out")
         mixcam˚ = pipeNode˚.superBindPath("mixcam")
-        shader  = Shader(pipeline, file: "pipe.camix", kernel: "camixKernel")
+        shader  = Shader(pipeline, "pipe.camix", kernel: "camixKernel")
     }
 
     public override func makeResources() {

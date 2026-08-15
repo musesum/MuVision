@@ -8,6 +8,7 @@ public class CameraNode: ComputeNode {
     private var camera˚ : Flo?
     private var outTex˚ : Flo?
     private var front˚  : Flo?
+    private var zoom˚   : Flo?
     private let camera  : CameraSession
     #if os(visionOS)
     public init(_ pipeline  : Pipeline,
@@ -26,23 +27,30 @@ public class CameraNode: ComputeNode {
         camera˚ = pipeNode˚
         outTex˚ = pipeNode˚.superBindPath("out")
         front˚  = pipeNode˚.superBindPath("front")
-        shader  = Shader(pipeline, file: "pipe.camera", kernel: "cameraKernel")
+        zoom˚   = pipeNode˚.superBindPath("zoom")
+        shader  = Shader(pipeline, "pipe.camera", kernel: "cameraKernel")
 
         front˚?.addClosure { flo,_ in
             camera.facing(flo.bool)
         }
-    }
-
-    override open func makeResources() {
+        zoom˚?.addClosure { flo,_ in
+            if let x = flo.val("x") {
+                camera.setZoomFactor(CGFloat(x))
+            }
+        }
+        // registered in init, not makeResources: makeResources only runs after
+        // `on > 0` passes the pipeChildren filter, so a closure added there
+        // misses the menu tap that turned the camera on (3-tap bug)
         camera˚?.addClosure { flo,_ in
             if let val = flo.val("on") {
                 let isOn = val > 0
-                self.camera.setCameraOn(isOn)
+                camera.setCameraOn(isOn)
             }
         }
-        super.makeResources()
+        camera˚?.reactivate()
     }
-    
+
+
     public override func computeShader(_ encoder: MTLComputeCommandEncoder)
     {
         guard camera.hasNewTex else { return }

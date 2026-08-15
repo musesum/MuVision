@@ -63,8 +63,6 @@ public struct ColorRender {
         return rgbs
     }
 
-   
-
     /// render colors into a rgb array
     func renderSub(_ size: Int) -> [Rgb] {
 

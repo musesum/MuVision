@@ -13,6 +13,7 @@ public class ColorNode: ComputeNode {
     private var outTex˚ : Flo?
     private var plane˚  : Flo?
     private var height˚ : Flo?
+    private var pairMix˚: Flo?
 
     public init(_ pipeline  : Pipeline,
                 _ pipeNode˚ : Flo,
@@ -25,7 +26,8 @@ public class ColorNode: ComputeNode {
         outTex˚   = pipeNode˚.superBindPath("out")
         plane˚    = pipeNode˚.superBindPath("plane")
         height˚   = pipeNode˚.superBindPath("height")
-        shader    = Shader(pipeline, file: "pipe.color", kernel: "colorKernel")
+        pairMix˚  = pipeNode˚.superBindPath("pairMix")
+        shader    = Shader(pipeline, "pipe.color", kernel: "colorKernel")
     }
 
     public override func makeResources() {
@@ -50,6 +52,7 @@ public class ColorNode: ComputeNode {
         }
         plane˚?.updateMtlBuffer()
         height˚?.updateMtlBuffer()
+        pairMix˚?.updateMtlBuffer()
     }
 
     override public func computeShader(_ encoder: MTLComputeCommandEncoder) {
@@ -59,6 +62,12 @@ public class ColorNode: ComputeNode {
         encoder.setTexture(outTex˚,   index: 2)
         encoder.setBuffer (plane˚,    index: 0)
         encoder.setBuffer (height˚,   index: 1)
+        if pairMix˚?.buffer != nil {
+            encoder.setBuffer(pairMix˚, index: 2)
+        } else {
+            var pairOff = Float(0) // no leaf in the script: keep the plain path
+            encoder.setBytes(&pairOff, length: MemoryLayout<Float>.size, index: 2)
+        }
         super.computeShader(encoder)
         outTex˚?.reactivate()
         palTex˚?.reactivate()
