@@ -11,8 +11,10 @@ extension CubeNode { // Make
 
     func makeCube() {
 
-        if let lastAspect, lastAspect == pipeline.pipeSize.aspect { return }
+        if let lastAspect, lastAspect == pipeline.pipeSize.aspect,
+           lastSize == pipeline.pipeSize { return }
         self.lastAspect = pipeline.pipeSize.aspect
+        self.lastSize = pipeline.pipeSize
 
         if let tex = makeCubeTex(), let cudex˚ {
             cudex˚.texture = tex

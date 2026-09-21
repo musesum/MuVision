@@ -4,6 +4,20 @@ import MuFlo
 
 extension Flo { // MTLBuffer
 
+    /// a shift flo whose layer is still wrapping: the eased value the Metal
+    /// buffer carries -- getFloatNums takes each scalar's tween, below -- is
+    /// off the 0.5 0.5 centre that means still. Never the touch target:
+    /// while sky.main.anim carries the azimuth pad home the target is
+    /// already at centre, and a pass gated on that stops the layer dead
+    /// while the pad's tween thumb is still gliding. At rest the plugin
+    /// lands the tween on the target, so a still layer costs nothing
+    public var shiftWrapping: Bool {
+        guard let exprs else { return false }
+        let x = exprs["x", .tween] ?? 0.5
+        let y = exprs["y", .tween] ?? 0.5
+        return abs(x - 0.5) > 0.001 || abs(y - 0.5) > 0.001
+    }
+
     public func updateMtlBuffer() {
 
         if let device = MTLCreateSystemDefaultDevice(),

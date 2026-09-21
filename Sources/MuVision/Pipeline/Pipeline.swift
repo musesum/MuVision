@@ -16,14 +16,27 @@ open class Pipeline {
     internal var clipBuf: MTLBuffer?
 
     private var depthTex: MTLTexture!
-    private var pipeRunning = false
+    var pipeRunning = false // internal: Pipeline+size pauses the loop while textures are remade
     public var renderState: RenderState
+    /// opt-in: the window layer keeps presenting while a space renders immersed;
+    /// the immersed arm owns compute, the window arm draws its own pass
+    public var dualPresent = false
+    /// opt-in: the pass clears color and depth instead of .dontCare — a frame that
+    /// draws nothing must present transparent pixels, not stale ones
+    public var clearLoad = false
+    /// the depth-clear value: 1 = far in normal Z; a reverse-Z host passes 0
+    public var clearDepthFar: Double = 1
     public var device = MTLCreateSystemDefaultDevice()!
     public var library: MTLLibrary!
     public var pipeSource: PipeNode?
     public var layer = CAMetalLayer()
 
     internal var rotatable = [String:Flo]()
+
+    /// the eyedropper's two flos: the request the menu and the canvas tap
+    /// fill in, and the brush colour the frame answers with
+    internal lazy var dropper˚: Flo? = root˚.findPath("canvas.dropper")
+    internal lazy var paint˚: Flo? = root˚.findPath("canvas.brush.paint")
 
     private var aspect = Aspect.square
     private var _aspectBuf: MTLBuffer?
@@ -118,7 +131,7 @@ open class Pipeline {
     public func renderFrame()  {
 
         guard pipeRunning,
-              renderState != .immersed ,
+              renderState != .immersed || dualPresent,
               let pipeSource
         else { return }
         //performCpuWork()
@@ -128,8 +141,9 @@ open class Pipeline {
         desc.errorOptions = .encoderExecutionStatus
         guard let commandBuf = commandQueue.makeCommandBuffer(descriptor: desc) else { fatalError("Pipeline.renderFrame") }
         guard let drawable = layer.nextDrawable() else { return }
-        // compute cycle
-        if let commandEncoder = commandBuf.makeComputeCommandEncoder() {
+        // compute cycle — the immersed arm owns it while both arms present
+        if renderState != .immersed,
+           let commandEncoder = commandBuf.makeComputeCommandEncoder() {
             pipeSource.runCompute(commandEncoder)
             commandEncoder.endEncoding()
         }
@@ -143,6 +157,10 @@ open class Pipeline {
         commandBuf.present(drawable)
         commandBuf.commit()
         commandBuf.waitUntilCompleted()
+
+        // the frame is done and the drawable is still in scope: the only
+        // moment the whole composite can be read a pixel at a time
+        pickDropper(drawable.texture)
 
         if let error = commandBuf.error as NSError? {
             TimeLog("\(#function)", interval: 4) {
@@ -161,14 +179,17 @@ open class Pipeline {
                 }
             }
         }
-        TimeLog(#function, interval: 4) {
-            NextFrame.shared.addBetweenFrame {
-                var logging = ""
-                pipeSource.logNode(&logging, "")
-                logging += "nil"
-                P("🚰 "+logging)
-            }
+#if DEBUG
+        // the chain prints between frames, so the throttle and its time prefix
+        // belong with the print itself: a TimeLog out here fires before the
+        // deferred body and strands a bare prefix on the console
+        NextFrame.shared.addBetweenFrame {
+            var logging = ""
+            pipeSource.logNode(&logging, "")
+            guard !logging.isEmpty else { return } // an empty chain logs nothing
+            TimeLog("renderChain", interval: 4) { P("🚰 " + logging + "nil") }
         }
+#endif
     }
 }
 
@@ -183,11 +204,11 @@ extension Pipeline {
         rp.colorAttachments[0].texture = drawable.texture
         rp.depthAttachment.texture = depthTex
         rp.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0)
-        rp.colorAttachments[0].loadAction = .dontCare
+        rp.colorAttachments[0].loadAction = clearLoad ? .clear : .dontCare
         rp.colorAttachments[0].storeAction = .store
-        rp.depthAttachment.loadAction = .dontCare
+        rp.depthAttachment.loadAction = clearLoad ? .clear : .dontCare
         rp.depthAttachment.storeAction = .dontCare
-        rp.depthAttachment.clearDepth = 1
+        rp.depthAttachment.clearDepth = clearDepthFar
         return rp
     }
 

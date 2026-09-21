@@ -5,9 +5,23 @@ import MuFlo // PrintLog
 
 extension PipeNode { // make
     
-    public func makeRenderState(_ metalVD: MTLVertexDescriptor) -> MTLRenderPipelineState? {
-        guard let shader else { return err("shaderFunc == nil") }
-        
+    public func makeRenderState(_ metalVD: MTLVertexDescriptor,
+                                areas: MTLPixelFormat? = nil,
+                                writes: Bool = false) -> MTLRenderPipelineState? {
+
+        guard let shader else {
+            PrintLog("⁉️ makeRenderState err: shaderFunc == nil")
+            return nil
+        }
+        return makeRenderState(metalVD, shader, areas: areas, writes: writes)
+    }
+    /// one state from an explicit shader pair; `areas` declares the tracking-areas
+    /// attachment, which only the fragments emitting a render value write
+    public func makeRenderState(_ metalVD: MTLVertexDescriptor,
+                                _ shader: Shader,
+                                areas: MTLPixelFormat? = nil,
+                                writes: Bool = false) -> MTLRenderPipelineState? {
+
         let pd = MTLRenderPipelineDescriptor()
         pd.label = pipeFlo˚.name
         pd.vertexFunction   = shader.vertexFunction
@@ -25,7 +39,11 @@ extension PipeNode { // make
         pd.colorAttachments[0].sourceAlphaBlendFactor = .sourceAlpha
         pd.colorAttachments[0].destinationRGBBlendFactor = .oneMinusSourceAlpha
         pd.colorAttachments[0].destinationAlphaBlendFactor = .oneMinusSourceAlpha
-        
+
+        if let areas {
+            pd.colorAttachments[1].pixelFormat = areas
+            pd.colorAttachments[1].writeMask = writes ? .all : []
+        }
         do {
             return try pipeline.device.makeRenderPipelineState(descriptor: pd)
         } catch {

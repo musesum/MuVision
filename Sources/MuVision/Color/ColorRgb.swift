@@ -24,8 +24,9 @@ public struct Rgb {
         lhs.b = (lhs.b * lfade) + (rhs.b * rfade)
     }
 
-    /// return 0..<360
-    func hsv() -> Hsv {
+    /// hue sat val, each 0...1 -- the range `Hsv` itself carries, and the
+    /// one `Hsv.rgb()` reads back with `hue * 6`
+    public func hsv() -> Hsv {
 
         let Min = min(r, min(g, b))
         let Max = max(r, max(g, b))
@@ -35,11 +36,14 @@ public struct Rgb {
         let ss = delta/Max
         var hh = Float(0)
         let vv = Max
+        // grey, white and black have no hue to find, and the sector
+        // arithmetic below would divide by that nothing
+        if delta == 0 { return Hsv(0, 0, vv) }
 
         if      r == Max { hh =       ( g - b ) / delta } // between yellow & magenta
         else if g == Max { hh = 2.0 + ( b - r ) / delta } // between cyan & yellow
         else             { hh = 4.0 + ( r - g ) / delta } // between magenta & cyan
-        hh /= 60                // degrees
+        hh /= 6                 // six 60 degree sectors to Hsv's 0...1
         if hh < 0 { hh += 1 }
         return Hsv(hh, ss, vv)
     }

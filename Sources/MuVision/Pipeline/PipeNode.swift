@@ -46,7 +46,10 @@ open class PipeNode: Equatable {
         if let node = self as? RenderNode {
             node.updateFirstTime()
             node.updateUniforms()
-            node.renderShader(encoder, pipeline.renderState)
+            // the window pass is windowed even while a space holds the pipeline
+            // state at immersed (dualPresent); the immersed overload below passes
+            // the pipeline state as before
+            node.renderShader(encoder, .windowed)
         }
         pipeChildren
             .filter { $0.pipeFlo˚.val("on") ?? 0 > 0 }

@@ -29,10 +29,21 @@ extension MTLDevice {
 }
 
 
+extension LayerRenderer.Drawable {
+    /// a capture target: video or streaming seen outside the device; false below visionOS 26
+    public var isCapture: Bool {
+        if #available(visionOS 26.0, *) { return target == .capture }
+        return false
+    }
+}
+
 open class Renderer {
 
     var pipeline: Pipeline
     public var deviceAnchor: DeviceAnchor?
+    /// true while frames carry a capture drawable beside the built-in one; the
+    /// compositor task writes it, app nodes read it to route a capture pass
+    nonisolated(unsafe) public private(set) static var captureActive = false
 
     // Metal
     private let device: MTLDevice
@@ -44,6 +55,10 @@ open class Renderer {
 
     public let layerRenderer: LayerRenderer
     private var renderState: LayerRenderer.State = .invalidated
+    /// set when the loop leaves; no forced tick outlives the space
+    private var loopEnded = false
+    /// whether the previous frame already reported a missing device anchor
+    private var anchorMissing = false
 
     // ARKit
     private let arSession: ARKitSession
@@ -82,6 +97,7 @@ open class Renderer {
         while true {
             switch layerRenderer.state {
             case .invalidated:
+                loopEnded = true
                 arSession.stop()
                 renderState = .invalidated
                 PrintLog("🎞️ RenderLoop .invalidated")
@@ -107,11 +123,17 @@ open class Renderer {
 }
 extension Renderer {
 
-    public func updateAnchor(_ drawable:  LayerRenderer.Drawable) {
-        guard worldTracking.state == .running else { return }
+    /// stamp this frame's device anchor; false when none is available to stamp
+    @discardableResult
+    public func updateAnchor(_ drawable:  LayerRenderer.Drawable) -> Bool {
+        guard worldTracking.state == .running else {
+            deviceAnchor = nil
+            return false
+        }
         let time = LayerRenderer.Clock.Instant.epoch.duration(to:  drawable.frameTiming.presentationTime).timeInterval
 
         deviceAnchor = worldTracking.queryDeviceAnchor(atTimestamp: time)
+        guard let deviceAnchor else { return false }
         drawable.deviceAnchor = deviceAnchor
 
         NoTimeLog(#function, interval: 4) {
@@ -119,6 +141,7 @@ extension Renderer {
                 print("⚓️ origin    " + anchorNow)
             }
         }
+        return true
     }
 
     public func renderFrame() async throws {
@@ -128,34 +151,81 @@ extension Renderer {
         performCpuWork()
         frame.endUpdate()
 
-        guard let drawable = frame.queryDrawable() else { return }
+        let drawables = nextDrawables(frame)
+        guard !drawables.isEmpty else { return }
+        reportCapture(drawables.contains { $0.isCapture })
 
-        // start commmand
+        frame.startSubmission()
+        // every queried drawable presents before endSubmission, the built-in first
+        for drawable in drawables {
+            present(drawable)
+        }
+        frame.endSubmission()
+
+        func performCpuWork() {
+            // pending Flo animations; the windowed main loop owns the tick once
+            // the space is gone, so a dying loop never forces one alongside it
+            guard !loopEnded, layerRenderer.state == .running else { return }
+            _ = NextFrame.shared.nextFrame(force: true)
+        }
+    }
+    /// log the anchor gap once at each edge, never per frame
+    private func reportAnchor(missing: Bool) {
+        guard anchorMissing != missing else { return }
+        anchorMissing = missing
+        DebugLog { P(missing
+                     ? "🎞️ Renderer no device anchor: dropping frames"
+                     : "🎞️ Renderer device anchor resumed") }
+    }
+    /// one command buffer per drawable; an anchor-less drawable still presents
+    private func present(_ drawable: LayerRenderer.Drawable) {
         let desc = MTLCommandBufferDescriptor() //..
         desc.errorOptions = .encoderExecutionStatus
         guard let commandBuf = commandQueue.makeCommandBuffer(descriptor: desc) else { fatalError("Renderer::renderFrame commandBuf") }
 
-        frame.startSubmission()
-        updateAnchor(drawable)
-        runLayer(drawable, commandBuf)
-        frame.endSubmission()
-
-        func performCpuWork() {
-            // this should execute pending Flo animations
-            // while ignoring the metal based renderFrame()
-            _ = NextFrame.shared.nextFrame(force: true) //..... crash here?
+        var presented = false
+        if updateAnchor(drawable) {
+            reportAnchor(missing: false)
+            presented = runLayer(drawable, commandBuf)
+        } else {
+            reportAnchor(missing: true)
+        }
+        if !presented {
+            // a queried drawable must present before endSubmission; the
+            // compositor drops an anchor-less present without harm
+            drawable.encodePresent(commandBuffer: commandBuf)
+            commandBuf.commit()
         }
     }
+    /// log the capture edge once each way, never per frame
+    private func reportCapture(_ active: Bool) {
+        guard Self.captureActive != active else { return }
+        Self.captureActive = active
+        DebugLog { P(active
+                     ? "🎞️ Renderer capture drawable joined the frame"
+                     : "🎞️ Renderer capture drawable left the frame") }
+    }
+    /// this frame's drawables, the built-in display first; a Reality Composer Pro
+    /// capture adds a second one, and an empty array is a cancelled frame
+    private func nextDrawables(_ frame: LayerRenderer.Frame) -> [LayerRenderer.Drawable] {
+        if #available(visionOS 26.0, *) {
+            return frame.queryDrawables().sorted { !$0.isCapture && $1.isCapture }
+        }
+        return frame.queryDrawable().map { [$0] } ?? []
+    }
+    /// true once the drawable was presented; the caller balances a false
+    @discardableResult
     public func runLayer(_ drawable: LayerRenderer.Drawable,
-                         _ commandBuf: MTLCommandBuffer) {
+                         _ commandBuf: MTLCommandBuffer) -> Bool {
 
-        guard let pipeSource = pipeline.pipeSource else { return }
+        guard let pipeSource = pipeline.pipeSource else { return false }
 
         if let computeEncoder = commandBuf.makeComputeCommandEncoder() {
             pipeSource.runCompute(computeEncoder)
             computeEncoder.endEncoding()
         }
         let renderPass = makeRenderPass(drawable: drawable)
+        var presented = false
         if let encoder = commandBuf.makeRenderCommandEncoder(descriptor: renderPass) {
 
             setViewMappings(encoder)
@@ -170,6 +240,7 @@ extension Renderer {
             drawable.encodePresent(commandBuffer: commandBuf)
             commandBuf.commit()
             commandBuf.waitUntilCompleted()
+            presented = true
         }
         NoTimeLog(#function, interval: 4) {
             NextFrame.shared.addBetweenFrame {
@@ -179,6 +250,7 @@ extension Renderer {
                 P("🚰 "+logging)
             }
         }
+        return presented
 
         func makeRenderPass(drawable: LayerRenderer.Drawable) -> MTLRenderPassDescriptor { //???? duplicate?
 
@@ -194,6 +266,18 @@ extension Renderer {
             rp.depthAttachment.storeAction = .store
             rp.depthAttachment.clearDepth = 0.0
 
+            // gaze tracking areas: no MSAA in this pass, so a plain store reaches the compositor
+            TrackingAreas.passAreas = false
+            if #available(visionOS 26.0, *),
+               TrackingAreas.format != nil,
+               let areas = drawable.trackingAreasTextures.first {
+
+                rp.colorAttachments[1].texture = areas
+                rp.colorAttachments[1].loadAction = .clear
+                rp.colorAttachments[1].storeAction = .store
+                rp.colorAttachments[1].clearColor = MTLClearColorMake(0, 0, 0, 0)
+                TrackingAreas.passAreas = true
+            }
             rp.rasterizationRateMap = drawable.rasterizationRateMaps.first
             rp.renderTargetArrayLength = drawable.views.count
             return rp

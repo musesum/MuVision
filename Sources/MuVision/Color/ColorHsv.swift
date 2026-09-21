@@ -4,18 +4,18 @@ import Foundation
 
 public struct Hsv {
 
-    internal var hue: Float // 0...1/ degree instead of radians
-    internal var sat: Float // 0...1
-    internal var val: Float // 0...1
+    public var hue: Float // 0...1, a turn rather than degrees or radians
+    public var sat: Float // 0...1
+    public var val: Float // 0...1
 
-    init(_ hue: Float, _ sat: Float, _ val: Float) {
+    public init(_ hue: Float, _ sat: Float, _ val: Float) {
 
         self.hue = hue
         self.sat = sat
         self.val = val
     }
-    /// hue: 0..<360
-    /// 
+    /// hue is a turn, 0...1: `hue * 6` picks the sector and the fraction
+    /// across it, which is what `Rgb.hsv()` writes
     public func rgb() -> Rgb {
 
         if sat == 0 { return Rgb(r: val, g: val, b: val) }

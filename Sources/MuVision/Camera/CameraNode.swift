@@ -9,6 +9,9 @@ public class CameraNode: ComputeNode {
     private var outTex˚ : Flo?
     private var front˚  : Flo?
     private var zoom˚   : Flo?
+    private var mask˚   : Flo?   // subject mask, aspect-filled like the frame
+    private var maskShader : Shader?
+    private var maskCompute: MTLComputePipelineState?
     private let camera  : CameraSession
     #if os(visionOS)
     public init(_ pipeline  : Pipeline,
@@ -28,7 +31,11 @@ public class CameraNode: ComputeNode {
         outTex˚ = pipeNode˚.superBindPath("out")
         front˚  = pipeNode˚.superBindPath("front")
         zoom˚   = pipeNode˚.superBindPath("zoom")
+        mask˚   = pipeNode˚.findPath("mask")
         shader  = Shader(pipeline, "pipe.camera", kernel: "cameraKernel")
+        if mask˚ != nil {
+            maskShader = Shader(pipeline, "pipe.camera", kernel: "cameraMaskKernel")
+        }
 
         front˚?.addClosure { flo,_ in
             camera.facing(flo.bool)
@@ -50,6 +57,12 @@ public class CameraNode: ComputeNode {
         camera˚?.reactivate()
     }
 
+    public override func makeResources() {
+        super.makeResources()
+        if let fn = maskShader?.kernelFunction {
+            maskCompute = try? pipeline.device.makeComputePipelineState(function: fn)
+        }
+    }
 
     public override func computeShader(_ encoder: MTLComputeCommandEncoder)
     {
@@ -60,6 +73,16 @@ public class CameraNode: ComputeNode {
         encoder.setTexture(camTex, index: 0)
         encoder.setTexture(outTex˚, index: 1)
         super.computeShader(encoder)
+        // the mask takes the frame's center-crop, sampled by uv over the whole frame
+        if let maskTex = camera.maskTex, let mask˚, let maskCompute {
+            computeTexture(mask˚)
+            encoder.setComputePipelineState(maskCompute)
+            encoder.setTexture(maskTex, index: 0)
+            encoder.setTexture(mask˚,   index: 1)
+            encoder.setTexture(camTex,  index: 2)
+            encoder.dispatchThreadgroups(threadCount, threadsPerThreadgroup: threadSize)
+            mask˚.activate()
+        }
     }
     public override func logShader(_ logging: inout String,
                                    _ inOut: String) {

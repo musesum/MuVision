@@ -3,6 +3,7 @@ import AVFoundation
 import Metal
 import UIKit
 import MuFlo
+import MuRouter // SubjectMask
 
 #if !os(visionOS)
 
@@ -19,7 +20,25 @@ public final class CameraSession: NSObject, @unchecked Sendable {
     private var device = MTLCreateSystemDefaultDevice()
     private var videoOut: AVCaptureVideoDataOutputSampleBufferDelegate!
 
-    public var cameraTex: MTLTexture?
+    /// written on cameraQueue, read on the render thread: behind texLock
+    private let texLock = NSLock()
+    private var _cameraTex: MTLTexture?
+    private var _maskTex: MTLTexture?
+    public var cameraTex: MTLTexture? { texLock.withLock { _cameraTex } }
+    /// person mask of the last frame, r8: white = subject; nil until the first result
+    public var maskTex: MTLTexture? { texLock.withLock { _maskTex } }
+    private let subjectMask = SubjectMask()
+    // the cache textures' owners: an MTLTexture from CVMetalTextureGetTexture is only
+    // valid while its CVMetalTexture lives, and a frame still in flight on the GPU may
+    // sample one after the next replaces it, so keep the last few (cameraQueue only)
+    private var cameraCVs: [CVMetalTexture] = []
+    private var maskCVs: [CVMetalTexture] = []
+    private static let cvKept = 3
+    private func keep(_ cv: CVMetalTexture, in ring: inout [CVMetalTexture]) {
+        ring.append(cv)
+        if ring.count > Self.cvKept { ring.removeFirst(ring.count - Self.cvKept) }
+    }
+    private var maskFailLogged = false
 
     public init(_ videoOut: AVCaptureVideoDataOutputSampleBufferDelegate? = nil,
                 position: AVCaptureDevice.Position = .front) {
@@ -262,7 +281,43 @@ extension CameraSession: AVCaptureVideoDataOutputSampleBufferDelegate {
                               from _: AVCaptureConnection) {
 
         if let camTex = convert(sampleBuf) {
-            self.cameraTex = camTex
+            texLock.withLock { _cameraTex = camTex }
+        }
+        if let imageBuf = sampleBuf.imageBuffer {
+            subjectMask.person(imageBuf) { [weak self] mask in
+                guard let self, let mask else { return }
+                cameraQueue.async { [weak self] in   // one queue for the texture cache
+                    guard let self else { return }
+                    let tex = maskTexture(mask)
+                    texLock.withLock { _maskTex = tex }
+                }
+            }
+        }
+        /// one-channel mask buffer → r8 texture through the frame cache;
+        /// a buffer the cache refuses (not IOSurface backed) is copied instead
+        func maskTexture(_ buf: CVPixelBuffer) -> MTLTexture? {
+            guard let textureCache else { return nil }
+            var cvTex: CVMetalTexture?
+            let w = CVPixelBufferGetWidth(buf), h = CVPixelBufferGetHeight(buf)
+            let status = CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault, textureCache, buf, nil, .r8Unorm, w, h, 0, &cvTex)
+            if let cvTex, let tex = CVMetalTextureGetTexture(cvTex) {
+                keep(cvTex, in: &maskCVs)
+                return tex
+            }
+            if !maskFailLogged {
+                maskFailLogged = true
+                PrintLog("⁉️ CameraSession::maskTexture: cache status \(status) \(w)x\(h), copying")
+            }
+            guard let device else { return nil }
+            let desc = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .r8Unorm, width: w, height: h, mipmapped: false)
+            desc.usage = .shaderRead
+            guard let tex = device.makeTexture(descriptor: desc) else { return nil }
+            CVPixelBufferLockBaseAddress(buf, .readOnly)
+            defer { CVPixelBufferUnlockBaseAddress(buf, .readOnly) }
+            guard let base = CVPixelBufferGetBaseAddress(buf) else { return nil }
+            tex.replace(region: MTLRegionMake2D(0, 0, w, h), mipmapLevel: 0,
+                        withBytes: base, bytesPerRow: CVPixelBufferGetBytesPerRow(buf))
+            return tex
         }
         func convert(_ sampleBuf: CMSampleBuffer) -> MTLTexture? {
             guard let textureCache else { return err("textureCache") }
@@ -275,6 +330,7 @@ extension CameraSession: AVCaptureVideoDataOutputSampleBufferDelegate {
 
             guard let imageTex else { return err("imageTex") }
             guard let texture = CVMetalTextureGetTexture(imageTex) else { return err("get texture")}
+            keep(imageTex, in: &cameraCVs)
             return texture
 
             func err(_ str: String) -> MTLTexture? {

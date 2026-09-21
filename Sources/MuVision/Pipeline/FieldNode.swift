@@ -47,6 +47,18 @@ public class FieldNode: ComputeNode {
 
         mapShader   = Shader(pipeline, "cell.field", kernel: "fieldMapKernel")
         applyShader = Shader(pipeline, "cell.field", kernel: "fieldApplyKernel")
+        pipeline.resizeNodes.append { [weak self] in self?.makeMapTex() }
+    }
+
+    /// rg32Float source-coordinate map, same grid as the cell chain; remade on pipe size change
+    func makeMapTex() {
+        let td = MTLTextureDescriptor()
+        td.pixelFormat = .rg32Float
+        td.width  = Int(pipeline.pipeSize.width)
+        td.height = Int(pipeline.pipeSize.height)
+        td.usage  = [.shaderRead, .shaderWrite]
+        mapTex = pipeline.device.makeTexture(descriptor: td)
+        mapTex?.label = pipeFlo˚.path(3) + ".map"
     }
 
     public override func makeResources() {
@@ -60,14 +72,7 @@ public class FieldNode: ComputeNode {
         if let fn = applyShader?.kernelFunction {
             applyPipe = try? pipeline.device.makeComputePipelineState(function: fn)
         }
-        // rg32Float source-coordinate map, same grid as the cell chain
-        let td = MTLTextureDescriptor()
-        td.pixelFormat = .rg32Float
-        td.width  = Int(pipeline.pipeSize.width)
-        td.height = Int(pipeline.pipeSize.height)
-        td.usage  = [.shaderRead, .shaderWrite]
-        mapTex = pipeline.device.makeTexture(descriptor: td)
-        mapTex?.label = pipeFlo˚.path(3) + ".map"
+        makeMapTex()
 
         outTex˚?.reactivate()
     }

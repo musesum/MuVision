@@ -11,6 +11,7 @@ let package = Package(
         .package(name: "MuFlo", path: "../MuFlo"),
         .package(name: "MuPeers", path: "../MuPeers"),
         .package(name: "MuHands", path: "../MuHands"),
+        .package(name: "MuRouter", path: "../MuRouter"),
     ],
     targets: [
         .target(name: "MuVision",
@@ -18,6 +19,7 @@ let package = Package(
                     .product(name: "MuFlo", package: "MuFlo"),
                     .product(name: "MuPeers", package: "MuPeers"),
                     .product(name: "MuHands", package: "MuHands"),
+                    .product(name: "MuRouter", package: "MuRouter"),
                 ],
                 resources: [.process("Resources")]),
         .testTarget(

@@ -7,6 +7,7 @@ public struct ColorRender {
     private let black = Rgb(r: 0, g: 0, b: 0)
     private let white = Rgb(r: 1, g: 1, b: 1)
     private var rendered = [Rgb]() // final render of palette with gradient fades
+    public var rgbs: [Rgb] { rendered }
 
     public init (hsvs: [Hsv], _ splice: ColorOps = .gradient) {
         self.splice = splice
@@ -21,16 +22,30 @@ public struct ColorRender {
         render(size: 256)
     }
 
+    /// letters name ramp colors, capitals and `/` set the splice, `#rrggbb` is a literal color;
+    /// no splice letter = hard bands
     public init(_ script: String) {
-        for s in script {
+        splice = []
+        let chars = Array(script)
+        var i = 0
+        while i < chars.count {
+            let s = chars[i]
+            i += 1
+            if s == "#", i + 6 <= chars.count, let rgb = ColorRender.hex(String(chars[i ..< i + 6])) {
+                rgbDef.append(rgb)
+                i += 6
+                continue
+            }
             switch s {
             case "r": rgbDef.append(Hsv(    0, 1, 1).rgb()) // red
             case "o": rgbDef.append(Hsv( 1/12, 1, 1).rgb()) // orange
             case "y": rgbDef.append(Hsv( 2/12, 1, 1).rgb()) // yellow
             case "g": rgbDef.append(Hsv( 4/12, 1, 1).rgb()) // green
+            case "c": rgbDef.append(Hsv( 6/12, 1, 1).rgb()) // cyan
             case "b": rgbDef.append(Hsv( 8/12, 1, 1).rgb()) // blue
             case "i": rgbDef.append(Hsv( 9/12, 1, 1).rgb()) // indigo
-            case "v": rgbDef.append(Hsv(10/12, 1, 1).rgb()) // violet
+            case "v": rgbDef.append(Hsv(10/12, 1, 1).rgb()) // violet, the same hue as m
+            case "m": rgbDef.append(Hsv(10/12, 1, 1).rgb()) // magenta: the picker's circle
             case "k": rgbDef.append(Hsv(    0, 0, 0).rgb()) // black
             case "w": rgbDef.append(Hsv(    0, 0, 1).rgb()) // whitecase
             case "/": splice.insert(.gradient)
@@ -45,28 +60,36 @@ public struct ColorRender {
         render(size: 256)
     }
 
-    public static func fade(from: ColorRender, to: ColorRender, _ factor: Float) -> Rgbs {
-
-        var rgbs = Rgbs()
-        let count = min(from.rendered.count, to.rendered.count)
-        let factor01 = factor < 0 ? 0 : factor > 1 ? 1 : factor
-         let invFact = 1-factor01
-        for i in 0 ..< count {
-            let fromi = from.rendered[i]
-            let toi = to.rendered[i]
-            let rgb = Rgb(r: fromi.r * invFact + toi.r * factor01,
-                          g: fromi.g * invFact + toi.g * factor01,
-                          b: fromi.b * invFact + toi.b * factor01,
-                          a: fromi.a * invFact + toi.a * factor01)
-            rgbs.append(rgb)
+    /// six hex digits → rgb
+    public static func hex(_ hex: String) -> Rgb? {
+        guard hex.count == 6, let v = UInt32(hex, radix: 16) else { return nil }
+        return Rgb(r: Float((v >> 16) & 0xFF) / 255, g: Float((v >> 8) & 0xFF) / 255, b: Float(v & 0xFF) / 255)
+    }
+    /// rgb → `#rrggbb`
+    public static func hex(_ rgb: Rgb) -> String {
+        String(format: "#%02x%02x%02x", Int(rgb.r * 255 + 0.5), Int(rgb.g * 255 + 0.5), Int(rgb.b * 255 + 0.5))
+    }
+    /// a color token: lowercase letter or `#rrggbb`; capitals and `/` are splice letters
+    public static func isColor(_ token: String) -> Bool {
+        token.hasPrefix("#") || (token.count == 1 && token == token.lowercased() && token != "/" && token != " ")
+    }
+    /// script split into palette tokens: one letter or one `#rrggbb`
+    public static func tokens(_ script: String) -> [String] {
+        var out = [String]()
+        let chars = Array(script)
+        var i = 0
+        while i < chars.count {
+            if chars[i] == "#", i + 7 <= chars.count { out.append(String(chars[i ..< i + 7])); i += 7 }
+            else { out.append(String(chars[i])); i += 1 }
         }
-        return rgbs
+        return out
     }
 
     /// render colors into a rgb array
     func renderSub(_ size: Int) -> [Rgb] {
 
         if size < 1 { return [] }
+        if rgbDef.isEmpty { return [Rgb](repeating: black, count: size) } // all-splice or empty script
         if size == 1 { return [rgbDef[0]] }
 
         var result = [Rgb]()
