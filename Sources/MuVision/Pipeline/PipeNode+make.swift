@@ -103,7 +103,13 @@ extension PipeNode { // make
                                     label: path,
                                     format: MuComputePixelFormat) {
 
-            flo.texture = tex
+            // a snapshot or archive read before this texture existed, at
+            // launch, seeds it now: the last session's canvas comes back
+            if let saved = pipeline.archive.nameTex.removeValue(forKey: path) {
+                flo.texture = pipeline.aspectCopy(saved) // applied once, then let go
+            } else {
+                flo.texture = tex
+            }
             flo.reactivate()
             pipeline.rotatable[path] = flo
 

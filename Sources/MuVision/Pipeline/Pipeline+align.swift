@@ -11,6 +11,9 @@ import CompositorServices
 
 extension Pipeline {
 
+    /// put the archive's textures into their pipe flos. An entry is let go once
+    /// applied, so a later archive brings only its own textures; one whose flo
+    /// has no texture yet waits for computeTexture to make it and seed it
     public func alignNameTex() {
 
         for (name,tex) in archive.nameTex {
@@ -19,6 +22,7 @@ extension Pipeline {
 
                 flo.texture = aspectCopy(tex)
                 flo.activate()
+                archive.nameTex.removeValue(forKey: name)
             } else {
                 DebugLog { P("\(name) not found in rotatable") }
             }
