@@ -60,18 +60,21 @@ public enum CubeFace: Int, CaseIterable, Sendable {
 
 /// the view the cube and plato share: the device's own turn, re-zeroed on
 /// a face button and on off, times the user's turn that plato.cube's
-/// x and y spin and its F R B L U D buttons ease to.
+/// yaw and pitch spin and its F R B L U D buttons ease to.
 ///
 ///     view = device · device0⁻¹ · user
 ///
 /// device0 starts at the identity, so until a face button or an off the view
-/// follows the device's heading as it always has. x turns the view right
-/// about the model's vertical, y tilts it up about the screen's horizontal,
+/// follows the device's heading as it always has. yaw turns the view right
+/// about the model's vertical, pitch tilts it up about the screen's horizontal,
 /// however the device is held;
 /// 1 is a whole turn in 32 seconds. A face button eases over four times
-/// sky.main.anim's seconds, 3t²−2t³ as MuFlo's EaseInOut; off and on over
-/// the anim's own, in step with the cube's crossfade. Off eases back to F
-/// and stops the spin, x and y to 0, until on again; zoom and frustum stay.
+/// sky.main.anim's seconds, 3t²−2t³ as MuFlo's EaseInOut; on over the
+/// anim's own, in step with the cube's fade in. Off holds the view through
+/// the fade out, the flat screen coming in over the anim's seconds, and only
+/// then eases to F over the anim's seconds again, so no turn shows through
+/// the crossfade. Off stops the spin, yaw and pitch to 0, until on again; zoom and
+/// frustum stay.
 /// Every renderer calls view(_:now:) each
 /// frame; the time it measures makes a second caller in the same frame a no-op
 public final class CubeNav: @unchecked Sendable {
@@ -88,6 +91,7 @@ public final class CubeNav: @unchecked Sendable {
     struct Ease {
         let from: simd_quatf
         let to: simd_quatf
+        /// off's starts after the fade out; until then the turn holds at from
         let start: Double
         let duration: Double
         /// off's and on's ease to F runs its course; a speed takes over after
@@ -114,7 +118,7 @@ public final class CubeNav: @unchecked Sendable {
 
     // MARK: - flo
 
-    /// plato.cubemap x is on/off, plato.cube x y z the yaw and pitch speeds
+    /// plato.cubemap x is on/off, plato.cube yaw pitch zoom the yaw and pitch speeds
     /// and zoom, sky.main.anim x the ease's seconds. Binds once per root
     public func bind(_ root˚: Flo) {
         let cubemap˚ = root˚.findPath("plato.cubemap")
@@ -146,7 +150,7 @@ public final class CubeNav: @unchecked Sendable {
         (flo.exprs?.nameAny[name] as? Scalar).map { Float($0.tween) }
     }
     private func setNav(_ nav˚: Flo) {
-        let x = tween(nav˚, "x"), y = tween(nav˚, "y"), z = tween(nav˚, "z")
+        let x = tween(nav˚, "yaw"), y = tween(nav˚, "pitch"), z = tween(nav˚, "zoom")
         lock.lock()
         if let x { yaw = x }
         if let y { pitch = y }
@@ -160,35 +164,38 @@ public final class CubeNav: @unchecked Sendable {
         lock.unlock()
     }
 
-    /// cube → square eases to F and stops the spin, x and y back to 0; zoom
-    /// and frustum stay, as plato, still drawn, shows them. Square → cube
-    /// starts the cube from its defaults: x y z w back to their script
+    /// cube → square stops the spin, yaw and pitch back to 0, and holds the view
+    /// through the cube's fade out, sky.main.anim's seconds; only once the
+    /// flat screen is fully in does the view ease to F, over the anim's
+    /// seconds again, so no turn shows through the crossfade. Zoom and
+    /// frustum stay, as plato, still drawn, shows them. Square → cube
+    /// starts the cube from its defaults: yaw, pitch, zoom and frustum back to their script
     /// values, zoom and frustum easing there, and the view eases to F from
-    /// wherever the device has taken it meanwhile, so the cube fades in on
-    /// F and plato does not jump. Either ease runs its course before a speed
-    /// set meanwhile takes over
+    /// wherever the device has taken it meanwhile, in step with the fade
+    /// in, so the cube fades in on F and plato does not jump. Either ease
+    /// runs its course before a speed set meanwhile takes over
     func setOn(_ on: Bool, now: Double = CACurrentMediaTime()) {
         lock.lock()
         let wasOn = isOn
         isOn = on
         if wasOn != on {
-            easeLocked(to: CubeFace.front.turn, now, hold: true)
+            easeLocked(to: CubeFace.front.turn, now, hold: true, after: on ? 0 : duration)
         }
         lock.unlock()
-        if wasOn, !on { centreNav(Visitor(0, .model), ["x", "y"]) }
+        if wasOn, !on { centreNav(Visitor(0, .model), ["yaw", "pitch"]) }
         if !wasOn, on { centreNav(Visitor(0, .model)) }
     }
 
     /// nav's `names` back to their script values, fired so the frustum edge
     /// and the leaf follow
-    public func centreNav(_ visit: Visitor, _ names: [String] = ["x", "y", "z", "w"]) {
+    public func centreNav(_ visit: Visitor, _ names: [String] = ["yaw", "pitch", "zoom", "frustum"]) {
         lock.lock()
         let nav˚ = self.nav˚
         lock.unlock()
         guard let nav˚ else { return }
         Self.centre(nav˚, visit, names)
     }
-    public static func centre(_ nav˚: Flo, _ visit: Visitor, _ names: [String] = ["x", "y", "z", "w"]) {
+    public static func centre(_ nav˚: Flo, _ visit: Visitor, _ names: [String] = ["yaw", "pitch", "zoom", "frustum"]) {
         guard let exprs = nav˚.exprs else { return }
         let origins: [(String, Double)] = names.compactMap { name in
             (exprs.nameAny[name] as? Scalar).map { (name, $0.origin) }
@@ -206,13 +213,15 @@ public final class CubeNav: @unchecked Sendable {
         easeLocked(to: face.turn, now, slow: Self.faceSlow)
         lock.unlock()
     }
-    private func easeLocked(to: simd_quatf, _ now: Double, slow: Double = 1, hold: Bool = false) {
+    /// `after` seconds delay the ease's start, the turn held meanwhile
+    private func easeLocked(to: simd_quatf, _ now: Double,
+                            slow: Double = 1, hold: Bool = false, after: Double = 0) {
         let now = max(now, lastTime ?? now)
         advanceLocked(now)
         user = simd_normalize(device * device0.inverse * user)
         device0 = device
         if duration > 0 {
-            ease = Ease(from: user, to: to, start: now, duration: duration * slow, hold: hold)
+            ease = Ease(from: user, to: to, start: now + after, duration: duration * slow, hold: hold)
         } else {
             user = to
             ease = nil
@@ -249,7 +258,7 @@ public final class CubeNav: @unchecked Sendable {
         lock.lock(); defer { lock.unlock() }
         return ease != nil
     }
-    /// nav z, 0…1, as it eases: EyeBuf narrows the field of view by it
+    /// nav zoom, 0…1, as it eases: EyeBuf narrows the field of view by it
     public var zoom: Float {
         lock.lock(); defer { lock.unlock() }
         return zoomNow
@@ -279,6 +288,7 @@ public final class CubeNav: @unchecked Sendable {
                 user = ease.to
                 self.ease = nil
             } else {
+                // before its start, off's fade out, the turn holds at from
                 let s = Float(max(0, t))
                 user = simd_slerp(ease.from, ease.to, s * s * (3 - 2 * s))
             }

@@ -1,111 +1,93 @@
 import XCTest
 @testable import MuVision
 
-/// LumaMix: the false disk point → which layer is on top, the key end, and each
+/// LumaMix: the pal disk point → which layer is on top, the key end, and each
 /// layer's key level; RouterNode.lumaUniform hands it to the kernel
 final class LumaMixTests: XCTestCase {
 
     /// the disk point at `hour` o'clock and radius `r`, y up
-    func mix(_ hour: Double, _ r: Double) -> LumaMix {
+    func mix(_ hour: Double, _ r: Double, depth: Double = 0) -> LumaMix {
         let a = hour / 12 * 2 * .pi
-        return LumaMix(x: 0.5 + r / 2 * sin(a), y: 0.5 + r / 2 * cos(a))
+        return LumaMix(x: 0.5 + r / 2 * sin(a), y: 0.5 + r / 2 * cos(a), depth: depth)
     }
-    func assertMix(_ m: LumaMix, realOnTop: Bool, black: Bool, real: Float, fals: Float,
+    func assertMix(_ m: LumaMix, realOnTop: Bool, black: Bool, real: Float, pal: Float,
                    accuracy: Float = 1e-5, file: StaticString = #filePath, line: UInt = #line) {
         XCTAssertEqual(m.realOnTop, realOnTop, "realOnTop", file: file, line: line)
         XCTAssertEqual(m.black, black, "black", file: file, line: line)
         XCTAssertEqual(m.realLevel, real, accuracy: accuracy, "real level", file: file, line: line)
-        XCTAssertEqual(m.falseLevel, fals, accuracy: accuracy, "false level", file: file, line: line)
+        XCTAssertEqual(m.palLevel, pal, accuracy: accuracy, "pal level", file: file, line: line)
     }
 
+    /// the table, clockwise, the first entry over the second, only it keyed:
+    ///     09..12: (P B 1..n), (R 1..1)
+    ///     12..03: (R B 1..n), (P 1..1)
+    ///     03..06: (R W n..1), (P 1..1)
+    ///     06..09: (P W n..1), (R 1..1)
     func testDefaultIsIdentity() {
-        let m = LumaMix(x: 1, y: 0.5) // canvas.luma default, the right rim
+        let m = LumaMix(x: 0.5, y: 1) // canvas.luma default, 12 o'clock on the rim
         XCTAssertEqual(m.realLevel, 1)
-        XCTAssertEqual(m.falseLevel, 1)
+        XCTAssertEqual(m.palLevel, 1)
         XCTAssertTrue(m.realOnTop)
         XCTAssertTrue(m.isIdentity)
-        XCTAssertTrue(LumaMix(x: 0.75, y: 0.5).isIdentity, "3 o'clock at any radius")
+        XCTAssertTrue(LumaMix(x: 0.5, y: 0.75).isIdentity, "12 o'clock at any radius")
+        XCTAssertTrue(LumaMix(x: 0.5, y: 0.5).isIdentity, "the centre counts as 12")
     }
     func testClockPoints() {
-        // exact points: sin and cos land a hair either side of 9, 12 and 6
-        assertMix(LumaMix(x: 0, y: 0.5), realOnTop: false, black: true, real: 1, fals: 1) // left is full F
-        assertMix(LumaMix(x: 0.5, y: 1), realOnTop: true,  black: false, real: 0, fals: 0) // rim n = 0
-        assertMix(LumaMix(x: 0.5, y: 0), realOnTop: false, black: true,  real: 0, fals: 0)
-        assertMix(mix(1.5, 1),  realOnTop: true,  black: false, real: 0.5, fals: 0.5) // 12…3 n…1
-        assertMix(mix(4.5, 1),  realOnTop: true,  black: true,  real: 0.5, fals: 0.5) // 3…6 1…n
-        assertMix(mix(7.5, 1),  realOnTop: false, black: true,  real: 0.5, fals: 0.5) // 6…9 n…1
-        assertMix(mix(10.5, 0.5), realOnTop: false, black: true, real: 0.5, fals: 0.5) // any distance
-        assertMix(LumaMix(x: 0.5, y: 0.5), realOnTop: true, black: false, real: 0, fals: 0) // centre: 12
+        // half way through each quarter, depth 0: the top layer at 0.5, the one under it whole
+        assertMix(mix(1.5, 1),  realOnTop: true,  black: true,  real: 0.5, pal: 1)   // 12..03
+        assertMix(mix(4.5, 1),  realOnTop: true,  black: false, real: 0.5, pal: 1)   // 03..06
+        assertMix(mix(7.5, 1),  realOnTop: false, black: false, real: 1, pal: 0.5)   // 06..09
+        assertMix(mix(10.5, 0.5), realOnTop: false, black: true, real: 1, pal: 0.5)  // 09..12, any distance
+        // the clock points themselves
+        assertMix(LumaMix(x: 1, y: 0.5), realOnTop: true,  black: false, real: 0, pal: 1) // 3: R keyed to n
+        assertMix(LumaMix(x: 0.5, y: 0), realOnTop: false, black: false, real: 1, pal: 0) // 6: P keyed to n
+        assertMix(LumaMix(x: 0, y: 0.5), realOnTop: false, black: true,  real: 1, pal: 1) // 9: P over R whole
     }
-    func testNineAndThreeJoin() {
-        // either side of 9 o'clock F is on top at full level, keyed from black
-        // on both sides: no switch of key end at 9
-        assertMix(mix(8.999, 1), realOnTop: false, black: true, real: 1, fals: 1, accuracy: 1e-3)
-        assertMix(mix(9.001, 1), realOnTop: false, black: true, real: 1, fals: 1, accuracy: 1e-3)
-        // either side of 3 o'clock R over F unkeyed
-        assertMix(mix(2.999, 1), realOnTop: true, black: false, real: 1, fals: 1, accuracy: 1e-3)
-        assertMix(mix(3.001, 1), realOnTop: true, black: true, real: 1, fals: 1, accuracy: 1e-3)
-    }
-    func testTwelveAndSixJoin() {
-        // at the rim both layers are keyed to 0 either side of 12 and 6
-        for m in [mix(11.999, 1), mix(0.001, 1), mix(5.999, 1), mix(6.001, 1)] {
-            XCTAssertEqual(m.realLevel, 0, accuracy: 1e-3)
-            XCTAssertEqual(m.falseLevel, 0, accuracy: 1e-3)
+    /// 9 o'clock joins, P over R whole either side; 3 keeps R on top at n,
+    /// its key end turning from B to W; 12 and 6 are where the top layer changes
+    func testSeams() {
+        assertMix(mix(8.999, 1), realOnTop: false, black: false, real: 1, pal: 1, accuracy: 1e-3)
+        assertMix(mix(9.001, 1), realOnTop: false, black: true,  real: 1, pal: 1, accuracy: 1e-3)
+        for depth in [0.0, 0.4] {
+            let before = mix(2.999, 1, depth: depth), after = mix(3.001, 1, depth: depth)
+            XCTAssertTrue(before.realOnTop && after.realOnTop)
+            XCTAssertEqual(before.realLevel, Float(depth), accuracy: 1e-3)
+            XCTAssertEqual(after.realLevel, Float(depth), accuracy: 1e-3)
+            XCTAssertTrue(before.black)
+            XCTAssertFalse(after.black)
         }
+        let left12 = mix(11.999, 1), right12 = mix(0.001, 1)
+        XCTAssertFalse(left12.realOnTop)
+        XCTAssertEqual(left12.palLevel, 0, accuracy: 1e-3, "P keyed to n just left of 12")
+        XCTAssertTrue(right12.realOnTop)
+        XCTAssertEqual(right12.realLevel, 1, accuracy: 1e-3, "R over P whole just right of 12")
+        let above6 = mix(5.999, 1), below6 = mix(6.001, 1)
+        XCTAssertTrue(above6.realOnTop)
+        XCTAssertEqual(above6.realLevel, 1, accuracy: 1e-3, "R over P whole just above 6")
+        XCTAssertFalse(below6.realOnTop)
+        XCTAssertEqual(below6.palLevel, 0, accuracy: 1e-3, "P keyed to n just below 6")
     }
     func testEntriesTopFirst() {
-        let left = mix(10.5, 1).entries
-        XCTAssertEqual(left.map { $0.layer + $0.key }, ["FB", "RB"])
-        let top = mix(1.5, 1).entries
-        XCTAssertEqual(top.map { $0.layer + $0.key }, ["RW", "FW"], "W keys 12…3 alone")
-        let low = mix(4.5, 1).entries
-        XCTAssertEqual(low.map { $0.layer + $0.key }, ["RB", "FB"])
+        XCTAssertEqual(mix(10.5, 1).entries.map { $0.layer + $0.key }, ["PB", "R"])
+        XCTAssertEqual(mix(1.5, 1).entries.map { $0.layer + $0.key }, ["RB", "P"])
+        XCTAssertEqual(mix(4.5, 1).entries.map { $0.layer + $0.key }, ["RW", "P"])
+        XCTAssertEqual(mix(7.5, 1).entries.map { $0.layer + $0.key }, ["PW", "R"])
+        XCTAssertEqual(mix(7.5, 1).entries.last?.level, 1, "the one under is whole")
     }
-
-    /// the old disk, before the curve: n = (1 − r) / 2, levels n…1 by quarter
-    func oldLevels(_ x: Double, _ y: Double) -> (real: Float, fals: Float, realOnTop: Bool, black: Bool) {
-        let dx = x - 0.5, dy = y - 0.5
-        let n = (1 - min(1, 2 * hypot(dx, dy))) / 2
-        var hour = atan2(dx, dy) / (2 * .pi) * 12
-        if hour < 0 { hour += 12 }
-        let quarter = min(3, Int(hour / 3))
-        let t = hour / 3 - Double(quarter)
-        let rising = quarter == 0 || quarter == 2
-        let level = Float(rising ? n + (1 - n) * t : 1 + (n - 1) * t)
-        return (level, level, quarter < 2, quarter != 0) // key ends as the table now has them: B but 12…3
-    }
-    /// depth stands in for the old thumb distance: depth (1 − r) / 2 is the
-    /// old disk at every point, the defaults are it on the rim
-    func testDepthEmulatesTheOldDisk() {
-        var g = SystemRandomNumberGenerator()
-        for _ in 0 ..< 2000 {
-            let x = Double.random(in: 0 ... 1, using: &g), y = Double.random(in: 0 ... 1, using: &g)
-            let r = min(1, 2 * hypot(x - 0.5, y - 0.5))
-            let m = LumaMix(x: x, y: y, depth: (1 - r) / 2)
-            let o = oldLevels(x, y)
-            XCTAssertEqual(m.realLevel, o.real, accuracy: 1e-6, "\(x) \(y)")
-            XCTAssertEqual(m.falseLevel, o.fals, accuracy: 1e-6)
-            XCTAssertEqual(m.realOnTop, o.realOnTop)
-            XCTAssertEqual(m.black, o.black)
-            XCTAssertEqual(m.band, LumaMix.oldBand)
-            // the rim at the defaults
-            let a = atan2(y - 0.5, x - 0.5)
-            let rx = 0.5 + cos(a) / 2, ry = 0.5 + sin(a) / 2
-            XCTAssertEqual(LumaMix(x: rx, y: ry).realLevel, oldLevels(rx, ry).real, accuracy: 1e-5)
-        }
-        XCTAssertEqual(LumaMix.defaultDepth, 0)
-        XCTAssertEqual(LumaMix.defaultBreadth, 0)
-    }
-    /// depth is n, whatever the thumb's distance from the centre
+    /// depth is n, the keyed layer's level at 3 and 6 o'clock, whatever the
+    /// thumb's distance from the centre
     func testDepthIsN() {
         for depth in [0.0, 0.3, 1.0] {
-            for y in [1.0, 0.75, 0.55] { // 12 o'clock at the rim, half way, near the centre
-                XCTAssertEqual(LumaMix(x: 0.5, y: y, depth: depth).realLevel, Float(depth), accuracy: 1e-6)
+            for r in [1.0, 0.5, 0.1] {
+                XCTAssertEqual(LumaMix(x: 0.5 + r / 2, y: 0.5, depth: depth).realLevel, Float(depth), accuracy: 1e-6)
+                XCTAssertEqual(LumaMix(x: 0.5, y: 0.5 - r / 2, depth: depth).palLevel, Float(depth), accuracy: 1e-6)
             }
         }
-        XCTAssertEqual(LumaMix(x: 0.5, y: 1, depth: 2).realLevel, 1, "clamped")
-        XCTAssertTrue(LumaMix(x: 0.5, y: 1, depth: 1).isIdentity, "12…3 with nothing keyed is R over F")
-        XCTAssertFalse(LumaMix(x: 0.2, y: 0.7, depth: 1).isIdentity, "9…12 keeps F over R")
+        XCTAssertEqual(LumaMix(x: 1, y: 0.5, depth: 2).realLevel, 1, "clamped")
+        XCTAssertTrue(LumaMix(x: 1, y: 0.5, depth: 1).isIdentity, "3 o'clock with nothing keyed is R over P")
+        XCTAssertFalse(LumaMix(x: 0.2, y: 0.7, depth: 1).isIdentity, "09..12 keeps P over R")
+        XCTAssertEqual(LumaMix.defaultDepth, 0)
+        XCTAssertEqual(LumaMix.defaultBreadth, 0)
     }
     /// breadth → the cut edge's half width, an octave every quarter from the
     /// old key's 1/32; σ the Gaussian's that fits that edge
@@ -149,7 +131,7 @@ final class LumaMixTests: XCTestCase {
     /// the cut: level of the range kept below it, the edge's Gaussian around
     /// it; black keys mirror white ones; wider breadth, softer edge
     func testGaussianEdge() {
-        let w = LumaMix(realOnTop: true, black: false, realLevel: 0.5, falseLevel: 1, band: 0.125)
+        let w = LumaMix(realOnTop: true, black: false, realLevel: 0.5, palLevel: 1, band: 0.125)
         XCTAssertEqual(w.keep(luma: 0.5, level: 0.5), 0.5, accuracy: 1e-6, "the cut at mid level")
         XCTAssertEqual(w.keep(luma: 0.3, level: 1), 1)
         XCTAssertEqual(w.keep(luma: 0, level: 0), 0, "level 0 keeps none")
@@ -170,17 +152,17 @@ final class LumaMixTests: XCTestCase {
             last = k
         }
         // a wider edge keeps more just past the cut
-        let soft = LumaMix(realOnTop: true, black: false, realLevel: 0.5, falseLevel: 1, band: 0.5)
+        let soft = LumaMix(realOnTop: true, black: false, realLevel: 0.5, palLevel: 1, band: 0.5)
         XCTAssertGreaterThan(soft.keep(luma: 0.6, level: 0.5), w.keep(luma: 0.6, level: 0.5))
     }
 
-    /// the kernel's view: real level, false level, black key, 1 real on top or 2 false
+    /// the kernel's view: real level, pal level, black key, 1 real on top or 2 pal
     func testLumaUniform() {
         XCTAssertEqual(RouterNode.lumaUniform(.identity), SIMD4(1, 1, 0, 1))
-        let low = RouterNode.lumaUniform(mix(7.5, 1)) // 6…9: F over R, black key
-        XCTAssertEqual(low.x, 0.5, accuracy: 1e-5)
+        let low = RouterNode.lumaUniform(mix(7.5, 1)) // 06..09: P over R, white key, R whole
+        XCTAssertEqual(low.x, 1, accuracy: 1e-5)
         XCTAssertEqual(low.y, 0.5, accuracy: 1e-5)
-        XCTAssertEqual(low.z, 1)
+        XCTAssertEqual(low.z, 0)
         XCTAssertEqual(low.w, 2)
         XCTAssertEqual(RouterNode.curveUniform(LumaMix(x: 0.2, y: 0.3, breadth: 1)), SIMD4(0.5, 0, 0, 0))
     }

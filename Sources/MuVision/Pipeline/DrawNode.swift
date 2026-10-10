@@ -19,7 +19,7 @@ public class DrawNode: ComputeNode {
 
     private var inTex˚      : Flo?
     private var outTex˚     : Flo?
-    private var shift˚      : Flo?          // pipe.draw.shift, index/false layer shift, drawDotKernel buffer 0
+    private var shift˚      : Flo?          // pipe.draw.shift, index/pal layer shift, drawDotKernel buffer 0
     private var shiftReal˚  : Flo?          // pipe.draw.shiftReal, real layer shift, drawRealKernel buffer 0
     private var touchDraw   : TouchDraw
     private var touchCanvas : TouchCanvas
@@ -77,14 +77,15 @@ public class DrawNode: ComputeNode {
     }
     /// the settings a snapshot restores alongside the canvas, each set kept
     /// to the layer whose leaf writes it, so the real leaf's arrows never
-    /// roll back what the false leaf is holding. canvas.alpha is on neither
+    /// roll back what the pal leaf is holding. canvas.alpha is on neither
     /// list: it is the cube face mix and the plato alpha, written by the
     /// hand, and replaying it on an undo blanked the cube
     private func params(_ paths: [String]) -> [(Flo, [String])] {
         guard let root = paint˚?.getRoot() else { return [] }
         return paths.compactMap { path -> (Flo, [String])? in
             guard let flo = root.findPath(path) else { return nil }
-            return (flo, ["x", "y", "z", "w"].filter { flo.val($0) != nil })
+            let axisName = flo.axisNames()
+            return (flo, Flo.axisSlots.compactMap { axisName[$0] }.filter { flo.val($0) != nil })
         }
     }
     /// what the real leaf's own controls write: the stroke's colour and its
@@ -93,7 +94,7 @@ public class DrawNode: ComputeNode {
     static let realParamPaths = ["canvas.brush.paint", "canvas.brush.alpha",
                                  "canvas.shiftReal", "canvas.brush.tiltReal",
                                  "canvas.brush.sizeReal", "canvas.brush.pressReal"]
-    /// and what the false leaf's do: the brush row, the azimuth pad's colour
+    /// and what the pal leaf's do: the brush row, the azimuth pad's colour
     /// frame and shift, the canvas repeat, the palettes and the preset slots
     static let indexParamPaths = ["canvas.brush.index", "canvas.brush.size", "canvas.brush.press",
                                   "canvas.brush.tilt", "canvas.brush.paint",
@@ -271,7 +272,7 @@ public class DrawNode: ComputeNode {
                              ("y", Double(redoSnaps.count { $0.real != nil }))],
                             .fire, Visitor(0))
     }
-    /// the newest snapshot that carries the real layer. A false stroke or a
+    /// the newest snapshot that carries the real layer. A pal stroke or a
     /// fill leaves an index-only snapshot, which the real leaf's arrows step
     /// over: they roll back the real layer's strokes and settings, nothing else
     static func popReal(_ snaps: inout [CanvasSnap]) -> CanvasSnap? {
@@ -476,7 +477,7 @@ public class DrawNode: ComputeNode {
 
         let aspectBuf = pipeline.aspectBuf // aspect ratio
 
-        // drawDotKernel: index/false layer, shifted by canvas.shift
+        // drawDotKernel: index/pal layer, shifted by canvas.shift
         encoder.setTexture(inTex˚      , index: 0)
         encoder.setTexture(outTex˚     , index: 1)
         encoder.setBuffer (shift˚      , index: 0)

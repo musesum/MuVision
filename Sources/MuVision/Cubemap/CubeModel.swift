@@ -3,12 +3,15 @@ import Metal
 
 public class CubeModel: MeshModel<Float> {
 
+    /// half the cube's side, model units
+    public static let radius = Float(10)
+
     override public init(_ nameFormats: [VertexNameFormat],
                          _ vertexStride: Int) {
 
         super.init(nameFormats, vertexStride)
 
-        let r = Float(10)
+        let r = Self.radius
         vertices = [ // each 4 elements is 1 VertexCube element
         /* +Y */  -r,+r,+r,1, +r,+r,+r,1, +r,+r,-r,1, -r,+r,-r,1,
         /* -Y */  -r,-r,-r,1, +r,-r,-r,1, +r,-r,+r,1, -r,-r,+r,1,

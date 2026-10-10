@@ -7,7 +7,7 @@ import MuFlo
 
 /// the canvas's undo ring. Both arrows live on the real paint leaf's bottom
 /// row, so they step that layer's own history: the newest snapshot carrying
-/// a real texture, with the settings the real leaf writes. A false stroke's
+/// a real texture, with the settings the real leaf writes. A pal stroke's
 /// snapshot stays where it is, and nothing on either list reaches the cube
 final class DrawHistoryTests: XCTestCase {
 
@@ -20,7 +20,7 @@ final class DrawHistoryTests: XCTestCase {
         }
     }
 
-    /// the real leaf's own settings ride with the real layer, the false
+    /// the real leaf's own settings ride with the real layer, the pal
     /// leaf's with the index layer, and neither list carries the other's
     func testParamListsAreKeptApart() {
         let real = Set(DrawNode.realParamPaths)
@@ -30,8 +30,8 @@ final class DrawHistoryTests: XCTestCase {
         XCTAssertEqual(real.intersection(index), ["canvas.brush.paint"])
         XCTAssertTrue(real.contains("canvas.brush.alpha"), "the real left arc's stroke alpha")
         XCTAssertTrue(real.contains("canvas.shiftReal"))
-        XCTAssertFalse(real.contains("canvas.shift"), "the false pad's shift is not the real one's")
-        XCTAssertFalse(real.contains("canvas.brush.index"), "the false brush row stays put")
+        XCTAssertFalse(real.contains("canvas.shift"), "the pal pad's shift is not the real one's")
+        XCTAssertFalse(real.contains("canvas.brush.index"), "the pal brush row stays put")
         XCTAssertFalse(real.contains("sky.color.xfade"), "and so do the palettes")
         XCTAssertTrue(index.contains("canvas.brush.index"))
         XCTAssertTrue(index.contains("sky.color.ofs0"))
@@ -39,7 +39,7 @@ final class DrawHistoryTests: XCTestCase {
 
     /// the arrows step over an index-only snapshot to the newest real one,
     /// and leave the index ones in the ring
-    func testPopRealStepsOverTheFalseLayer() throws {
+    func testPopRealStepsOverThePalLayer() throws {
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         let d = MTLTextureDescriptor.texture2DDescriptor(
             pixelFormat: .rgba8Unorm, width: 4, height: 4, mipmapped: false)
@@ -54,10 +54,10 @@ final class DrawHistoryTests: XCTestCase {
 
         let first = DrawNode.popReal(&snaps)
         XCTAssertNotNil(first?.real, "the newest real one")
-        XCTAssertEqual(snaps.count, 2, "both false snapshots stay")
+        XCTAssertEqual(snaps.count, 2, "both pal snapshots stay")
         XCTAssertTrue(snaps.allSatisfy { $0.real == nil })
 
         XCTAssertNil(DrawNode.popReal(&snaps), "nothing left for the real arrows")
-        XCTAssertEqual(snaps.count, 2, "and the false ones are still not touched")
+        XCTAssertEqual(snaps.count, 2, "and the pal ones are still not touched")
     }
 }

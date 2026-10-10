@@ -40,7 +40,7 @@ public class CubeNode: RenderNode, @unchecked Sendable {
         cudex˚    = pipeFlo˚.superBindPath("cudex")
         mixcube˚  = pipeFlo˚.superBindPath("mixcube")
         zoom˚     = pipeFlo˚.getRoot().bind("plato.phase") { f,_ in
-            self.zoom = f.xyz.z
+            self.zoom = Float((f.exprs?.nameAny["zoom"] as? Scalar)?.tween ?? 0)
         }
         frustum˚  = pipeFlo˚.getRoot().bind("pipe.render.frustum") { f,_ in
             self.frustum = f.float

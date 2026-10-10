@@ -206,7 +206,8 @@ extension Pipeline {
         rp.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0)
         rp.colorAttachments[0].loadAction = clearLoad ? .clear : .dontCare
         rp.colorAttachments[0].storeAction = .store
-        rp.depthAttachment.loadAction = clearLoad ? .clear : .dontCare
+        // memoryless depth holds tile garbage until cleared; nothing persists across frames
+        rp.depthAttachment.loadAction = .clear
         rp.depthAttachment.storeAction = .dontCare
         rp.depthAttachment.clearDepth = clearDepthFar
         return rp

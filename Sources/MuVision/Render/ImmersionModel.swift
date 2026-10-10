@@ -13,8 +13,12 @@ open class ImmersionModel {
     }
 
     public var state: State = .windowed
-    public var style: ImmersionStyle = .mixed
+    public var style: ImmersionStyle = .mixed {
+        didSet { Self.fullNow = style is FullImmersionStyle }
+    }
     public var isImmersed = false
+    /// the style as last set; the eye buffer's zoom floor reads it off the render thread
+    nonisolated(unsafe) public private(set) static var fullNow = false
 
     public init() {}
 

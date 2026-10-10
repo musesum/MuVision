@@ -14,12 +14,12 @@ final class RouterJoinTests: XCTestCase {
                 mask: Bool = true, tex: Bool = true) -> S {
         S(route: SIMD4(fx, fy, bx, by), fade: SIMD4(ff, mask ? 1 : 0, tex ? 1 : 0, bf))
     }
-    /// pipe.flo.h defaults: draw front empty at 2, false canvas cell at 1,
+    /// pipe.flo.h defaults: draw front empty at 2, pal canvas on pal at 1,
     /// camera off, album front raw at 4, back raw at 3, both sliders at 1
     func uniforms(pass: Float = 1) -> U {
         var u = U()
         u.pass.x = pass
-        u.draw = source(0, 2, 0, 3, 1, 1)
+        u.draw = source(0, 2, 0, 2, 1, 1)
         u.camera = source(0, 6, 0, 0, 5, 0, mask: false, tex: false)
         u.album = source(1, 4, 1, 1, 3, 1)
         return u
@@ -41,15 +41,45 @@ final class RouterJoinTests: XCTestCase {
     }
     func testSplitPathsKeepTwoLanes() {
         var u = uniforms()
-        u.album.route.z = 3 // back to the cell rule, front raw
+        u.album.route.z = 2 // back to the cell rule, front raw
         XCTAssertFalse(RouterNode.joined(u).album)
-        XCTAssertFalse(RouterNode.joined(uniforms(pass: 3)).album)
+        XCTAssertFalse(RouterNode.joined(uniforms(pass: 2)).album)
     }
     func testFeedPassJoinsCellLanes() {
-        var u = uniforms(pass: 3)
-        u.album.route.x = 3
-        u.album.route.z = 3
+        var u = uniforms(pass: 2)
+        u.album.route.x = 2
+        u.album.route.z = 2
         XCTAssertTrue(RouterNode.joined(u).album)
+    }
+    /// the outputs are bits: a path on both, raw + pal, is in either pass
+    func testBothJoinsInEachPass() {
+        for pass: Float in [1, 2] {
+            var u = uniforms(pass: pass)
+            u.album.route.x = 3
+            u.album.route.z = 3
+            XCTAssertTrue(RouterNode.joined(u).album, "pass \(pass)")
+            u.album.route.z = pass == 1 ? 2 : 1 // the back lane in the other pass only
+            XCTAssertFalse(RouterNode.joined(u).album, "pass \(pass)")
+        }
+        XCTAssertTrue(RouterNode.routed(3, 1))
+        XCTAssertTrue(RouterNode.routed(3, 2))
+        XCTAssertFalse(RouterNode.routed(2, 1))
+        XCTAssertFalse(RouterNode.routed(4, 3), "SD-Turbo is neither raw nor pal")
+        XCTAssertFalse(RouterNode.routed(0, 3))
+    }
+    /// a join is the mask's two halves drawn as one: a path on F+B is the
+    /// frame unmasked by itself, and two paths on one half are not a whole
+    func testOnlyTheTwoHalvesJoin() {
+        var u = uniforms()
+        XCTAssertEqual(u.album.part, SIMD4(1, 2, 0, 0), "path a on F, path b on B")
+        u.album.part = SIMD4(2, 1, 0, 0) // the halves the other way round
+        XCTAssertTrue(RouterNode.joined(u).album)
+        u.album.part = SIMD4(3, 2, 0, 0)
+        XCTAssertFalse(RouterNode.joined(u).album, "F+B on path a")
+        u.album.part = SIMD4(1, 3, 0, 0)
+        XCTAssertFalse(RouterNode.joined(u).album, "F+B on path b")
+        u.album.part = SIMD4(1, 1, 0, 0)
+        XCTAssertFalse(RouterNode.joined(u).album, "both on F")
     }
     func testCameraBetweenKeepsSeparation() {
         var u = uniforms()

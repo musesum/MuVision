@@ -14,6 +14,18 @@ public enum StripItem: Sendable {
     case video(URL)
 }
 
+/// a picked item with the photo library's identifier for it, when the
+/// picker gave one (a pick made with full photo access): an archive's
+/// local link names the set by these
+public struct StripPick: Sendable {
+    public let item: StripItem
+    public let assetId: String?
+    public init(_ item: StripItem, assetId: String? = nil) {
+        self.item = item
+        self.assetId = assetId
+    }
+}
+
 /// photo strip fed into the real layer: WinSky pic/Strip.cpp port with the
 /// frames held as textures and the window cut by the strip kernel. The frames
 /// sit side by side at their own aspect (each scaled to the strip's across span,
@@ -25,7 +37,7 @@ public enum StripItem: Sendable {
 public class StripNode: ComputeNode {
 
     /// app seam: present a photo picker and hand back the chosen stills and movies in order
-    nonisolated(unsafe) public static var present: ((@escaping ([StripItem]) -> Void) -> Void)?
+    nonisolated(unsafe) public static var present: ((@escaping ([StripPick]) -> Void) -> Void)?
 
     private var outTex˚  : Flo?
     private var maskTex˚ : Flo?                  // subject masks, cut like the frames
@@ -46,6 +58,7 @@ public class StripNode: ComputeNode {
     private var offset   = SIMD2<Float>(0, 0)   // along: across-span units; across: 0…1
     private var lastTime = CACurrentMediaTime()
     private var videos   = [StripVideo?]()       // per frame: nil = still
+    private var assetIds = [String?]()           // per frame: the photo library's identifier, nil when the picker gave none
     private var playing  = false                 // pipe.strip on: videos play, else pause
     private var maskTime = 0.0                   // last live mask request
     private var maskNext = 0                     // round robin over the video frames
@@ -85,20 +98,39 @@ public class StripNode: ComputeNode {
         // a sync feature)
         pick˚?.addClosure   { [weak self] flo, visit in
             guard let self, flo.float > 0.5, visit.type.has(.user) else { return }
-            StripNode.present? { [weak self] items in
+            StripNode.present? { [weak self] picks in
                 // a cancelled picker keeps the current set (Dreamatic's nil pick)
-                guard let self, !items.isEmpty else { return }
-                if load(items, persist: true) > 0 { pipeFlo˚.setNameNums([("on", 1)], .fire, Visitor(0)) }
+                guard let self, !picks.isEmpty else { return }
+                if load(picks, persist: true) > 0 { pipeFlo˚.setNameNums([("on", 1)], .fire, Visitor(0)) }
             }
         }
         // on only gates dispatch, so the videos pause with it (Dreamatic pauses an idle album);
         // registered before restore, whose on 1 starts the restored videos
-        pipeNode˚.addClosure { [weak self] flo, _ in
-            guard let self, let on = flo.val("on"), (on > 0) != playing else { return }
+        pipeNode˚.addClosure { [weak self] flo, visit in
+            guard let self else { return }
+            if visit.type.has(.archive) { return keepSet() }
+            guard let on = flo.val("on"), (on > 0) != playing else { return }
             playing = on > 0
             videos.forEach { $0?.play(playing) }
         }
+        // an archive read while running merges the on and count it was saved
+        // with, `on 0, count 0` from any archive made without an album, which
+        // left the set loaded but switched off: the Layers thumbnail kept the
+        // last frame while the router dropped the album
+        count˚?.addClosure { [weak self] _, visit in
+            if visit.type.has(.archive) { self?.keepSet() }
+        }
         restore()
+    }
+
+    /// on and count belong to the set this node holds, not to an archive:
+    /// put back what a merge wrote over them, quietly, since the router and
+    /// the Layers leaf read them each frame. An archive that carries its own
+    /// album replaces the set after the merge, through loadPicks
+    private func keepSet() {
+        let count = frameCount
+        count˚?.setNameNums([("x", Double(count))], .sneak, Visitor(0))
+        pipeFlo˚.setNameNums([("on", count > 0 ? 1 : 0)], .sneak, Visitor(0))
     }
 
     /// slide is an xy flo: `xyz` is nil without a z component, which zeroed the rate
@@ -119,17 +151,18 @@ public class StripNode: ComputeNode {
     /// `persist` writes them to disk; the previous set's players are torn down.
     /// The new set is built aside and swapped in under the lock; returns its frame count
     @discardableResult
-    func load(_ picked: [StripItem], persist: Bool) -> Int {
+    func load(_ picked: [StripPick], persist: Bool) -> Int {
         videos.forEach { $0?.stop() }
-        let items = persist ? StripNode.save(Array(picked.prefix(8))) : Array(picked.prefix(8))
+        let picks = persist ? StripNode.save(Array(picked.prefix(8))) : Array(picked.prefix(8))
         playing = (pipeFlo˚.val("on") ?? 0) > 0
         let loader = MTKTextureLoader(device: pipeline.device)
         var textures = [MTLTexture]()
         var maskTextures = [MTLTexture]()
         var ratios = [Float]()
         var clips = [StripVideo?]()
-        for item in items {
-            switch item {
+        var ids = [String?]()
+        for pick in picks {
+            switch pick.item {
             case .image(let image):
                 guard let cg = StripNode.upright(image),
                       let tex = try? loader.newTexture(cgImage: cg, options: [.SRGB: false]) else { continue }
@@ -146,6 +179,7 @@ public class StripNode: ComputeNode {
                 ratios.append(1)
                 clips.append(video)
             }
+            ids.append(pick.assetId)
         }
         // one swap: the render loop sees the old set or the new one, never a mix
         lock.withLock {
@@ -153,6 +187,7 @@ public class StripNode: ComputeNode {
             masks = maskTextures
             aspects = ratios
             videos = clips
+            assetIds = ids
             maskNext = 0
             offset = .zero
         }
@@ -281,45 +316,85 @@ public class StripNode: ComputeNode {
     }()
 
     /// a new pick replaces the old set: stills as NN.jpg, movies moved in as NN.<ext>,
-    /// NN = picked position; hands back the items with each movie at its saved place
-    private static func save(_ items: [StripItem]) -> [StripItem] {
+    /// NN = picked position, and links.json the photo library's identifiers by
+    /// position; hands back the picks with each movie at its saved place
+    private static func save(_ picks: [StripPick]) -> [StripPick] {
         let fm = FileManager.default
         let dir = stripDir
         try? fm.removeItem(at: dir)
         try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
-        return items.enumerated().map { i, item in
-            switch item {
+        let saved: [StripPick] = picks.enumerated().map { i, pick in
+            switch pick.item {
             case .image(let image):
                 if let data = image.jpegData(compressionQuality: 0.9) {
                     try? data.write(to: dir.appendingPathComponent(String(format: "%02d.jpg", i)), options: .atomic)
                 }
-                return item
+                return pick
             case .video(let url):
                 let ext = url.pathExtension.isEmpty ? "mov" : url.pathExtension.lowercased()
-                let saved = dir.appendingPathComponent(String(format: "%02d.", i) + ext)
+                let moved = dir.appendingPathComponent(String(format: "%02d.", i) + ext)
                 do {
-                    try fm.moveItem(at: url, to: saved)
-                    return .video(saved)
+                    try fm.moveItem(at: url, to: moved)
+                    return StripPick(.video(moved), assetId: pick.assetId)
                 } catch {
                     PrintLog("⁉️ strip save \(url.lastPathComponent): \(error.localizedDescription)")
-                    return item // plays from the picker copy this session only
+                    return pick // plays from the picker copy this session only
                 }
             }
+        }
+        if let data = try? JSONEncoder().encode(saved.map(\.assetId)) {
+            try? data.write(to: dir.appendingPathComponent(Self.linksName), options: .atomic)
+        }
+        return saved
+    }
+    private static let linksName = "links.json"
+    /// the saved identifiers by position, nil where the picker gave none
+    private static func savedLinks(_ dir: URL) -> [String?] {
+        guard let data = try? Data(contentsOf: dir.appendingPathComponent(linksName)) else { return [] }
+        return (try? JSONDecoder().decode([String?].self, from: data)) ?? []
+    }
+    /// the saved files in strip order, each with its identifier
+    private static func savedPicks(_ dir: URL) -> [(url: URL, assetId: String?)] {
+        guard let names = try? FileManager.default.contentsOfDirectory(atPath: dir.path) else { return [] }
+        let links = savedLinks(dir)
+        return names.filter { $0 != linksName }.sorted().map { name in
+            let i = Int(name.prefix(2)) ?? -1
+            return (dir.appendingPathComponent(name), links.indices.contains(i) ? links[i] : nil)
         }
     }
 
     /// the saved set from the last pick, if any, in strip order
     private func restore() {
-        let dir = StripNode.stripDir
-        guard let names = try? FileManager.default.contentsOfDirectory(atPath: dir.path) else { return }
-        let items: [StripItem] = names.sorted().compactMap { name in
-            let url = dir.appendingPathComponent(name)
-            if UTType(filenameExtension: url.pathExtension)?.conforms(to: .movie) == true { return .video(url) }
-            return UIImage(contentsOfFile: url.path).map { .image($0) }
+        let picks: [StripPick] = StripNode.savedPicks(StripNode.stripDir).compactMap { url, assetId in
+            if UTType(filenameExtension: url.pathExtension)?.conforms(to: .movie) == true {
+                return StripPick(.video(url), assetId: assetId)
+            }
+            return UIImage(contentsOfFile: url.path).map { StripPick(.image($0), assetId: assetId) }
         }
-        guard !items.isEmpty else { return }
-        if load(items, persist: false) > 0 { pipeFlo˚.setNameNums([("on", 1)], .fire, Visitor(0)) }
-        DebugLog { P("🎞️ strip restored \(items.count)") }
+        guard !picks.isEmpty else { return }
+        if load(picks, persist: false) > 0 { pipeFlo˚.setNameNums([("on", 1)], .fire, Visitor(0)) }
+        DebugLog { P("🎞️ strip restored \(picks.count)") }
+    }
+
+    // MARK: - the archive
+
+    /// frames loaded
+    public var frameCount: Int { lock.withLock { frames.count } }
+    /// every frame came from the photo library with its identifier: an
+    /// archive can name the set instead of carrying it
+    public var hasLinks: Bool {
+        lock.withLock { !assetIds.isEmpty && assetIds.allSatisfy { $0 != nil } }
+    }
+    /// the set as saved, in strip order: each frame's file, with the photo
+    /// library's identifier when the picker gave one
+    public var archivePicks: [(url: URL, assetId: String?)] {
+        StripNode.savedPicks(StripNode.stripDir)
+    }
+    /// an archive's album, embedded or linked: replaces the set as a pick would
+    public func loadPicks(_ picks: [StripPick]) {
+        guard !picks.isEmpty else { return }
+        if load(picks, persist: true) > 0 { pipeFlo˚.setNameNums([("on", 1)], .fire, Visitor(0)) }
+        DebugLog { P("🎞️ strip archive \(picks.count)") }
     }
 
     /// strip length in across-span units for the current axis: Σ aspect (horizontal) or Σ 1/aspect

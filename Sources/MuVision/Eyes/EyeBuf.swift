@@ -16,7 +16,6 @@ open class EyeBuf {
     var eyes: UnsafeMutablePointer<UniEyes>!
     var tripleOffset = 0
     var tripleIndex = 0
-    var rotation: Float = 0
 
     public init?(_ label: String,
                  _ pipeline: Pipeline,
@@ -48,15 +47,47 @@ open class EyeBuf {
         tan0 / (1 - widenMax * min(max(frustum, 0), 1))
     }
 
-    /// plato.cube z: the neutral field of view narrowed up to 4× at z 1;
+    /// plato.cube zoom: the neutral field of view narrowed up to 4× at zoom 1;
     /// the eye stays put, so a touch still maps through the stored
-    /// projection. z 0 is the view as it was
+    /// projection. zoom 0 is the view as it was
     public static let zoomMax: Float = 4
     static func zoomTan(_ tan: Float, _ zoom: Float) -> Float {
         tan / pow(zoomMax, min(max(zoom, 0), 1))
     }
 
-    /// tan half-fov for plato.cube w (frustum) and z (zoom): zoom narrows
+    /// the cube and plato's place before the viewer on visionOS: `placeFar`
+    /// metres ahead at zoom 0, `placeRun` nearer by zoom 1; scale `scaleMin`
+    /// + zoom; lifted `placeUp`
+    public static let placeFar: Float = 4
+    public static let placeRun: Float = 3
+    public static let scaleMin: Float = 0.05
+    public static let placeUp: Float = 1
+    /// full immersion keeps the head this far inside the cube's near wall
+    public static let cubeInset: Float = 0.5
+
+    /// zoom's floor: 0 in mixed, where the range ends; in full immersion the
+    /// zoom at which the cube, half a side `r` model units, still holds
+    /// `head` (world metres) `cubeInset` inside every wall, so its boundary
+    /// never passes through the viewer
+    public static func zoomFloor(head: SIMD3<Float>, cubeRadius r: Float, full: Bool) -> Float {
+        guard full else { return 0 }
+        let x = (abs(head.x) + cubeInset) / r - scaleMin
+        let y = (abs(head.y - placeUp) + cubeInset) / r - scaleMin
+        // near wall −placeFar + placeRun·z + r(scaleMin + z) > head.z + cubeInset
+        let z = (head.z + cubeInset + placeFar - r * scaleMin) / (placeRun + r)
+        return min(1, max(0, x, y, z))
+    }
+
+    /// zoom within `floorBand` of the floor blends toward it by the standard
+    /// cubic 3t²−2t³: slope 0 at the floor, 1 at the band's top; below the
+    /// floor it holds there
+    public static let floorBand: Float = 0.15
+    public static func zoomEased(_ zoom: Float, floor: Float) -> Float {
+        let t = min(max((zoom - floor) / floorBand, 0), 1)
+        return floor + (zoom - floor) * t * t * (3 - 2 * t)
+    }
+
+    /// tan half-fov for plato.cube frustum and zoom: zoom narrows
     /// the neutral view, and the frustum widens from there to the radial
     /// spokes -- at frustum 1 the full spokes, 100× the neutral tan, at any
     /// zoom, so the WZ thumb's height never stops frustum 1 short of them.
@@ -89,6 +120,12 @@ open class EyeBuf {
 
     public private(set) var projection = matrix_identity_float4x4
     public private(set) var viewModel = matrix_identity_float4x4
+    #if os(visionOS)
+    /// the last frame's placement, model → world, and the device anchor's
+    /// position: a pinch's sight ray in model space (PlatoNode+PressPinch)
+    public internal(set) var visionModel = matrix_identity_float4x4
+    public internal(set) var visionHead = SIMD3<Float>.zero
+    #endif
 
     /// eye pulled back to `distance` with the field of view narrowed to keep
     /// the apparent size: 0.01 = inside the object, 1000 = the infinite point;

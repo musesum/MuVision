@@ -15,11 +15,22 @@ extension EyeBuf {
         nextTripleUniformBuffer()
 
         let anchorOrigin = anchor?.originFromAnchorTransform ?? matrix_identity_float4x4
+        // the range's floor in mixed; in full immersion the head stays inside
+        // the cube; the last floorBand of zoom eases into it
+        let floor = Self.zoomFloor(head: anchorOrigin.columns.3.xyz,
+                                   cubeRadius: CubeModel.radius,
+                                   full: ImmersionModel.fullNow)
+        let zoomNow = Self.zoomEased(zoom, floor: floor)
+        // plato.cube's turn: yaw, pitch and the face eases, about the model's
+        // own centre; the head's pose is the drawable's, so no device turn
+        let turn = CubeNav.shared.view(matrix_identity_float4x4)
 
         eyes[0].eye.0 = uniformForEyeIndex(0, label)
         if drawable.views.count > 1 {
             eyes[0].eye.1 = uniformForEyeIndex(1)
         }
+        visionModel = modelTransform()
+        visionHead = anchorOrigin.columns.3.xyz
 
         NoTimeLog(#function, interval: 4) {
             let tab = "\t\(label[0...1])"
@@ -75,16 +86,15 @@ extension EyeBuf {
 
         /// Renamed from updateRotation
         func modelTransform() -> matrix_float4x4 {
-            let distance: Float = 4.0 - zoom * 3       // how far in front of the user (−Z)
-            let scale: Float = 0.05 + zoom  // size
-            let yOffset: Float = 1.0        // move the content slightly up (+Y)
+            let distance = Self.placeFar - zoomNow * Self.placeRun // metres ahead (−Z)
+            let scale = Self.scaleMin + zoomNow
+            let yOffset = Self.placeUp
 
             let translate = SIMD4<Float>(0, yOffset, -distance, 1).translate
-            let rotateY = SIMD3<Float>(0, 1, 0).rotate(radians: rotation)
             let scaleM = scale4x4(scale)
 
-            // translate (place it), then rotate, then scale about local origin.
-            return translate * rotateY * scaleM
+            // translate (place it), then turn, then scale about local origin.
+            return translate * turn * scaleM
         }
 
         /// Standard uniform scaling matrix (avoid using Float.scale in Simd+ext)

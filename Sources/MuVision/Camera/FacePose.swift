@@ -22,7 +22,6 @@ open class FacePose: NSObject {
     private var personSegment: VNGeneratePersonSegmentationRequest!
     private var angleColors: FaceAngleColors?
     private var ciContext: CIContext!
-    private var camSession: CameraSession!
 
     var ciImage: CIImage? {
         didSet {
@@ -43,8 +42,9 @@ open class FacePose: NSObject {
         super.init()
         guard let device = MTLCreateSystemDefaultDevice() else { return }
         ciContext = CIContext(mtlDevice: device)
-        camSession = CameraSession(self, position: .front)
-        camSession.setCameraOn(true)
+        // frames come from whoever owns the capture output: a CameraSession
+        // cannot take a non-Sendable delegate onto its queue, so the owner
+        // sets this object as its AVCaptureVideoDataOutput delegate
         setupFacePose()
     }
 

@@ -3,6 +3,7 @@ import UIKit
 import MuFlo
 import simd
 
+@available(iOS 18.0, *)
 public class CameraNode: ComputeNode {
 
     private var camera˚ : Flo?
@@ -55,6 +56,14 @@ public class CameraNode: ComputeNode {
             }
         }
         camera˚?.reactivate()
+        // a restored session: the Snapshot merged `on 1` into pipe.camera
+        // before this node existed, so no closure saw it. Start from the
+        // value as it stands; otherwise camera.stream reads on while nothing
+        // streams, and the Layers leaf, seeing the stream already on, never
+        // turns it on again
+        if (camera˚?.val("on") ?? 0) > 0 {
+            camera.setCameraOn(true)
+        }
     }
 
     public override func makeResources() {

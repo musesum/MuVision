@@ -10,13 +10,13 @@ final class RouteLogTests: XCTestCase {
     typealias R = RouterNode.RouteSource
     typealias Log = RouterNode.RouteLog
 
-    /// pipe.flo.h defaults: draw F0 B3 at 2/1, camera off at 6/5, album F1 B1 at 4/3
+    /// pipe.flo.h defaults: draw F0 B2 at 2/1, camera off at 6/5, album F1 B1 at 4/3
     func sources() -> [R] {
-        [R(code: "D", route: SIMD4(0, 2, 3, 1), lane: SIMD2(0, 1)),
+        [R(code: "D", route: SIMD4(0, 2, 2, 1), lane: SIMD2(0, 1)),
          R(code: "C", route: SIMD4(0, 6, 0, 5), lane: SIMD2(0, 0)),
          R(code: "A", route: SIMD4(1, 4, 1, 3), lane: SIMD2(1, 1))]
     }
-    static let defaultLine = "DF0B3,CF0B0,AF1B1 · order C,A,D · opacity DF 0.00 DB 1.00 CF 0.00 CB 0.00 AF 1.00 AB 1.00"
+    static let defaultLine = "DF0B2,CF0B0,AF1B1 · order C,A,D · opacity DF 0.00 DB 1.00 CF 0.00 CB 0.00 AF 1.00 AB 1.00"
 
     func testRouteLine() {
         XCTAssertEqual(RouterNode.routeLine(sources()), Self.defaultLine)
@@ -67,7 +67,19 @@ final class RouteLogTests: XCTestCase {
     /// several at once read in the leaf's order: radios, rows, sliders, fades
     func testChangeSeveral() {
         XCTAssertEqual(change { $0[2].lane.y = 0.4; $0[1].route.x = 3; $0[0].route.z = 1; $0[0].master = 0 },
-                       "DB 3→1, CF 0→3, AB opacity 1.00→0.40, D fade 1.00→0.00")
+                       "DB 2→1, CF 0→3, AB opacity 1.00→0.40, D fade 1.00→0.00")
+    }
+    /// a path carrying another part than its own half reads after the fades,
+    /// and a change of part reads as the leaf's letters
+    func testRouteLinePart() {
+        var s = sources()
+        s[1].part = SIMD2(3, 2)
+        XCTAssertTrue(RouterNode.routeLine(s).hasSuffix("AF 1.00 AB 1.00 · part CF F+B"))
+        s[2].part = SIMD2(1, 1)
+        s[1].master = 0.5
+        XCTAssertTrue(RouterNode.routeLine(s).hasSuffix(" · fade C 0.50 · part CF F+B AB F"))
+        XCTAssertEqual(change { $0[1].part = SIMD2(3, 2) }, "CF part F→F+B")
+        XCTAssertEqual(change { $0[2].part = SIMD2(1, 3) }, "AB part B→F+B")
     }
     /// under a hundredth a slider hasn't moved as the log reads it
     func testChangeBelowAHundredthIsNone() {
@@ -86,8 +98,8 @@ final class RouteLogTests: XCTestCase {
             router {
                 draw {
                     tex   (texture)
-                    front (x 0…3=1, y 1…6=2, z 0…1=0.4)
-                    back  (x 0…3=3, y 1…6=1, z 0…1=1)
+                    front (x 0…7=1, y 1…6=2, z 0…1=0.4)
+                    back  (x 0…7=2, y 1…6=1, z 0…1=1)
                     fade  (x 0…1=0.5)
                 }
             }
@@ -97,10 +109,11 @@ final class RouteLogTests: XCTestCase {
         XCTAssertEqual(u.fade.x, 0.2, accuracy: 1e-6)
         XCTAssertEqual(u.fade.w, 0.5, accuracy: 1e-6)
         let r = draw.routeSource("D", u)
-        XCTAssertEqual(r.route, SIMD4(1, 2, 3, 1))
+        XCTAssertEqual(r.route, SIMD4(1, 2, 2, 1))
+        XCTAssertEqual(r.part, SIMD2(1, 2), "draw's lanes carry no w: each keeps its half")
         XCTAssertEqual(r.lane, SIMD2(0.4, 1))
         XCTAssertEqual(r.master, 0.5)
-        XCTAssertEqual(RouterNode.routeLine([r]), "DF1B3 · order D · opacity DF 0.40 DB 1.00 · fade D 0.50")
+        XCTAssertEqual(RouterNode.routeLine([r]), "DF1B2 · order D · opacity DF 0.40 DB 1.00 · fade D 0.50")
     }
 
     // MARK: - when it logs

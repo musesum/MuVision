@@ -25,6 +25,8 @@ public class Motion {
     public static var shared = Motion()
     var motion: CMMotionManager?
     private let orientationActor = MotionActor() // ← new actor
+    /// the low-pass on the attitude, before the screen's own turn is added
+    public var turnFilter = TurnFilter()
 
     public init() {
         motion = CMMotionManager()
@@ -45,11 +47,17 @@ public class Motion {
 
             let a = deviceMotion.attitude.rotationMatrix
 
-            let X = vector_float4([a.m12, a.m22, a.m32, 0])
-            let Y = vector_float4([a.m13, a.m23, a.m33, 0])
-            let Z = vector_float4([a.m11, a.m21, a.m31, 0])
-            let W = vector_float4([    0,     0,     0, 1])
-            mat = matrix_float4x4(X,Y,Z,W)
+            // the attitude's columns cycled, a rotation still
+            let X = SIMD3<Float>(Float(a.m12), Float(a.m22), Float(a.m32))
+            let Y = SIMD3<Float>(Float(a.m13), Float(a.m23), Float(a.m33))
+            let Z = SIMD3<Float>(Float(a.m11), Float(a.m21), Float(a.m31))
+            let attitude = simd_quatf(simd_float3x3(X, Y, Z))
+            // the low-pass takes the magnetometer's wobble off the heading;
+            // the gyro's speed opens its cutoff so a real turn is not lagged
+            let rate = deviceMotion.rotationRate
+            let speed = Float((rate.x * rate.x + rate.y * rate.y + rate.z * rate.z).squareRoot())
+            let turn = turnFilter.filter(attitude, speed: speed, at: deviceMotion.timestamp)
+            mat = matrix_float4x4(turn)
 #if os(visionOS)
             let radians = Float.pi/2
 #else
